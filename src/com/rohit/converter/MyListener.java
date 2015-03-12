@@ -1728,7 +1728,24 @@ public class MyListener {
 				public void enterUnannPrimitiveType(
 						UnannPrimitiveTypeContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.getText();
+					try {
+						if (type.equals("int") || type.equals("short") || type.equals("long")) {
+							bw.write("Integer ");
+						} else if(type.equals("byte")) {
+							bw.write("Byte ");
+						} else if(type.equals("char")) {
+							bw.write("Character ");
+						} else if(type.equals("float") || type.equals("double")) {
+							bw.write("Float ");
+						} else if(type.equals("boolean")) {
+							bw.write("Boolean ");
+						}
 
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				@Override
@@ -2498,16 +2515,7 @@ public class MyListener {
 				@Override
 				public void enterIntegralType(IntegralTypeContext ctx) {
 					// TODO Auto-generated method stub
-					String type = ctx.getChild(0).toString();
-					try {
-						if (type.equals("int")) {
-							bw.write("Integer ");
-						}
-
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					
 				}
 
 				@Override
