@@ -1,4 +1,0 @@
-shared class TestCase() {
-shared void Foo() {
-}
-}
