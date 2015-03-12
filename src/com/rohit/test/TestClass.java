@@ -1,10 +1,10 @@
 package com.rohit.test;
 
 public class TestClass {
-	int b;
 	public void foo() {
-		boolean c;
+		int c = 3;
 		int a = 5;
+		a = a + c;
 	}
 	
 	public void bar() {

@@ -32,7 +32,8 @@ public class MyListener {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.out.println("First Argument: original java file.\nSecond Argument: destination ceylon file");
+			System.out
+					.println("First Argument: original java file.\nSecond Argument: destination ceylon file");
 		} else {
 			File f = new File(args[0]);
 
@@ -1080,7 +1081,12 @@ public class MyListener {
 				public void exitExpressionStatement(
 						ExpressionStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getChild(ctx.getChildCount() - 1) + "\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				@Override
@@ -1730,15 +1736,17 @@ public class MyListener {
 					// TODO Auto-generated method stub
 					String type = ctx.getText();
 					try {
-						if (type.equals("int") || type.equals("short") || type.equals("long")) {
+						if (type.equals("int") || type.equals("short")
+								|| type.equals("long")) {
 							bw.write("Integer ");
-						} else if(type.equals("byte")) {
+						} else if (type.equals("byte")) {
 							bw.write("Byte ");
-						} else if(type.equals("char")) {
+						} else if (type.equals("char")) {
 							bw.write("Character ");
-						} else if(type.equals("float") || type.equals("double")) {
+						} else if (type.equals("float")
+								|| type.equals("double")) {
 							bw.write("Float ");
-						} else if(type.equals("boolean")) {
+						} else if (type.equals("boolean")) {
 							bw.write("Boolean ");
 						}
 
@@ -2515,7 +2523,7 @@ public class MyListener {
 				@Override
 				public void enterIntegralType(IntegralTypeContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				@Override
@@ -3096,7 +3104,14 @@ public class MyListener {
 				@Override
 				public void enterAssignment(AssignmentContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.leftHandSide().getText());
+						bw.write(ctx.assignmentOperator().getText());
+						bw.write(ctx.expression().getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				@Override
@@ -3225,8 +3240,8 @@ public class MyListener {
 			};
 			ParseTreeWalker.DEFAULT.walk(listener, tree);
 
-			//Use to generate a viewable AST diagram
-			
+			// Use to generate a viewable AST diagram
+
 			/*JFrame frame = new JFrame("Antlr AST");
 			JPanel panel = new JPanel();
 			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
