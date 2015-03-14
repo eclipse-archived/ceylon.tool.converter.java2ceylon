@@ -1,4 +1,4 @@
-# java-to-ceylon-converter
+# Java to Ceylon Converter
 
 This is a project to convert java to ceylon. 
 The MyListener class generates an AST and converts the given java file to ceylon.
