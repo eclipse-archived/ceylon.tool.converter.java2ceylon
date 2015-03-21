@@ -1,4 +1,4 @@
-// Generated from /home/rohitmohan96/workspace/Test/src/test/Java8.g4 by ANTLR 4.5
+// Generated from com.rohit.converter/Java8.g4 by ANTLR 4.5
 package com.rohit.converter;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

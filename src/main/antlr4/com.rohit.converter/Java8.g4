@@ -56,6 +56,7 @@ grammar Java8;
 /*
  * Productions from §3 (Lexical Structure)
  */
+
 literal
 	:	IntegerLiteral
 	|	FloatingPointLiteral
