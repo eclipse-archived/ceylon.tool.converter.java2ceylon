@@ -14,3 +14,5 @@ Build using Maven
 Run the jar in the target directory
 
 `java -jar target/Java-to-Ceylon-Converter-0.0.1-SNAPSHOT-jar-with-dependencies.jar 'full/directory/of/java/file.java' 'test.ceylon'`
+
+There is also a test class in com.rohit.test that you can use. 
