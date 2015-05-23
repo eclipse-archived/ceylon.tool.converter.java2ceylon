@@ -5,6 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -13,11 +19,245 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
-import com.rohit.converter.Java8Lexer;
-import com.rohit.converter.Java8Listener;
-import com.rohit.converter.Java8Parser;
-import com.rohit.converter.Java8Parser.*;
+import com.rohit.converter.Java8Parser.AdditionalBoundContext;
+import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
+import com.rohit.converter.Java8Parser.AmbiguousNameContext;
+import com.rohit.converter.Java8Parser.AndExpressionContext;
+import com.rohit.converter.Java8Parser.AnnotationContext;
+import com.rohit.converter.Java8Parser.AnnotationTypeBodyContext;
+import com.rohit.converter.Java8Parser.AnnotationTypeDeclarationContext;
+import com.rohit.converter.Java8Parser.AnnotationTypeElementDeclarationContext;
+import com.rohit.converter.Java8Parser.AnnotationTypeElementModifierContext;
+import com.rohit.converter.Java8Parser.AnnotationTypeMemberDeclarationContext;
+import com.rohit.converter.Java8Parser.ArgumentListContext;
+import com.rohit.converter.Java8Parser.ArrayAccessContext;
+import com.rohit.converter.Java8Parser.ArrayAccess_lf_primaryContext;
+import com.rohit.converter.Java8Parser.ArrayAccess_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.ArrayCreationExpressionContext;
+import com.rohit.converter.Java8Parser.ArrayInitializerContext;
+import com.rohit.converter.Java8Parser.ArrayTypeContext;
+import com.rohit.converter.Java8Parser.AssertStatementContext;
+import com.rohit.converter.Java8Parser.AssignmentContext;
+import com.rohit.converter.Java8Parser.AssignmentExpressionContext;
+import com.rohit.converter.Java8Parser.AssignmentOperatorContext;
+import com.rohit.converter.Java8Parser.BasicForStatementContext;
+import com.rohit.converter.Java8Parser.BasicForStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.BlockContext;
+import com.rohit.converter.Java8Parser.BlockStatementContext;
+import com.rohit.converter.Java8Parser.BlockStatementsContext;
+import com.rohit.converter.Java8Parser.BreakStatementContext;
+import com.rohit.converter.Java8Parser.CastExpressionContext;
+import com.rohit.converter.Java8Parser.CatchClauseContext;
+import com.rohit.converter.Java8Parser.CatchFormalParameterContext;
+import com.rohit.converter.Java8Parser.CatchTypeContext;
+import com.rohit.converter.Java8Parser.CatchesContext;
+import com.rohit.converter.Java8Parser.ClassBodyContext;
+import com.rohit.converter.Java8Parser.ClassBodyDeclarationContext;
+import com.rohit.converter.Java8Parser.ClassDeclarationContext;
+import com.rohit.converter.Java8Parser.ClassInstanceCreationExpressionContext;
+import com.rohit.converter.Java8Parser.ClassInstanceCreationExpression_lf_primaryContext;
+import com.rohit.converter.Java8Parser.ClassInstanceCreationExpression_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.ClassMemberDeclarationContext;
+import com.rohit.converter.Java8Parser.ClassModifierContext;
+import com.rohit.converter.Java8Parser.ClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.ClassTypeContext;
+import com.rohit.converter.Java8Parser.ClassType_lf_classOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.ClassType_lfno_classOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.CompilationUnitContext;
+import com.rohit.converter.Java8Parser.ConditionalAndExpressionContext;
+import com.rohit.converter.Java8Parser.ConditionalExpressionContext;
+import com.rohit.converter.Java8Parser.ConditionalOrExpressionContext;
+import com.rohit.converter.Java8Parser.ConstantDeclarationContext;
+import com.rohit.converter.Java8Parser.ConstantExpressionContext;
+import com.rohit.converter.Java8Parser.ConstantModifierContext;
+import com.rohit.converter.Java8Parser.ConstructorBodyContext;
+import com.rohit.converter.Java8Parser.ConstructorDeclarationContext;
+import com.rohit.converter.Java8Parser.ConstructorDeclaratorContext;
+import com.rohit.converter.Java8Parser.ConstructorModifierContext;
+import com.rohit.converter.Java8Parser.ContinueStatementContext;
+import com.rohit.converter.Java8Parser.DefaultValueContext;
+import com.rohit.converter.Java8Parser.DimExprContext;
+import com.rohit.converter.Java8Parser.DimExprsContext;
+import com.rohit.converter.Java8Parser.DimsContext;
+import com.rohit.converter.Java8Parser.DoStatementContext;
+import com.rohit.converter.Java8Parser.ElementValueArrayInitializerContext;
+import com.rohit.converter.Java8Parser.ElementValueContext;
+import com.rohit.converter.Java8Parser.ElementValueListContext;
+import com.rohit.converter.Java8Parser.ElementValuePairContext;
+import com.rohit.converter.Java8Parser.ElementValuePairListContext;
+import com.rohit.converter.Java8Parser.EmptyStatementContext;
+import com.rohit.converter.Java8Parser.EnhancedForStatementContext;
+import com.rohit.converter.Java8Parser.EnhancedForStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.EnumBodyContext;
+import com.rohit.converter.Java8Parser.EnumBodyDeclarationsContext;
+import com.rohit.converter.Java8Parser.EnumConstantContext;
+import com.rohit.converter.Java8Parser.EnumConstantListContext;
+import com.rohit.converter.Java8Parser.EnumConstantModifierContext;
+import com.rohit.converter.Java8Parser.EnumConstantNameContext;
+import com.rohit.converter.Java8Parser.EnumDeclarationContext;
+import com.rohit.converter.Java8Parser.EqualityExpressionContext;
+import com.rohit.converter.Java8Parser.ExceptionTypeContext;
+import com.rohit.converter.Java8Parser.ExceptionTypeListContext;
+import com.rohit.converter.Java8Parser.ExclusiveOrExpressionContext;
+import com.rohit.converter.Java8Parser.ExplicitConstructorInvocationContext;
+import com.rohit.converter.Java8Parser.ExpressionContext;
+import com.rohit.converter.Java8Parser.ExpressionNameContext;
+import com.rohit.converter.Java8Parser.ExpressionStatementContext;
+import com.rohit.converter.Java8Parser.ExtendsInterfacesContext;
+import com.rohit.converter.Java8Parser.FieldAccessContext;
+import com.rohit.converter.Java8Parser.FieldAccess_lf_primaryContext;
+import com.rohit.converter.Java8Parser.FieldAccess_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.FieldDeclarationContext;
+import com.rohit.converter.Java8Parser.FieldModifierContext;
+import com.rohit.converter.Java8Parser.Finally_Context;
+import com.rohit.converter.Java8Parser.FloatingPointTypeContext;
+import com.rohit.converter.Java8Parser.ForInitContext;
+import com.rohit.converter.Java8Parser.ForStatementContext;
+import com.rohit.converter.Java8Parser.ForStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.ForUpdateContext;
+import com.rohit.converter.Java8Parser.FormalParameterContext;
+import com.rohit.converter.Java8Parser.FormalParameterListContext;
+import com.rohit.converter.Java8Parser.FormalParametersContext;
+import com.rohit.converter.Java8Parser.IfThenElseStatementContext;
+import com.rohit.converter.Java8Parser.IfThenElseStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.IfThenStatementContext;
+import com.rohit.converter.Java8Parser.ImportDeclarationContext;
+import com.rohit.converter.Java8Parser.InclusiveOrExpressionContext;
+import com.rohit.converter.Java8Parser.InferredFormalParameterListContext;
+import com.rohit.converter.Java8Parser.InstanceInitializerContext;
+import com.rohit.converter.Java8Parser.IntegralTypeContext;
+import com.rohit.converter.Java8Parser.InterfaceBodyContext;
+import com.rohit.converter.Java8Parser.InterfaceDeclarationContext;
+import com.rohit.converter.Java8Parser.InterfaceMemberDeclarationContext;
+import com.rohit.converter.Java8Parser.InterfaceMethodDeclarationContext;
+import com.rohit.converter.Java8Parser.InterfaceMethodModifierContext;
+import com.rohit.converter.Java8Parser.InterfaceModifierContext;
+import com.rohit.converter.Java8Parser.InterfaceTypeContext;
+import com.rohit.converter.Java8Parser.InterfaceTypeListContext;
+import com.rohit.converter.Java8Parser.InterfaceType_lf_classOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.InterfaceType_lfno_classOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.LabeledStatementContext;
+import com.rohit.converter.Java8Parser.LabeledStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.LambdaBodyContext;
+import com.rohit.converter.Java8Parser.LambdaExpressionContext;
+import com.rohit.converter.Java8Parser.LambdaParametersContext;
+import com.rohit.converter.Java8Parser.LastFormalParameterContext;
+import com.rohit.converter.Java8Parser.LeftHandSideContext;
+import com.rohit.converter.Java8Parser.LiteralContext;
+import com.rohit.converter.Java8Parser.LocalVariableDeclarationContext;
+import com.rohit.converter.Java8Parser.LocalVariableDeclarationStatementContext;
+import com.rohit.converter.Java8Parser.MarkerAnnotationContext;
+import com.rohit.converter.Java8Parser.MethodBodyContext;
+import com.rohit.converter.Java8Parser.MethodDeclarationContext;
+import com.rohit.converter.Java8Parser.MethodDeclaratorContext;
+import com.rohit.converter.Java8Parser.MethodHeaderContext;
+import com.rohit.converter.Java8Parser.MethodInvocationContext;
+import com.rohit.converter.Java8Parser.MethodInvocation_lf_primaryContext;
+import com.rohit.converter.Java8Parser.MethodInvocation_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.MethodModifierContext;
+import com.rohit.converter.Java8Parser.MethodNameContext;
+import com.rohit.converter.Java8Parser.MethodReferenceContext;
+import com.rohit.converter.Java8Parser.MethodReference_lf_primaryContext;
+import com.rohit.converter.Java8Parser.MethodReference_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.MultiplicativeExpressionContext;
+import com.rohit.converter.Java8Parser.NormalAnnotationContext;
+import com.rohit.converter.Java8Parser.NormalClassDeclarationContext;
+import com.rohit.converter.Java8Parser.NormalInterfaceDeclarationContext;
+import com.rohit.converter.Java8Parser.NumericTypeContext;
+import com.rohit.converter.Java8Parser.PackageDeclarationContext;
+import com.rohit.converter.Java8Parser.PackageModifierContext;
+import com.rohit.converter.Java8Parser.PackageNameContext;
+import com.rohit.converter.Java8Parser.PackageOrTypeNameContext;
+import com.rohit.converter.Java8Parser.PostDecrementExpressionContext;
+import com.rohit.converter.Java8Parser.PostDecrementExpression_lf_postfixExpressionContext;
+import com.rohit.converter.Java8Parser.PostIncrementExpressionContext;
+import com.rohit.converter.Java8Parser.PostIncrementExpression_lf_postfixExpressionContext;
+import com.rohit.converter.Java8Parser.PostfixExpressionContext;
+import com.rohit.converter.Java8Parser.PreDecrementExpressionContext;
+import com.rohit.converter.Java8Parser.PreIncrementExpressionContext;
+import com.rohit.converter.Java8Parser.PrimaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArrayContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lf_arrayAccessContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lf_primaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lf_primary_lf_arrayAccess_lf_primaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lfno_arrayAccessContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.PrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primaryContext;
+import com.rohit.converter.Java8Parser.PrimitiveTypeContext;
+import com.rohit.converter.Java8Parser.ReceiverParameterContext;
+import com.rohit.converter.Java8Parser.ReferenceTypeContext;
+import com.rohit.converter.Java8Parser.RelationalExpressionContext;
+import com.rohit.converter.Java8Parser.ResourceContext;
+import com.rohit.converter.Java8Parser.ResourceListContext;
+import com.rohit.converter.Java8Parser.ResourceSpecificationContext;
+import com.rohit.converter.Java8Parser.ResultContext;
+import com.rohit.converter.Java8Parser.ReturnStatementContext;
+import com.rohit.converter.Java8Parser.ShiftExpressionContext;
+import com.rohit.converter.Java8Parser.SimpleTypeNameContext;
+import com.rohit.converter.Java8Parser.SingleElementAnnotationContext;
+import com.rohit.converter.Java8Parser.SingleStaticImportDeclarationContext;
+import com.rohit.converter.Java8Parser.SingleTypeImportDeclarationContext;
+import com.rohit.converter.Java8Parser.StatementContext;
+import com.rohit.converter.Java8Parser.StatementExpressionContext;
+import com.rohit.converter.Java8Parser.StatementExpressionListContext;
+import com.rohit.converter.Java8Parser.StatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.StatementWithoutTrailingSubstatementContext;
+import com.rohit.converter.Java8Parser.StaticImportOnDemandDeclarationContext;
+import com.rohit.converter.Java8Parser.StaticInitializerContext;
+import com.rohit.converter.Java8Parser.SuperclassContext;
+import com.rohit.converter.Java8Parser.SuperinterfacesContext;
+import com.rohit.converter.Java8Parser.SwitchBlockContext;
+import com.rohit.converter.Java8Parser.SwitchBlockStatementGroupContext;
+import com.rohit.converter.Java8Parser.SwitchLabelContext;
+import com.rohit.converter.Java8Parser.SwitchLabelsContext;
+import com.rohit.converter.Java8Parser.SwitchStatementContext;
+import com.rohit.converter.Java8Parser.SynchronizedStatementContext;
+import com.rohit.converter.Java8Parser.ThrowStatementContext;
+import com.rohit.converter.Java8Parser.Throws_Context;
+import com.rohit.converter.Java8Parser.TryStatementContext;
+import com.rohit.converter.Java8Parser.TryWithResourcesStatementContext;
+import com.rohit.converter.Java8Parser.TypeArgumentContext;
+import com.rohit.converter.Java8Parser.TypeArgumentListContext;
+import com.rohit.converter.Java8Parser.TypeArgumentsContext;
+import com.rohit.converter.Java8Parser.TypeArgumentsOrDiamondContext;
+import com.rohit.converter.Java8Parser.TypeBoundContext;
+import com.rohit.converter.Java8Parser.TypeContext;
+import com.rohit.converter.Java8Parser.TypeDeclarationContext;
+import com.rohit.converter.Java8Parser.TypeImportOnDemandDeclarationContext;
+import com.rohit.converter.Java8Parser.TypeNameContext;
+import com.rohit.converter.Java8Parser.TypeParameterContext;
+import com.rohit.converter.Java8Parser.TypeParameterListContext;
+import com.rohit.converter.Java8Parser.TypeParameterModifierContext;
+import com.rohit.converter.Java8Parser.TypeParametersContext;
+import com.rohit.converter.Java8Parser.TypeVariableContext;
+import com.rohit.converter.Java8Parser.UnannArrayTypeContext;
+import com.rohit.converter.Java8Parser.UnannClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannClassTypeContext;
+import com.rohit.converter.Java8Parser.UnannClassType_lf_unannClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannClassType_lfno_unannClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannInterfaceType_lf_unannClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannInterfaceType_lfno_unannClassOrInterfaceTypeContext;
+import com.rohit.converter.Java8Parser.UnannPrimitiveTypeContext;
+import com.rohit.converter.Java8Parser.UnannReferenceTypeContext;
+import com.rohit.converter.Java8Parser.UnannTypeContext;
+import com.rohit.converter.Java8Parser.UnannTypeVariableContext;
+import com.rohit.converter.Java8Parser.UnaryExpressionContext;
+import com.rohit.converter.Java8Parser.UnaryExpressionNotPlusMinusContext;
+import com.rohit.converter.Java8Parser.VariableDeclaratorContext;
+import com.rohit.converter.Java8Parser.VariableDeclaratorIdContext;
+import com.rohit.converter.Java8Parser.VariableDeclaratorListContext;
+import com.rohit.converter.Java8Parser.VariableInitializerContext;
+import com.rohit.converter.Java8Parser.VariableInitializerListContext;
+import com.rohit.converter.Java8Parser.VariableModifierContext;
+import com.rohit.converter.Java8Parser.WhileStatementContext;
+import com.rohit.converter.Java8Parser.WhileStatementNoShortIfContext;
+import com.rohit.converter.Java8Parser.WildcardBoundsContext;
+import com.rohit.converter.Java8Parser.WildcardContext;
 
 public class Main {
 
@@ -27,6 +267,16 @@ public class Main {
 	 * @param args
 	 * @throws IOException
 	 */
+
+	static String lastParameter;
+	static boolean enterif = false;
+	static boolean enterfor = false;
+	static Stack<String> operators = new Stack<String>();
+	static String forinit;
+	static String forlimit;
+	static String forConditionOperator;
+	static String forCounterDatatype;
+
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.out
@@ -49,12 +299,6 @@ public class Main {
 						VariableInitializerContext ctx) {
 					// TODO Auto-generated method stub
 
-					try {
-						bw.write(" = " + ctx.getChild(0).getText());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void exitVariableDeclaratorId(
@@ -151,7 +395,8 @@ public class Main {
 				public void enterResult(ResultContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getChild(0).toString() + " ");
+						if (ctx.getChild(0).toString().equals("void"))
+							bw.write(ctx.getChild(0).toString() + " ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -188,7 +433,7 @@ public class Main {
 					// TODO Auto-generated method stub
 
 					try {
-						bw.write(ctx.Identifier() + "() ");
+						bw.write(ctx.Identifier() + "(");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -220,14 +465,7 @@ public class Main {
 
 				public void enterAssignment(AssignmentContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.leftHandSide().getText());
-						bw.write(ctx.assignmentOperator().getText());
-						bw.write(ctx.expression().getText());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
 				}
 
 				public void visitTerminal(TerminalNode node) {
@@ -301,7 +539,15 @@ public class Main {
 
 				public void exitUnaryExpression(UnaryExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!operators.isEmpty()) {
+							bw.write(" " + operators.lastElement() + " ");
+							operators.pop();
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitUnannTypeVariable(UnannTypeVariableContext ctx) {
@@ -574,7 +820,12 @@ public class Main {
 
 				public void exitReturnStatement(ReturnStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(";\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitResult(ResultContext ctx) {
@@ -601,7 +852,6 @@ public class Main {
 				public void exitRelationalExpression(
 						RelationalExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void exitReferenceType(ReferenceTypeContext ctx) {
@@ -817,7 +1067,12 @@ public class Main {
 
 				public void exitMethodDeclarator(MethodDeclaratorContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(") ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitMethodDeclaration(MethodDeclarationContext ctx) {
@@ -997,12 +1252,25 @@ public class Main {
 
 				public void exitFormalParameter(FormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!ctx.variableDeclaratorId().getText()
+								.equals(lastParameter))
+							bw.write(", ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitForUpdate(ForUpdateContext ctx) {
-					// TODO Auto-generated method stub
-
+					// TODO change by(1) according to step
+					try {
+						bw.write(".by(1))");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					enterfor = false;
 				}
 
 				public void exitForStatementNoShortIf(
@@ -1018,7 +1286,12 @@ public class Main {
 
 				public void exitForInit(ForInitContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						forCounterDatatype = ctx.getChild(0).getChild(0).getText();
+						bw.write(" in (" + forinit);
+					} catch (IOException e) {
+						e.getStackTrace();
+					}
 				}
 
 				public void exitFloatingPointType(FloatingPointTypeContext ctx) {
@@ -1060,12 +1333,19 @@ public class Main {
 
 				public void exitExpressionName(ExpressionNameContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void exitExpression(ExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (enterif) {
+						try {
+							bw.write(")");
+							enterif = false;
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 				}
 
 				public void exitExplicitConstructorInvocation(
@@ -1531,13 +1811,18 @@ public class Main {
 				public void enterVariableInitializer(
 						VariableInitializerContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!enterfor)
+							bw.write(" = ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterVariableDeclaratorList(
 						VariableDeclaratorListContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterVariableDeclaratorId(
@@ -1831,7 +2116,12 @@ public class Main {
 
 				public void enterReturnStatement(ReturnStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("return ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterResourceSpecification(
@@ -1853,7 +2143,11 @@ public class Main {
 				public void enterRelationalExpression(
 						RelationalExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						if (!enterfor)
+							operators.push(ctx.getChild(1).getText());
+						else
+							forConditionOperator = ctx.getChild(1).getText();
 				}
 
 				public void enterReferenceType(ReferenceTypeContext ctx) {
@@ -2086,7 +2380,17 @@ public class Main {
 
 				public void enterLiteral(LiteralContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!enterfor) {
+							bw.write(ctx.getText());
+						} else {
+							forinit = ctx.getText();
+							forlimit = forinit;
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterLeftHandSide(LeftHandSideContext ctx) {
@@ -2097,7 +2401,8 @@ public class Main {
 				public void enterLastFormalParameter(
 						LastFormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-
+					lastParameter = ctx.formalParameter()
+							.variableDeclaratorId().getText();
 				}
 
 				public void enterLambdaParameters(LambdaParametersContext ctx) {
@@ -2213,6 +2518,13 @@ public class Main {
 				public void enterIfThenStatement(IfThenStatementContext ctx) {
 					// TODO Auto-generated method stub
 
+					enterif = true;
+					try {
+						bw.write(ctx.getChild(0).getText()
+								+ ctx.getChild(1).getText());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 
 				public void enterIfThenElseStatementNoShortIf(
@@ -2240,12 +2552,28 @@ public class Main {
 
 				public void enterFormalParameter(FormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterForUpdate(ForUpdateContext ctx) {
 					// TODO Auto-generated method stub
+					try {
 
+						if (forConditionOperator.equals("<=")
+								|| forConditionOperator.equals(">="))
+							bw.write(".." + forlimit + ")");
+						else if (isNumeric(forlimit)) {
+							if(forCounterDatatype.equals("int"))
+								bw.write(".." + (int)(Double.parseDouble(forlimit) - 1)
+									+ ")");
+							else 
+								bw.write(".." + (Double.parseDouble(forlimit) - 1)
+										+ ")");
+						} else
+							bw.write(".." + forlimit + " - 1)");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterForStatementNoShortIf(
@@ -2314,12 +2642,21 @@ public class Main {
 
 				public void enterExpressionName(ExpressionNameContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!enterfor) {
+							bw.write(ctx.getText());
+						} else {
+							forinit = ctx.getText();
+							forlimit = forinit;
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterExpression(ExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterExplicitConstructorInvocation(
@@ -2504,7 +2841,8 @@ public class Main {
 				public void enterConditionalOrExpression(
 						ConditionalOrExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterConditionalExpression(
@@ -2516,7 +2854,8 @@ public class Main {
 				public void enterConditionalAndExpression(
 						ConditionalAndExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterCompilationUnit(CompilationUnitContext ctx) {
@@ -2627,7 +2966,7 @@ public class Main {
 					// TODO Auto-generated method stub
 
 				}
-				
+
 				public void enterBasicForStatementNoShortIf(
 						BasicForStatementNoShortIfContext ctx) {
 					// TODO Auto-generated method stub
@@ -2636,13 +2975,24 @@ public class Main {
 
 				public void enterBasicForStatement(BasicForStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						enterfor = true;
+						bw.write(ctx.getChild(0).getText()
+								+ ctx.getChild(1).getText());
+					} catch (IOException e) {
+						e.getStackTrace();
+					}
 				}
 
 				public void enterAssignmentOperator(
 						AssignmentOperatorContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterAssignmentExpression(
@@ -2742,7 +3092,8 @@ public class Main {
 				public void enterAdditiveExpression(
 						AdditiveExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterAdditionalBound(AdditionalBoundContext ctx) {
@@ -2754,21 +3105,27 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-			/*
-			 * JFrame frame = new JFrame("Antlr AST"); JPanel panel = new
-			 * JPanel(); TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			 * .getRuleNames()), tree); viewer.setScale(1.5); panel.add(viewer);
-			 * JScrollPane jScrollPane = new JScrollPane(panel);
-			 * frame.add(jScrollPane);
-			 * frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			 * frame.setSize(200, 200);
-			 * 
-			 * frame.setVisible(true);
-			 */
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
 		}
+	}
+
+	public static boolean isNumeric(String str) {
+		return str.matches("-?\\d+(\\.\\d+)?");
 	}
 
 }
