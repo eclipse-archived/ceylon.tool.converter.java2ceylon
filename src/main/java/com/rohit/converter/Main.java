@@ -5,12 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Stack;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -19,7 +14,6 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -3105,19 +3099,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-			JFrame frame = new JFrame("Antlr AST");
-			JPanel panel = new JPanel();
-			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-					.getRuleNames()), tree);
-			viewer.setScale(1.1);
-			panel.add(viewer);
-			JScrollPane jScrollPane = new JScrollPane(panel);
-			frame.add(jScrollPane);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setSize(500, 500);
-			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
-
-			frame.setVisible(true);
+//			JFrame frame = new JFrame("Antlr AST");
+//			JPanel panel = new JPanel();
+//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//					.getRuleNames()), tree);
+//			viewer.setScale(1.1);
+//			panel.add(viewer);
+//			JScrollPane jScrollPane = new JScrollPane(panel);
+//			frame.add(jScrollPane);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(500, 500);
+//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+//
+//			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
