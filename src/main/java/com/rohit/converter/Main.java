@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +19,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -262,14 +268,11 @@ public class Main {
 	 * @throws IOException
 	 */
 
-	static String lastParameter;
+	static String lastParameter, forinit, forlimit, forConditionOperator, forCounterDatatype;
 	static boolean enterif = false;
 	static boolean enterfor = false;
+	static boolean enterwhile = false;
 	static Stack<String> operators = new Stack<String>();
-	static String forinit;
-	static String forlimit;
-	static String forConditionOperator;
-	static String forCounterDatatype;
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
@@ -1331,10 +1334,10 @@ public class Main {
 
 				public void exitExpression(ExpressionContext ctx) {
 					// TODO Auto-generated method stub
-					if (enterif) {
+					if (enterif || enterwhile) {
 						try {
 							bw.write(")");
-							enterif = false;
+							enterif = enterwhile = false;
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -1788,7 +1791,13 @@ public class Main {
 
 				public void enterWhileStatement(WhileStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("while(");
+						enterwhile = true;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterVariableModifier(VariableModifierContext ctx) {
@@ -3099,19 +3108,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
-//
-//			frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
