@@ -6,7 +6,7 @@ public class TestClass {
 		return c;
 	}
 	
-	public void bar(float b, boolean c) {
+	public void bar(int b, boolean c) {
 		if(b > 5 && c || b < 2) {
 			b = 5;
 		}
