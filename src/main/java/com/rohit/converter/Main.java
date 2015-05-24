@@ -268,10 +268,12 @@ public class Main {
 	 * @throws IOException
 	 */
 
-	static String lastParameter, forinit, forlimit, forConditionOperator, forCounterDatatype;
+	static String lastParameter, forinit, forlimit, forConditionOperator,
+			forCounterDatatype;
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
+	static boolean enterelse = false;
 	static Stack<String> operators = new Stack<String>();
 
 	public static void main(String[] args) throws IOException {
@@ -357,7 +359,13 @@ public class Main {
 					// TODO Auto-generated method stub
 					int count = ctx.getChildCount();
 					try {
-						bw.write(ctx.getChild(count - 1).toString() + "\n");
+						bw.write(ctx.getChild(count - 1).toString());
+						if(enterelse) {
+							bw.write(" else ");
+							enterelse = false;
+						} else {
+							bw.write("\n");
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -367,26 +375,7 @@ public class Main {
 				public void enterUnannPrimitiveType(
 						UnannPrimitiveTypeContext ctx) {
 					// TODO Auto-generated method stub
-					String type = ctx.getText();
-					try {
-						if (type.equals("int") || type.equals("short")
-								|| type.equals("long")) {
-							bw.write("Integer ");
-						} else if (type.equals("byte")) {
-							bw.write("Byte ");
-						} else if (type.equals("char")) {
-							bw.write("Character ");
-						} else if (type.equals("float")
-								|| type.equals("double")) {
-							bw.write("Float ");
-						} else if (type.equals("boolean")) {
-							bw.write("Boolean ");
-						}
-
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					
 				}
 
 				public void enterResult(ResultContext ctx) {
@@ -1284,7 +1273,8 @@ public class Main {
 				public void exitForInit(ForInitContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						forCounterDatatype = ctx.getChild(0).getChild(0).getText();
+						forCounterDatatype = ctx.getChild(0).getChild(0)
+								.getText();
 						bw.write(" in (" + forinit);
 					} catch (IOException e) {
 						e.getStackTrace();
@@ -1334,15 +1324,18 @@ public class Main {
 
 				public void exitExpression(ExpressionContext ctx) {
 					// TODO Auto-generated method stub
-					if (enterif || enterwhile) {
-						try {
+
+					try {
+						if (enterif || enterwhile) {
 							bw.write(")");
 							enterif = enterwhile = false;
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+							enterelse = true;
+						} 
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
+
 				}
 
 				public void exitExplicitConstructorInvocation(
@@ -1582,7 +1575,12 @@ public class Main {
 				public void exitClassInstanceCreationExpression_lfno_primary(
 						ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitClassInstanceCreationExpression_lf_primary(
@@ -1858,7 +1856,28 @@ public class Main {
 
 				public void enterUnannType(UnannTypeContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.getText();
+					try {
+						if (type.equals("int") || type.equals("short")
+								|| type.equals("long")) {
+							bw.write("Integer ");
+						} else if (type.equals("byte")) {
+							bw.write("Byte ");
+						} else if (type.equals("char")) {
+							bw.write("Character ");
+						} else if (type.equals("float")
+								|| type.equals("double")) {
+							bw.write("Float ");
+						} else if (type.equals("boolean")) {
+							bw.write("Boolean ");
+						} else {
+							bw.write(type + " ");
+						}
 
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterUnannReferenceType(
@@ -2539,7 +2558,13 @@ public class Main {
 				public void enterIfThenElseStatement(
 						IfThenElseStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterif = true;
+					try {
+						bw.write(ctx.getChild(0).getText()
+								+ ctx.getChild(1).getText());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 
 				public void enterFormalParameters(FormalParametersContext ctx) {
@@ -2565,11 +2590,13 @@ public class Main {
 								|| forConditionOperator.equals(">="))
 							bw.write(".." + forlimit + ")");
 						else if (isNumeric(forlimit)) {
-							if(forCounterDatatype.equals("int"))
-								bw.write(".." + (int)(Double.parseDouble(forlimit) - 1)
-									+ ")");
-							else 
-								bw.write(".." + (Double.parseDouble(forlimit) - 1)
+							if (forCounterDatatype.equals("int"))
+								bw.write(".."
+										+ (int) (Double.parseDouble(forlimit) - 1)
+										+ ")");
+							else
+								bw.write(".."
+										+ (Double.parseDouble(forlimit) - 1)
 										+ ")");
 						} else
 							bw.write(".." + forlimit + " - 1)");
@@ -2903,7 +2930,12 @@ public class Main {
 				public void enterClassInstanceCreationExpression_lfno_primary(
 						ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getChild(1) + "(");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterClassInstanceCreationExpression_lf_primary(
@@ -3118,7 +3150,7 @@ public class Main {
 			frame.add(jScrollPane);
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(500, 500);
-			frame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 			frame.setVisible(true);
 
