@@ -262,17 +262,21 @@ public class Main {
 	 * @throws IOException
 	 */
 
-	static String lastParameter, forinit, forlimit, forConditionOperator,
+	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype;
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
 	static boolean enterelse = false;
 	static Stack<String> operators = new Stack<String>();
+	protected static boolean enterswitch = false;
+	protected static boolean enterArgumentList = false;
+	protected static String lastActualParameter;
+	static int lastActualParameterIndex, numOfArguments;
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.out
+			System.err
 					.println("First Argument: original java file.\nSecond Argument: destination ceylon file");
 		} else {
 			File f = new File(args[0]);
@@ -354,7 +358,7 @@ public class Main {
 					int count = ctx.getChildCount();
 					try {
 						bw.write(ctx.getChild(count - 1).toString());
-						if(enterelse) {
+						if (enterelse) {
 							bw.write(" else ");
 							enterelse = false;
 						} else {
@@ -369,7 +373,7 @@ public class Main {
 				public void enterUnannPrimitiveType(
 						UnannPrimitiveTypeContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void enterResult(ResultContext ctx) {
@@ -707,18 +711,36 @@ public class Main {
 
 				public void exitSwitchLabel(SwitchLabelContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (ctx.getChild(0).toString().equals("case"))
+							bw.write(") {\n");
+						else
+							bw.write("{\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitSwitchBlockStatementGroup(
 						SwitchBlockStatementGroupContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("}\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitSwitchBlock(SwitchBlockContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitSuperinterfaces(SuperinterfacesContext ctx) {
@@ -1234,7 +1256,7 @@ public class Main {
 					// TODO Auto-generated method stub
 					try {
 						if (!ctx.variableDeclaratorId().getText()
-								.equals(lastParameter))
+								.equals(lastFormalParameter))
 							bw.write(", ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -1320,11 +1342,16 @@ public class Main {
 					// TODO Auto-generated method stub
 
 					try {
-						if (enterif || enterwhile) {
+
+						if (enterif || enterwhile || enterswitch) {
 							bw.write(")");
-							enterif = enterwhile = false;
-							enterelse = true;
-						} 
+							enterif = enterwhile = enterswitch = false;
+						} else if (enterArgumentList) {
+							numOfArguments++;
+							if (!(ctx.getText().equals(lastActualParameter) && lastActualParameterIndex == numOfArguments)) {
+								bw.write(", ");
+							}
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -1569,12 +1596,6 @@ public class Main {
 				public void exitClassInstanceCreationExpression_lfno_primary(
 						ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(")");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void exitClassInstanceCreationExpression_lf_primary(
@@ -1708,7 +1729,14 @@ public class Main {
 
 				public void exitArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(")");
+						enterArgumentList = false;
+						numOfArguments = 0;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitAnnotationTypeMemberDeclaration(
@@ -2028,7 +2056,13 @@ public class Main {
 
 				public void enterSwitchStatement(SwitchStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("switch(");
+						enterswitch = true;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterSwitchLabels(SwitchLabelsContext ctx) {
@@ -2038,7 +2072,15 @@ public class Main {
 
 				public void enterSwitchLabel(SwitchLabelContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (ctx.getChild(0).toString().equals("case"))
+							bw.write(ctx.getChild(0) + "(");
+						else
+							bw.write("else ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterSwitchBlockStatementGroup(
@@ -2049,7 +2091,12 @@ public class Main {
 
 				public void enterSwitchBlock(SwitchBlockContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterSuperinterfaces(SuperinterfacesContext ctx) {
@@ -2342,7 +2389,12 @@ public class Main {
 
 				public void enterMethodName(MethodNameContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterMethodInvocation_lfno_primary(
@@ -2359,7 +2411,15 @@ public class Main {
 
 				public void enterMethodInvocation(MethodInvocationContext ctx) {
 					// TODO Auto-generated method stub
+					enterArgumentList = true;
 
+					try {
+						if (ctx.getChild(0).getText().equals("System.out"))
+							bw.write("print");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterMethodHeader(MethodHeaderContext ctx) {
@@ -2417,7 +2477,7 @@ public class Main {
 				public void enterLastFormalParameter(
 						LastFormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-					lastParameter = ctx.formalParameter()
+					lastFormalParameter = ctx.formalParameter()
 							.variableDeclaratorId().getText();
 				}
 
@@ -2553,6 +2613,7 @@ public class Main {
 						IfThenElseStatementContext ctx) {
 					// TODO Auto-generated method stub
 					enterif = true;
+					enterelse = true;
 					try {
 						bw.write(ctx.getChild(0).getText()
 								+ ctx.getChild(1).getText());
@@ -2925,7 +2986,9 @@ public class Main {
 						ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getChild(1) + "(");
+						bw.write(ctx.getChild(1).getText());
+						enterArgumentList = true;
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2983,7 +3046,6 @@ public class Main {
 
 				public void enterBreakStatement(BreakStatementContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterBlockStatements(BlockStatementsContext ctx) {
@@ -3070,7 +3132,16 @@ public class Main {
 
 				public void enterArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
-
+					lastActualParameter = ctx.getChild(ctx.getChildCount() - 1)
+							.getText();
+					lastActualParameterIndex = ctx.getChildCount() / 2 + 1;
+					numOfArguments = 0;
+					try {
+						bw.write("(");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterAnnotationTypeMemberDeclaration(
@@ -3134,19 +3205,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			// JFrame frame = new JFrame("Antlr AST");
+			// JPanel panel = new JPanel();
+			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+			// .getRuleNames()), tree);
+			// viewer.setScale(1.1);
+			// panel.add(viewer);
+			// JScrollPane jScrollPane = new JScrollPane(panel);
+			// frame.add(jScrollPane);
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setSize(500, 500);
+			// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+			//
+			// frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
