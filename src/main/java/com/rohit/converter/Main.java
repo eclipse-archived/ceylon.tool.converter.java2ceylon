@@ -256,18 +256,19 @@ import com.rohit.converter.Java8Parser.WildcardContext;
 public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
-			forCounterDatatype;
+			forCounterDatatype, lastActualParameter = "", variableModifier = "";
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
 	static boolean enterelse = false;
 	static boolean enterresult = false;
-	static Stack<String> operators = new Stack<String>();
 	static boolean enterswitch = false;
 	static boolean enterArgumentList = false;
-	static String lastActualParameter;
-	static int lastActualParameterIndex, numOfArguments;
-	static String variableModifier = "";
+
+	static int lastActualParameterIndex = 0, numOfArguments = 0;
+	
+
+	static Stack<String> operators = new Stack<String>();
 
 	/**
 	 * Main Method
@@ -1062,7 +1063,12 @@ public class Main {
 
 				public void exitMethodInvocation(MethodInvocationContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitMethodHeader(MethodHeaderContext ctx) {
@@ -1731,14 +1737,8 @@ public class Main {
 
 				public void exitArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(")");
-						enterArgumentList = false;
-						numOfArguments = 0;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					enterArgumentList = false;
+					numOfArguments = 0;
 				}
 
 				public void exitAnnotationTypeMemberDeclaration(
@@ -2399,12 +2399,6 @@ public class Main {
 
 				public void enterMethodName(MethodNameContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.getText());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void enterMethodInvocation_lfno_primary(
@@ -2421,11 +2415,35 @@ public class Main {
 
 				public void enterMethodInvocation(MethodInvocationContext ctx) {
 					// TODO Auto-generated method stub
-					enterArgumentList = true;
 
 					try {
-						if (ctx.getChild(0).getText().equals("System.out"))
-							bw.write("print");
+						// if ((ctx.getChild(0).getText()).equals("System.out"))
+						// bw.write("print(");
+						// else
+						// bw.write(ctx.methodName().getText() + "(");
+
+						if (ctx.argumentList() != null) {
+							if (ctx.getText().equals(
+									"System.out.println("
+											+ ctx.argumentList().getText()
+											+ ")")) {
+								bw.write("print(");
+							} else if (ctx.getText().equals(
+									"System.out.print("
+											+ ctx.argumentList().getText()
+											+ ")")) {
+								bw.write("process.write(");
+							} else
+								bw.write(ctx.methodName().getText() + "(");
+						} else {
+							if (ctx.getText().equals("System.out.println()")) {
+								bw.write("print(\"\"");
+							} else if (ctx.getText().equals(
+									"System.out.print()")) {
+								bw.write("process.write(\"\"");
+							} else
+								bw.write(ctx.methodName().getText() + "(");
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -3152,16 +3170,12 @@ public class Main {
 
 				public void enterArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
+					enterArgumentList = true;
+					
 					lastActualParameter = ctx.getChild(ctx.getChildCount() - 1)
 							.getText();
 					lastActualParameterIndex = ctx.getChildCount() / 2 + 1;
 					numOfArguments = 0;
-					try {
-						bw.write("(");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void enterAnnotationTypeMemberDeclaration(
