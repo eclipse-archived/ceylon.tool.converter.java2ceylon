@@ -268,11 +268,13 @@ public class Main {
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
 	static boolean enterelse = false;
+	static boolean enterresult = false;
 	static Stack<String> operators = new Stack<String>();
-	protected static boolean enterswitch = false;
-	protected static boolean enterArgumentList = false;
-	protected static String lastActualParameter;
+	static boolean enterswitch = false;
+	static boolean enterArgumentList = false;
+	static String lastActualParameter;
 	static int lastActualParameterIndex, numOfArguments;
+	static String variableModifier = "";
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
@@ -379,6 +381,7 @@ public class Main {
 				public void enterResult(ResultContext ctx) {
 					// TODO Auto-generated method stub
 					try {
+						enterresult = true;
 						if (ctx.getChild(0).toString().equals("void"))
 							bw.write(ctx.getChild(0).toString() + " ");
 					} catch (IOException e) {
@@ -832,7 +835,7 @@ public class Main {
 
 				public void exitResult(ResultContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterresult = false;
 				}
 
 				public void exitResourceSpecification(
@@ -1064,7 +1067,6 @@ public class Main {
 
 				public void exitMethodHeader(MethodHeaderContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void exitMethodDeclarator(MethodDeclaratorContext ctx) {
@@ -1822,7 +1824,7 @@ public class Main {
 
 				public void enterVariableModifier(VariableModifierContext ctx) {
 					// TODO Auto-generated method stub
-
+					variableModifier = ctx.getText();
 				}
 
 				public void enterVariableInitializerList(
@@ -1879,7 +1881,11 @@ public class Main {
 				public void enterUnannType(UnannTypeContext ctx) {
 					// TODO Auto-generated method stub
 					String type = ctx.getText();
+
 					try {
+						if(!variableModifier.equals("final") && !enterfor && !enterresult)
+							bw.write("variable ");
+
 						if (type.equals("int") || type.equals("short")
 								|| type.equals("long")) {
 							bw.write("Integer ");
@@ -1895,6 +1901,8 @@ public class Main {
 						} else {
 							bw.write(type + " ");
 						}
+						
+						variableModifier = "";
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2451,7 +2459,6 @@ public class Main {
 				public void enterLocalVariableDeclaration(
 						LocalVariableDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterLiteral(LiteralContext ctx) {
@@ -3205,19 +3212,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			// .getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+//			JFrame frame = new JFrame("Antlr AST");
+//			JPanel panel = new JPanel();
+//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//					.getRuleNames()), tree);
+//			viewer.setScale(1.1);
+//			panel.add(viewer);
+//			JScrollPane jScrollPane = new JScrollPane(panel);
+//			frame.add(jScrollPane);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(500, 500);
+//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//
+//			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();

@@ -8,6 +8,9 @@ public class TestClass {
 	}
 
 	public void bar(int b, boolean c) {
+		
+		final int d = 4;
+
 		if (b > 5 && c || b < 2) {
 			b = 5;
 		} else if (b < 4) {
@@ -18,7 +21,7 @@ public class TestClass {
 
 		int a = 4;
 
-		foo(a, b, a, b);
+		foo(a, b, a, 1.5f);
 
 		switch (b) {
 		case 1:
@@ -31,7 +34,7 @@ public class TestClass {
 			break;
 		}
 
-		for (int i = a; i < b; i++) {
+		for (int i = a; i <= b; i++) {
 			b = 6;
 		}
 
