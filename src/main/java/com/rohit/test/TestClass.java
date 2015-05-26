@@ -1,13 +1,18 @@
 package com.rohit.test;
 
+import java.io.IOException;
+
 public class TestClass {
+	
+	public final int f = 2;
+	
 	public int foo(int x, int y, int z, float a) {
 		int c = x + y;
 
 		return c;
 	}
 
-	public void bar(int b, boolean c) {
+	public void bar(int b, boolean c) throws IOException {
 		
 		final int d = 4;
 

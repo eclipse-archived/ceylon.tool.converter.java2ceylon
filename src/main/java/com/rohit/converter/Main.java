@@ -255,13 +255,6 @@ import com.rohit.converter.Java8Parser.WildcardContext;
 
 public class Main {
 
-	/**
-	 * Main Method
-	 * 
-	 * @param args
-	 * @throws IOException
-	 */
-
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype;
 	static boolean enterif = false;
@@ -276,6 +269,13 @@ public class Main {
 	static int lastActualParameterIndex, numOfArguments;
 	static String variableModifier = "";
 
+	/**
+	 * Main Method
+	 * 
+	 * @author rohitmohan96
+	 * @param args
+	 * @throws IOException
+	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.err
@@ -1824,6 +1824,7 @@ public class Main {
 
 				public void enterVariableModifier(VariableModifierContext ctx) {
 					// TODO Auto-generated method stub
+
 					variableModifier = ctx.getText();
 				}
 
@@ -1883,8 +1884,11 @@ public class Main {
 					String type = ctx.getText();
 
 					try {
-						if(!variableModifier.equals("final") && !enterfor && !enterresult)
-							bw.write("variable ");
+						if (!enterfor && !enterresult) {
+							if (!variableModifier.equals("final"))
+								bw.write("variable ");
+						}
+						variableModifier = "";
 
 						if (type.equals("int") || type.equals("short")
 								|| type.equals("long")) {
@@ -1901,8 +1905,6 @@ public class Main {
 						} else {
 							bw.write(type + " ");
 						}
-						
-						variableModifier = "";
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2696,7 +2698,18 @@ public class Main {
 
 				public void enterFieldModifier(FieldModifierContext ctx) {
 					// TODO Auto-generated method stub
+					variableModifier = ctx.getText();
+					try {
+						if (!enterfor && !enterresult) {
+							if (variableModifier.equals("public"))
 
+								bw.write("shared ");
+
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterFieldDeclaration(FieldDeclarationContext ctx) {
