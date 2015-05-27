@@ -10,7 +10,6 @@ public class TestClass {
 	}
 
 	public void bar(int b, boolean c) {
-
 		final int d = 4;
 
 		if (b == 5 && c || b < 2) {

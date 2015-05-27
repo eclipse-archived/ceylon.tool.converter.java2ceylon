@@ -257,7 +257,7 @@ public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype, lastActualParameter = "",
-			variableModifier = "";
+			variableModifier = "", variableListType = "";
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
@@ -265,11 +265,13 @@ public class Main {
 	static boolean enterresult = false;
 	static boolean enterswitch = false;
 	static boolean enterArgumentList = false;
+	static boolean multipleVariables = false;
 
 	static int lastActualParameterIndex = 0, numOfArguments = 0;
 
 	static Stack<String> operators = new Stack<String>();
 	static String lastInterface;
+	protected static String firstVariableInList;
 
 	/**
 	 * Main Method
@@ -311,22 +313,12 @@ public class Main {
 				public void exitLocalVariableDeclarationStatement(
 						LocalVariableDeclarationStatementContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.getChild(ctx.getChildCount() - 1) + "\n");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
 				}
 
 				public void exitFieldDeclaration(FieldDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.getChild(ctx.getChildCount() - 1) + "\n");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
 				}
 
 				public void exitExpressionStatement(
@@ -507,12 +499,18 @@ public class Main {
 				public void exitVariableDeclaratorList(
 						VariableDeclaratorListContext ctx) {
 					// TODO Auto-generated method stub
-
+					multipleVariables = false;
 				}
 
 				public void exitVariableDeclarator(VariableDeclaratorContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (!enterfor)
+							bw.write(";\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitUnaryExpressionNotPlusMinus(
@@ -1047,7 +1045,13 @@ public class Main {
 
 				public void exitMethodInvocation_lfno_primary(
 						MethodInvocation_lfno_primaryContext ctx) {
-					// TODO Auto-generated method stub
+					// TODO Auto-generated method stubtry {
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 				}
 
@@ -1616,6 +1620,12 @@ public class Main {
 				public void exitClassInstanceCreationExpression_lfno_primary(
 						ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitClassInstanceCreationExpression_lf_primary(
@@ -1861,7 +1871,11 @@ public class Main {
 				public void enterVariableDeclaratorList(
 						VariableDeclaratorListContext ctx) {
 					// TODO Auto-generated method stub
+					firstVariableInList = ctx.getChild(0).getText();
 
+					if (ctx.getChildCount() > 1) {
+						multipleVariables = true;
+					}
 				}
 
 				public void enterVariableDeclaratorId(
@@ -1878,6 +1892,15 @@ public class Main {
 				public void enterVariableDeclarator(
 						VariableDeclaratorContext ctx) {
 					// TODO Auto-generated method stub
+					if (multipleVariables
+							&& !ctx.getText().equals(firstVariableInList)) {
+						try {
+							bw.write(variableListType);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 				}
 
 				public void enterUnaryExpressionNotPlusMinus(
@@ -1903,8 +1926,10 @@ public class Main {
 
 					try {
 						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final"))
+							if (!variableModifier.equals("final")) {
 								bw.write("variable ");
+								variableListType = "variable ";
+							}
 						}
 						variableModifier = "";
 
@@ -1923,6 +1948,8 @@ public class Main {
 						} else {
 							ceylonType = type + " ";
 						}
+
+						variableListType += ceylonType;
 
 						bw.write(ceylonType);
 					} catch (IOException e) {
@@ -2444,6 +2471,34 @@ public class Main {
 				public void enterMethodInvocation_lfno_primary(
 						MethodInvocation_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
+					try {
+						int a = ctx.getChildCount();
+						String str = "";
+
+						for (int i = 0; i < a; i++) {
+							if (ctx.getChild(i).getText().equals("("))
+								break;
+
+							str += ctx.getChild(i).getText();
+
+						}
+
+						if (str.equals("System.out.println")) {
+							bw.write("print");
+							if (ctx.argumentList() == null)
+								bw.write("\"\"");
+						} else if (str.equals("System.out.print")) {
+							bw.write("process.write");
+						} else {
+							bw.write(str);
+							if (ctx.argumentList() == null)
+								bw.write("(");
+						}
+
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 				}
 
@@ -2461,20 +2516,24 @@ public class Main {
 						String str = "";
 
 						for (int i = 0; i < a; i++) {
-							str += ctx.getChild(i).getText();
-
 							if (ctx.getChild(i).getText().equals("("))
 								break;
+
+							str += ctx.getChild(i).getText();
+
 						}
 
-						if (str.equals("System.out.println(")) {
-							bw.write("print(");
+						if (str.equals("System.out.println")) {
+							bw.write("print");
 							if (ctx.argumentList() == null)
 								bw.write("\"\"");
-						} else if (str.equals("System.out.print(")) {
-							bw.write("process.write(");
-						} else
+						} else if (str.equals("System.out.print")) {
+							bw.write("process.write");
+						} else {
 							bw.write(str);
+							if (ctx.argumentList() == null)
+								bw.write("(");
+						}
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -3085,7 +3144,12 @@ public class Main {
 					// TODO Auto-generated method stub
 					try {
 						bw.write(ctx.getChild(1).getText());
-						enterArgumentList = true;
+
+						if (ctx.argumentList() != null) {
+							enterArgumentList = true;
+						} else {
+							bw.write("(");
+						}
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -3231,6 +3295,12 @@ public class Main {
 				public void enterArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
 					enterArgumentList = true;
+					try {
+						bw.write("(");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 					lastActualParameter = ctx.getChild(ctx.getChildCount() - 1)
 							.getText();
