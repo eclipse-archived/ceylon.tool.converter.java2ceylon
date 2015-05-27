@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +19,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -269,6 +275,7 @@ public class Main {
 	static int lastActualParameterIndex = 0, numOfArguments = 0;
 
 	static Stack<String> operators = new Stack<String>();
+	static String lastInterface;
 
 	/**
 	 * Main Method
@@ -1162,6 +1169,14 @@ public class Main {
 
 				public void exitInterfaceType(InterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
+					if (!ctx.getText().equals(lastInterface)) {
+						try {
+							bw.write(" & ");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 
 				}
 
@@ -1196,7 +1211,14 @@ public class Main {
 
 				public void exitInterfaceBody(InterfaceBodyContext ctx) {
 					// TODO Auto-generated method stub
+					int count = ctx.getChildCount();
 
+					try {
+						bw.write(ctx.getChild(count - 1).toString());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitIntegralType(IntegralTypeContext ctx) {
@@ -2114,12 +2136,23 @@ public class Main {
 
 				public void enterSuperinterfaces(SuperinterfacesContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("satisfies ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterSuperclass(SuperclassContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getChild(0).getText() + " "
+								+ ctx.getChild(1).getText() + "() ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterStaticInitializer(StaticInitializerContext ctx) {
@@ -2369,7 +2402,17 @@ public class Main {
 				public void enterNormalInterfaceDeclaration(
 						NormalInterfaceDeclarationContext ctx) {
 					// TODO Auto-generated method stub
+					String modifier = " ";
+					if (ctx.interfaceModifier(0).getText().equals("public"))
+						modifier = "shared ";
 
+					try {
+						bw.write(modifier + "interface " + ctx.Identifier()
+								+ " ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterNormalAnnotation(NormalAnnotationContext ctx) {
@@ -2420,45 +2463,6 @@ public class Main {
 					// TODO Auto-generated method stub
 
 					try {
-						// if ((ctx.getChild(0).getText()).equals("System.out"))
-						// bw.write("print(");
-						// else
-						// bw.write(ctx.methodName().getText() + "(");
-
-						// if (ctx.argumentList() != null) {
-						// if (ctx.getText().equals(
-						// "System.out.println("
-						// + ctx.argumentList().getText()
-						// + ")")) {
-						// bw.write("print(");
-						// } else if (ctx.getText().equals(
-						// "System.out.print("
-						// + ctx.argumentList().getText()
-						// + ")")) {
-						// bw.write("process.write(");
-						// } else {
-						// try {
-						// bw.write(ctx.methodName().getText() + "(");
-						// } catch (NullPointerException e) {
-						// int a = ctx.getChildCount();
-						// for (int i = 0; i < a; i++) {
-						// bw.write(ctx.getChild(i).getText());
-						//
-						// if (ctx.getChild(i).getText()
-						// .equals("("))
-						// break;
-						// }
-						// }
-						// }
-						// } else {
-						// if (ctx.getText().equals("System.out.println()")) {
-						// bw.write("print(\"\"");
-						// } else if (ctx.getText().equals(
-						// "System.out.print()")) {
-						// bw.write("process.write(\"\"");
-						// } else
-						// bw.write(ctx.methodName().getText() + "(");
-						// }
 						int a = ctx.getChildCount();
 						String str = "";
 
@@ -2471,7 +2475,7 @@ public class Main {
 
 						if (str.equals("System.out.println(")) {
 							bw.write("print(");
-							if(ctx.argumentList() == null) 
+							if (ctx.argumentList() == null)
 								bw.write("\"\"");
 						} else if (str.equals("System.out.print(")) {
 							bw.write("process.write(");
@@ -2496,7 +2500,13 @@ public class Main {
 
 				public void enterMethodBody(MethodBodyContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getText().equals(";"))
+						try {
+							bw.write(";\n");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 
 				public void enterMarkerAnnotation(MarkerAnnotationContext ctx) {
@@ -2583,12 +2593,13 @@ public class Main {
 
 				public void enterInterfaceTypeList(InterfaceTypeListContext ctx) {
 					// TODO Auto-generated method stub
+					lastInterface = ctx.getChild(ctx.getChildCount() - 1)
+							.getText();
 
 				}
 
 				public void enterInterfaceType(InterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterInterfaceModifier(InterfaceModifierContext ctx) {
@@ -2599,7 +2610,13 @@ public class Main {
 				public void enterInterfaceMethodModifier(
 						InterfaceMethodModifierContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getText().equals("public"))
+						try {
+							bw.write("shared ");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 
 				public void enterInterfaceMethodDeclaration(
@@ -2622,7 +2639,12 @@ public class Main {
 
 				public void enterInterfaceBody(InterfaceBodyContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getChild(0).toString() + "\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterIntegralType(IntegralTypeContext ctx) {
@@ -3039,7 +3061,12 @@ public class Main {
 
 				public void enterClassType(ClassTypeContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterClassOrInterfaceType(
@@ -3279,19 +3306,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
