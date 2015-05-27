@@ -256,7 +256,8 @@ import com.rohit.converter.Java8Parser.WildcardContext;
 public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
-			forCounterDatatype, lastActualParameter = "", variableModifier = "";
+			forCounterDatatype, lastActualParameter = "",
+			variableModifier = "";
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
@@ -266,7 +267,6 @@ public class Main {
 	static boolean enterArgumentList = false;
 
 	static int lastActualParameterIndex = 0, numOfArguments = 0;
-	
 
 	static Stack<String> operators = new Stack<String>();
 
@@ -304,12 +304,7 @@ public class Main {
 				public void exitVariableDeclaratorId(
 						VariableDeclaratorIdContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.getText());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
 				}
 
 				public void exitLocalVariableDeclarationStatement(
@@ -1344,6 +1339,7 @@ public class Main {
 
 				public void exitExpressionName(ExpressionNameContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void exitExpression(ExpressionContext ctx) {
@@ -1849,18 +1845,23 @@ public class Main {
 				public void enterVariableDeclaratorList(
 						VariableDeclaratorListContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void enterVariableDeclaratorId(
 						VariableDeclaratorIdContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterVariableDeclarator(
 						VariableDeclaratorContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void enterUnaryExpressionNotPlusMinus(
@@ -1882,6 +1883,7 @@ public class Main {
 				public void enterUnannType(UnannTypeContext ctx) {
 					// TODO Auto-generated method stub
 					String type = ctx.getText();
+					String ceylonType = "";
 
 					try {
 						if (!enterfor && !enterresult) {
@@ -1892,20 +1894,21 @@ public class Main {
 
 						if (type.equals("int") || type.equals("short")
 								|| type.equals("long")) {
-							bw.write("Integer ");
+							ceylonType = "Integer ";
 						} else if (type.equals("byte")) {
-							bw.write("Byte ");
+							ceylonType = "Byte ";
 						} else if (type.equals("char")) {
-							bw.write("Character ");
+							ceylonType = "Character ";
 						} else if (type.equals("float")
 								|| type.equals("double")) {
-							bw.write("Float ");
+							ceylonType = "Float ";
 						} else if (type.equals("boolean")) {
-							bw.write("Boolean ");
+							ceylonType = "Boolean ";
 						} else {
-							bw.write(type + " ");
+							ceylonType = type + " ";
 						}
 
+						bw.write(ceylonType);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2422,28 +2425,59 @@ public class Main {
 						// else
 						// bw.write(ctx.methodName().getText() + "(");
 
-						if (ctx.argumentList() != null) {
-							if (ctx.getText().equals(
-									"System.out.println("
-											+ ctx.argumentList().getText()
-											+ ")")) {
-								bw.write("print(");
-							} else if (ctx.getText().equals(
-									"System.out.print("
-											+ ctx.argumentList().getText()
-											+ ")")) {
-								bw.write("process.write(");
-							} else
-								bw.write(ctx.methodName().getText() + "(");
-						} else {
-							if (ctx.getText().equals("System.out.println()")) {
-								bw.write("print(\"\"");
-							} else if (ctx.getText().equals(
-									"System.out.print()")) {
-								bw.write("process.write(\"\"");
-							} else
-								bw.write(ctx.methodName().getText() + "(");
+						// if (ctx.argumentList() != null) {
+						// if (ctx.getText().equals(
+						// "System.out.println("
+						// + ctx.argumentList().getText()
+						// + ")")) {
+						// bw.write("print(");
+						// } else if (ctx.getText().equals(
+						// "System.out.print("
+						// + ctx.argumentList().getText()
+						// + ")")) {
+						// bw.write("process.write(");
+						// } else {
+						// try {
+						// bw.write(ctx.methodName().getText() + "(");
+						// } catch (NullPointerException e) {
+						// int a = ctx.getChildCount();
+						// for (int i = 0; i < a; i++) {
+						// bw.write(ctx.getChild(i).getText());
+						//
+						// if (ctx.getChild(i).getText()
+						// .equals("("))
+						// break;
+						// }
+						// }
+						// }
+						// } else {
+						// if (ctx.getText().equals("System.out.println()")) {
+						// bw.write("print(\"\"");
+						// } else if (ctx.getText().equals(
+						// "System.out.print()")) {
+						// bw.write("process.write(\"\"");
+						// } else
+						// bw.write(ctx.methodName().getText() + "(");
+						// }
+						int a = ctx.getChildCount();
+						String str = "";
+
+						for (int i = 0; i < a; i++) {
+							str += ctx.getChild(i).getText();
+
+							if (ctx.getChild(i).getText().equals("("))
+								break;
 						}
+
+						if (str.equals("System.out.println(")) {
+							bw.write("print(");
+							if(ctx.argumentList() == null) 
+								bw.write("\"\"");
+						} else if (str.equals("System.out.print(")) {
+							bw.write("process.write(");
+						} else
+							bw.write(str);
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2479,6 +2513,7 @@ public class Main {
 				public void enterLocalVariableDeclaration(
 						LocalVariableDeclarationContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void enterLiteral(LiteralContext ctx) {
@@ -2610,7 +2645,8 @@ public class Main {
 				public void enterInclusiveOrExpression(
 						InclusiveOrExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterImportDeclaration(ImportDeclarationContext ctx) {
@@ -2662,6 +2698,7 @@ public class Main {
 
 				public void enterFormalParameter(FormalParameterContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void enterForUpdate(ForUpdateContext ctx) {
@@ -2791,7 +2828,8 @@ public class Main {
 				public void enterExclusiveOrExpression(
 						ExclusiveOrExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterExceptionTypeList(ExceptionTypeListContext ctx) {
@@ -2807,7 +2845,8 @@ public class Main {
 				public void enterEqualityExpression(
 						EqualityExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterEnumDeclaration(EnumDeclarationContext ctx) {
@@ -3171,7 +3210,7 @@ public class Main {
 				public void enterArgumentList(ArgumentListContext ctx) {
 					// TODO Auto-generated method stub
 					enterArgumentList = true;
-					
+
 					lastActualParameter = ctx.getChild(ctx.getChildCount() - 1)
 							.getText();
 					lastActualParameterIndex = ctx.getChildCount() / 2 + 1;
@@ -3215,7 +3254,8 @@ public class Main {
 
 				public void enterAndExpression(AndExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterAmbiguousName(AmbiguousNameContext ctx) {
