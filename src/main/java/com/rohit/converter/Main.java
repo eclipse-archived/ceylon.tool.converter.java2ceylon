@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +19,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -272,6 +278,8 @@ public class Main {
 	static Stack<String> operators = new Stack<String>();
 	static String lastInterface;
 	protected static String firstVariableInList;
+	protected static boolean enterTypeArgumentsList;
+	protected static boolean enterTypeParametersList;
 
 	/**
 	 * Main Method
@@ -386,8 +394,24 @@ public class Main {
 					String modifier = " ";
 					if (ctx.classModifier(0).getText().equals("public"))
 						modifier = "shared ";
+
+					for (int i = 0; i < ctx.classModifier().size(); i++) {
+						String mod = ctx.classModifier(i).getText();
+						if (mod.equals("public"))
+							modifier = "shared ";
+						else if (mod.equals("abstract"))
+							modifier = "abstract ";
+
+					}
+
 					try {
-						bw.write(modifier + "class " + ctx.Identifier() + "() ");
+						if(ctx.typeParameters() == null)
+							bw.write(modifier + "class " + ctx.Identifier() + "() ");
+						else {
+							enterTypeParametersList = true;
+							bw.write(modifier + "class " + ctx.Identifier());
+						}
+							
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -396,13 +420,15 @@ public class Main {
 
 				public void enterMethodModifier(MethodModifierContext ctx) {
 					// TODO Auto-generated method stub
-					if (ctx.getText().equals("public"))
-						try {
+					try {
+						if (ctx.getText().equals("public"))
 							bw.write("shared ");
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						else if (ctx.getText().equals("abstract"))
+							bw.write("formal ");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
 				}
 
 				public void enterMethodDeclarator(MethodDeclaratorContext ctx) {
@@ -604,7 +630,12 @@ public class Main {
 
 				public void exitTypeParameters(TypeParametersContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(">()");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitTypeParameterModifier(
@@ -647,7 +678,12 @@ public class Main {
 				public void exitTypeArgumentsOrDiamond(
 						TypeArgumentsOrDiamondContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("(");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitTypeArguments(TypeArgumentsContext ctx) {
@@ -657,7 +693,13 @@ public class Main {
 
 				public void exitTypeArgumentList(TypeArgumentListContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						enterTypeArgumentsList = false;
+						bw.write("> ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitTypeArgument(TypeArgumentContext ctx) {
@@ -1664,7 +1706,12 @@ public class Main {
 				public void exitCatchFormalParameter(
 						CatchFormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(") ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitCatchClause(CatchClauseContext ctx) {
@@ -1824,7 +1871,16 @@ public class Main {
 
 				public void enterWildcard(WildcardContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if ((ctx.getChild(0).getText() + ctx.wildcardBounds()
+								.getChild(0)).equals("?extends"))
+							bw.write("out ");
+						else if ((ctx.getChild(0).getText() + ctx
+								.wildcardBounds().getChild(0)).equals("?super"))
+							bw.write("in ");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 
 				public void enterWhileStatementNoShortIf(
@@ -1921,41 +1977,7 @@ public class Main {
 
 				public void enterUnannType(UnannTypeContext ctx) {
 					// TODO Auto-generated method stub
-					String type = ctx.getText();
-					String ceylonType = "";
 
-					try {
-						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final")) {
-								bw.write("variable ");
-								variableListType = "variable ";
-							}
-						}
-						variableModifier = "";
-
-						if (type.equals("int") || type.equals("short")
-								|| type.equals("long")) {
-							ceylonType = "Integer ";
-						} else if (type.equals("byte")) {
-							ceylonType = "Byte ";
-						} else if (type.equals("char")) {
-							ceylonType = "Character ";
-						} else if (type.equals("float")
-								|| type.equals("double")) {
-							ceylonType = "Float ";
-						} else if (type.equals("boolean")) {
-							ceylonType = "Boolean ";
-						} else {
-							ceylonType = type + " ";
-						}
-
-						variableListType += ceylonType;
-
-						bw.write(ceylonType);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void enterUnannReferenceType(
@@ -1985,6 +2007,27 @@ public class Main {
 				public void enterUnannClassType_lfno_unannClassOrInterfaceType(
 						UnannClassType_lfno_unannClassOrInterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.getChild(0).getText();
+					String ceylonType = "";
+
+					try {
+						if (!enterfor && !enterresult) {
+							if (!variableModifier.equals("final")) {
+								bw.write("variable ");
+								variableListType = "variable ";
+							}
+						}
+						variableModifier = "";
+
+						ceylonType = type + " ";
+
+						variableListType += ceylonType;
+
+						bw.write(ceylonType);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 				}
 
@@ -1996,7 +2039,12 @@ public class Main {
 
 				public void enterUnannClassType(UnannClassTypeContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText() + " ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterUnannClassOrInterfaceType(
@@ -2017,7 +2065,12 @@ public class Main {
 
 				public void enterTypeParameters(TypeParametersContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("<");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterTypeParameterModifier(
@@ -2028,12 +2081,17 @@ public class Main {
 
 				public void enterTypeParameterList(TypeParameterListContext ctx) {
 					// TODO Auto-generated method stub
-
+					
 				}
 
 				public void enterTypeParameter(TypeParameterContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterTypeName(TypeNameContext ctx) {
@@ -2070,7 +2128,13 @@ public class Main {
 
 				public void enterTypeArgumentList(TypeArgumentListContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						enterTypeArgumentsList = true;
+						bw.write("<");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterTypeArgument(TypeArgumentContext ctx) {
@@ -2091,7 +2155,12 @@ public class Main {
 
 				public void enterTryStatement(TryStatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("try ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterThrows_(Throws_Context ctx) {
@@ -2417,7 +2486,41 @@ public class Main {
 
 				public void enterNumericType(NumericTypeContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.getText();
+					String ceylonType = "";
 
+					try {
+						if (!enterfor && !enterresult) {
+							if (!variableModifier.equals("final")) {
+								bw.write("variable ");
+								variableListType = "variable ";
+							}
+						}
+						variableModifier = "";
+
+						if (type.equals("int") || type.equals("short")
+								|| type.equals("long")) {
+							ceylonType = "Integer ";
+						} else if (type.equals("byte")) {
+							ceylonType = "Byte ";
+						} else if (type.equals("char")) {
+							ceylonType = "Character ";
+						} else if (type.equals("float")
+								|| type.equals("double")) {
+							ceylonType = "Float ";
+						} else if (type.equals("boolean")) {
+							ceylonType = "Boolean ";
+						} else {
+							ceylonType = type + " ";
+						}
+
+						variableListType += ceylonType;
+
+						bw.write(ceylonType);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterNormalInterfaceDeclaration(
@@ -2596,7 +2699,13 @@ public class Main {
 
 				public void enterLeftHandSide(LeftHandSideContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (enterfor)
+						try {
+							bw.write(ctx.getText());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 
 				public void enterLastFormalParameter(
@@ -2823,7 +2932,12 @@ public class Main {
 
 				public void enterFinally_(Finally_Context ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("finally ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterFieldModifier(FieldModifierContext ctx) {
@@ -2866,7 +2980,12 @@ public class Main {
 
 				public void enterExtendsInterfaces(ExtendsInterfacesContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("satisfies ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterExpressionStatement(
@@ -3103,7 +3222,12 @@ public class Main {
 				public void enterClassType_lfno_classOrInterfaceType(
 						ClassType_lfno_classOrInterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterClassType_lf_classOrInterfaceType(
@@ -3147,7 +3271,9 @@ public class Main {
 
 						if (ctx.argumentList() != null) {
 							enterArgumentList = true;
-						} else {
+						} else if(ctx.typeArgumentsOrDiamond() != null) {
+							enterTypeArgumentsList = true;
+						}else {
 							bw.write("(");
 						}
 
@@ -3193,12 +3319,22 @@ public class Main {
 				public void enterCatchFormalParameter(
 						CatchFormalParameterContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("(");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterCatchClause(CatchClauseContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("catch ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterCastExpression(CastExpressionContext ctx) {
@@ -3241,7 +3377,8 @@ public class Main {
 						AssignmentOperatorContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getText());
+						if (!enterfor)
+							bw.write(ctx.getText());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -3370,19 +3507,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
