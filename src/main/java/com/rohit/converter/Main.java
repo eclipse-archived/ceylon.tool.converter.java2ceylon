@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +19,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -366,7 +372,41 @@ public class Main {
 				public void enterUnannPrimitiveType(
 						UnannPrimitiveTypeContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.getText();
+					String ceylonType = "";
 
+					try {
+						if (!enterfor && !enterresult) {
+							if (!variableModifier.equals("final")) {
+								bw.write("variable ");
+								variableListType = "variable ";
+							}
+						}
+						variableModifier = "";
+
+						if (type.equals("int") || type.equals("short")
+								|| type.equals("long")) {
+							ceylonType = "Integer ";
+						} else if (type.equals("byte")) {
+							ceylonType = "Byte ";
+						} else if (type.equals("char")) {
+							ceylonType = "Character ";
+						} else if (type.equals("float")
+								|| type.equals("double")) {
+							ceylonType = "Float ";
+						} else if (type.equals("boolean")) {
+							ceylonType = "Boolean ";
+						} else {
+							ceylonType = type + " ";
+						}
+
+						variableListType += ceylonType;
+
+						bw.write(ceylonType);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterResult(ResultContext ctx) {
@@ -2480,41 +2520,7 @@ public class Main {
 
 				public void enterNumericType(NumericTypeContext ctx) {
 					// TODO Auto-generated method stub
-					String type = ctx.getText();
-					String ceylonType = "";
-
-					try {
-						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final")) {
-								bw.write("variable ");
-								variableListType = "variable ";
-							}
-						}
-						variableModifier = "";
-
-						if (type.equals("int") || type.equals("short")
-								|| type.equals("long")) {
-							ceylonType = "Integer ";
-						} else if (type.equals("byte")) {
-							ceylonType = "Byte ";
-						} else if (type.equals("char")) {
-							ceylonType = "Character ";
-						} else if (type.equals("float")
-								|| type.equals("double")) {
-							ceylonType = "Float ";
-						} else if (type.equals("boolean")) {
-							ceylonType = "Boolean ";
-						} else {
-							ceylonType = type + " ";
-						}
-
-						variableListType += ceylonType;
-
-						bw.write(ceylonType);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					
 				}
 
 				public void enterNormalInterfaceDeclaration(
@@ -2661,7 +2667,14 @@ public class Main {
 
 				public void enterMarkerAnnotation(MarkerAnnotationContext ctx) {
 					// TODO Auto-generated method stub
-
+					if(ctx.typeName().getText().equals("Override")) {
+						try {
+							bw.write("actual ");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 				}
 
 				public void enterLocalVariableDeclarationStatement(
@@ -3501,19 +3514,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
