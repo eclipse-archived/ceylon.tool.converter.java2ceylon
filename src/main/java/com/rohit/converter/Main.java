@@ -253,6 +253,11 @@ import com.rohit.converter.Java8Parser.WhileStatementNoShortIfContext;
 import com.rohit.converter.Java8Parser.WildcardBoundsContext;
 import com.rohit.converter.Java8Parser.WildcardContext;
 
+/**
+ * 
+ * @author rohitmohan96
+ * 
+ */
 public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
@@ -274,6 +279,7 @@ public class Main {
 	protected static String firstVariableInList;
 	protected static boolean enterTypeArgumentsList;
 	protected static boolean enterTypeParametersList;
+	protected static boolean enterConstructor;
 
 	/**
 	 * Main Method
@@ -371,7 +377,7 @@ public class Main {
 
 					try {
 						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final")) {
+							if (!variableModifier.equals("final") && !enterConstructor) {
 								bw.write("variable ");
 								variableListType = "variable ";
 							}
@@ -396,7 +402,8 @@ public class Main {
 
 						variableListType += ceylonType;
 
-						bw.write(ceylonType);
+						if (!enterConstructor)
+							bw.write(ceylonType);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -433,13 +440,14 @@ public class Main {
 					}
 
 					try {
-						if(ctx.typeParameters() == null)
-							bw.write(modifier + "class " + ctx.Identifier() + "() ");
+						if (ctx.typeParameters() == null)
+							bw.write(modifier + "class " + ctx.Identifier()
+									+ "() ");
 						else {
 							enterTypeParametersList = true;
 							bw.write(modifier + "class " + ctx.Identifier());
 						}
-							
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -1349,7 +1357,8 @@ public class Main {
 					// TODO Auto-generated method stub
 					try {
 						if (!ctx.variableDeclaratorId().getText()
-								.equals(lastFormalParameter))
+								.equals(lastFormalParameter)
+								&& !enterConstructor)
 							bw.write(", ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -1606,7 +1615,7 @@ public class Main {
 				public void exitConstructorDeclaration(
 						ConstructorDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterConstructor = false;
 				}
 
 				public void exitConstructorBody(ConstructorBodyContext ctx) {
@@ -1966,7 +1975,8 @@ public class Main {
 						VariableDeclaratorIdContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getText());
+						if (!enterConstructor)
+							bw.write(ctx.getText());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2109,7 +2119,7 @@ public class Main {
 
 				public void enterTypeParameterList(TypeParameterListContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void enterTypeParameter(TypeParameterContext ctx) {
@@ -2514,7 +2524,7 @@ public class Main {
 
 				public void enterNumericType(NumericTypeContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void enterNormalInterfaceDeclaration(
@@ -2661,7 +2671,7 @@ public class Main {
 
 				public void enterMarkerAnnotation(MarkerAnnotationContext ctx) {
 					// TODO Auto-generated method stub
-					if(ctx.typeName().getText().equals("Override")) {
+					if (ctx.typeName().getText().equals("Override")) {
 						try {
 							bw.write("actual ");
 						} catch (IOException e) {
@@ -3170,7 +3180,7 @@ public class Main {
 				public void enterConstructorDeclaration(
 						ConstructorDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterConstructor = true;
 				}
 
 				public void enterConstructorBody(ConstructorBodyContext ctx) {
@@ -3272,9 +3282,9 @@ public class Main {
 
 						if (ctx.argumentList() != null) {
 							enterArgumentList = true;
-						} else if(ctx.typeArgumentsOrDiamond() != null) {
+						} else if (ctx.typeArgumentsOrDiamond() != null) {
 							enterTypeArgumentsList = true;
-						}else {
+						} else {
 							bw.write("(");
 						}
 

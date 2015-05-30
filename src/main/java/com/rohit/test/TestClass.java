@@ -8,6 +8,10 @@ public class TestClass {
 		float c = 1 + y + a;
 		return c;
 	}
+	
+	public int foo() {
+		return 0;
+	}
 
 	public void bar(int b, boolean c) {
 		final int d = 4;
