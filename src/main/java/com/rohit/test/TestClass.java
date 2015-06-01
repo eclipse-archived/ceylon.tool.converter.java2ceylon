@@ -8,14 +8,14 @@ public class TestClass {
 		float c = 1 + y + a;
 		return c;
 	}
-	
-	public int foo() {
-		return 0;
-	}
 
 	public void bar(int b, boolean c) {
 		final int d = 4;
 
+		if(b % 2 == 0) {
+			b = 2;
+		}
+		
 		if (b == 5 && c || b < 2) {
 			b = 5;
 		} else if (b < 4) {

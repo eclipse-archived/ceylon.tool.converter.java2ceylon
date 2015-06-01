@@ -5,7 +5,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +19,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -377,7 +383,8 @@ public class Main {
 
 					try {
 						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final") && !enterConstructor) {
+							if (!variableModifier.equals("final")
+									&& !enterConstructor) {
 								bw.write("variable ");
 								variableListType = "variable ";
 							}
@@ -427,17 +434,19 @@ public class Main {
 					// TODO Auto-generated method stub
 
 					String modifier = " ";
-					if (ctx.classModifier(0).getText().equals("public"))
-						modifier = "shared ";
+					// if (ctx.classModifier() != null)
+					// if (ctx.classModifier(0).getText().equals("public"))
+					// modifier = "shared ";
 
-					for (int i = 0; i < ctx.classModifier().size(); i++) {
-						String mod = ctx.classModifier(i).getText();
-						if (mod.equals("public"))
-							modifier = "shared ";
-						else if (mod.equals("abstract"))
-							modifier = "abstract ";
+					if (ctx.classModifier() != null)
+						for (int i = 0; i < ctx.classModifier().size(); i++) {
+							String mod = ctx.classModifier(i).getText();
+							if (mod.equals("public"))
+								modifier = "shared ";
+							else if (mod.equals("abstract"))
+								modifier = "abstract ";
 
-					}
+						}
 
 					try {
 						if (ctx.typeParameters() == null)
@@ -1136,6 +1145,12 @@ public class Main {
 				public void exitMethodInvocation_lf_primary(
 						MethodInvocation_lf_primaryContext ctx) {
 					// TODO Auto-generated method stub
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 				}
 
@@ -2140,7 +2155,12 @@ public class Main {
 				public void enterTypeImportOnDemandDeclaration(
 						TypeImportOnDemandDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("import " + ctx.packageOrTypeName().getText() + "{...}\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterTypeDeclaration(TypeDeclarationContext ctx) {
@@ -2326,7 +2346,13 @@ public class Main {
 				public void enterSingleTypeImportDeclaration(
 						SingleTypeImportDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("import " + ctx.typeName().getChild(0).getText() + " {"
+								+ ctx.typeName().getChild(2).getText() + "}\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterSingleStaticImportDeclaration(
@@ -2417,7 +2443,16 @@ public class Main {
 				public void enterPrimaryNoNewArray_lfno_primary(
 						PrimaryNoNewArray_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.typeName() != null) {
+						try {
+							bw.write(ctx.typeName().getText()
+									+ ctx.getChild(1).getText()
+									+ ctx.getChild(2).getText());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 				}
 
 				public void enterPrimaryNoNewArray_lfno_arrayAccess(
@@ -2544,14 +2579,15 @@ public class Main {
 				}
 
 				public void enterNormalAnnotation(NormalAnnotationContext ctx) {
-					// TODO Auto-generated method stub
+					// TODO Auto-genserated method stub
 
 				}
 
 				public void enterMultiplicativeExpression(
 						MultiplicativeExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.getChildCount() > 1)
+						operators.push(ctx.getChild(1).getText());
 				}
 
 				public void enterMethodReference_lfno_primary(
@@ -2612,7 +2648,34 @@ public class Main {
 				public void enterMethodInvocation_lf_primary(
 						MethodInvocation_lf_primaryContext ctx) {
 					// TODO Auto-generated method stub
+					try {
+						int a = ctx.getChildCount();
+						String str = "";
 
+						for (int i = 0; i < a; i++) {
+							if (ctx.getChild(i).getText().equals("("))
+								break;
+
+							str += ctx.getChild(i).getText();
+
+						}
+
+						if (str.equals("System.out.println")) {
+							bw.write("print");
+							if (ctx.argumentList() == null)
+								bw.write("\"\"");
+						} else if (str.equals("System.out.print")) {
+							bw.write("process.write");
+						} else {
+							bw.write(str);
+							if (ctx.argumentList() == null)
+								bw.write("(");
+						}
+
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterMethodInvocation(MethodInvocationContext ctx) {
@@ -2773,6 +2836,12 @@ public class Main {
 
 				public void enterInterfaceType(InterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
+					try {
+						bw.write(ctx.getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterInterfaceModifier(InterfaceModifierContext ctx) {
@@ -2986,7 +3055,13 @@ public class Main {
 
 				public void enterFieldAccess(FieldAccessContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (ctx.primary().getText().equals("this"))
+						try {
+							bw.write("this." + ctx.getChild(2));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 
 				public void enterExtendsInterfaces(ExtendsInterfacesContext ctx) {
@@ -3249,12 +3324,7 @@ public class Main {
 
 				public void enterClassType(ClassTypeContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						bw.write(ctx.getText());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+
 				}
 
 				public void enterClassOrInterfaceType(
@@ -3518,19 +3588,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+					.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
