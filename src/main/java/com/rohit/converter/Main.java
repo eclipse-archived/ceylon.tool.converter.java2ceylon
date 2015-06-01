@@ -846,7 +846,7 @@ public class Main {
 				public void exitStatementWithoutTrailingSubstatement(
 						StatementWithoutTrailingSubstatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					
 				}
 
 				public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
@@ -1126,8 +1126,10 @@ public class Main {
 
 				public void exitMethodInvocation_lfno_primary(
 						MethodInvocation_lfno_primaryContext ctx) {
-					// TODO Auto-generated method stubtry {
+					// TODO Auto-generated method stub
 					try {
+						if(enterfor) 
+							forlimit += ")";
 						bw.write(")");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2150,7 +2152,8 @@ public class Main {
 						TypeImportOnDemandDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write("import " + ctx.packageOrTypeName().getText() + "{...}\n");
+						bw.write("import " + ctx.packageOrTypeName().getText()
+								+ "{...}\n");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2311,7 +2314,7 @@ public class Main {
 				public void enterStatementWithoutTrailingSubstatement(
 						StatementWithoutTrailingSubstatementContext ctx) {
 					// TODO Auto-generated method stub
-
+					
 				}
 
 				public void enterStatementNoShortIf(
@@ -2341,7 +2344,8 @@ public class Main {
 						SingleTypeImportDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write("import " + ctx.typeName().getChild(0).getText() + " {"
+						bw.write("import "
+								+ ctx.typeName().getChild(0).getText() + " {"
 								+ ctx.typeName().getChild(2).getText() + "}\n");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2608,6 +2612,7 @@ public class Main {
 				public void enterMethodInvocation_lfno_primary(
 						MethodInvocation_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
+
 					try {
 						int a = ctx.getChildCount();
 						String str = "";
@@ -2619,19 +2624,21 @@ public class Main {
 							str += ctx.getChild(i).getText();
 
 						}
-
-						if (str.equals("System.out.println")) {
-							bw.write("print");
-							if (ctx.argumentList() == null)
-								bw.write("\"\"");
-						} else if (str.equals("System.out.print")) {
-							bw.write("process.write");
+						if (!enterfor) {
+							if (str.equals("System.out.println")) {
+								bw.write("print");
+								if (ctx.argumentList() == null)
+									bw.write("\"\"");
+							} else if (str.equals("System.out.print")) {
+								bw.write("process.write");
+							} else {
+								bw.write(str);
+								if (ctx.argumentList() == null)
+									bw.write("(");
+							}
 						} else {
-							bw.write(str);
-							if (ctx.argumentList() == null)
-								bw.write("(");
+							forlimit = str + "(";
 						}
-
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
