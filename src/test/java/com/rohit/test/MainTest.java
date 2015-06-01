@@ -48,4 +48,20 @@ public class MainTest {
 		File file2 = new File(ceylonFile + "testSwitch.ceylon");
 		assertTrue("Switch test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testInterface() throws IOException {
+		Main.main(new String[]{testFile + "TestInterface.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testInterface.ceylon");
+		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+	}
+	
+	@Test
+	public void testClass() throws IOException {
+		Main.main(new String[]{testFile + "TestClass.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testClass.ceylon");
+		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+	}
 }
