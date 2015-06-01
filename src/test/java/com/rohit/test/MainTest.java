@@ -13,9 +13,9 @@ import com.rohit.converter.Main;
 public class MainTest {
 
 	String workingDir = System.getProperty("user.dir");
-	String testFile = workingDir + "/src/main/java/com/rohit/test/";
-	String convertedFile = "src/main/java/com/rohit/test/testConvertedFile.ceylon";
-	String ceylonFile = "src/main/java/com/rohit/test/";
+	String testFile = workingDir + "/src/test/java/com/rohit/test/";
+	String convertedFile = "src/test/java/com/rohit/test/testConvertedFile.ceylon";
+	String ceylonFile = "src/test/java/com/rohit/test/";
 
 	@Test
 	public void testMethod() throws IOException {
