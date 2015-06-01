@@ -1,3 +1,3 @@
-shared interface TestInterface satisfies SomethingElse{
+shared interface TestInterface {
 shared void foo() ;
 }

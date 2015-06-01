@@ -1,5 +1,5 @@
 package com.rohit.test;
 
-public interface TestInterface extends SomethingElse {
+public interface TestInterface {
 	public void foo();
 }
