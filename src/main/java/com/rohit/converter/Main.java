@@ -269,6 +269,7 @@ public class Main {
 	static boolean enterelse = false;
 	static boolean enterresult = false;
 	static boolean enterswitch = false;
+	static boolean isInstanceOf = false;
 	static boolean enterArgumentList = false;
 	static boolean multipleVariables = false;
 
@@ -846,7 +847,7 @@ public class Main {
 				public void exitStatementWithoutTrailingSubstatement(
 						StatementWithoutTrailingSubstatementContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
@@ -933,6 +934,7 @@ public class Main {
 				public void exitRelationalExpression(
 						RelationalExpressionContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void exitReferenceType(ReferenceTypeContext ctx) {
@@ -1128,7 +1130,7 @@ public class Main {
 						MethodInvocation_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						if(enterfor) 
+						if (enterfor)
 							forlimit += ")";
 						bw.write(")");
 					} catch (IOException e) {
@@ -2314,7 +2316,7 @@ public class Main {
 				public void enterStatementWithoutTrailingSubstatement(
 						StatementWithoutTrailingSubstatementContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void enterStatementNoShortIf(
@@ -2404,11 +2406,21 @@ public class Main {
 				public void enterRelationalExpression(
 						RelationalExpressionContext ctx) {
 					// TODO Auto-generated method stub
-					if (ctx.getChildCount() > 1)
-						if (!enterfor)
+					if (ctx.getChildCount() > 1) {
+						if (ctx.getChild(1).getText().equals("instanceof")) {
+							try {
+								isInstanceOf = true;
+								bw.write("is " + ctx.getChild(2).getText()
+										+ " " + ctx.getChild(0).getText());
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						} else if (!enterfor)
 							operators.push(ctx.getChild(1).getText());
 						else
 							forConditionOperator = ctx.getChild(1).getText();
+					}
 				}
 
 				public void enterReferenceType(ReferenceTypeContext ctx) {
@@ -3084,12 +3096,13 @@ public class Main {
 				public void enterExpressionName(ExpressionNameContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						if (!enterfor) {
-							bw.write(ctx.getText());
-						} else {
-							forinit = ctx.getText();
-							forlimit = forinit;
-						}
+						if (!isInstanceOf)
+							if (!enterfor) {
+								bw.write(ctx.getText());
+							} else {
+								forinit = ctx.getText();
+								forlimit = forinit;
+							}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -3310,7 +3323,11 @@ public class Main {
 						ClassType_lfno_classOrInterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getText());
+						if (!isInstanceOf) {
+							bw.write(ctx.getText());
+						} else {
+							isInstanceOf = false;
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
