@@ -64,4 +64,14 @@ public class MainTest {
 		File file2 = new File(ceylonFile + "testClass.ceylon");
 		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testInterface2() throws IOException {
+		Main.main(new String[]{testFile + "TestInterface2.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testInterface2.ceylon");
+		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+	}
+	
+	
 }

@@ -5,9 +5,8 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
+
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Java8Parser extends Parser {
@@ -2248,7 +2247,7 @@ public class Java8Parser extends Parser {
 	}
 
 	public static class CompilationUnitContext extends ParserRuleContext {
-		public TerminalNode EOF() { return getToken(Java8Parser.EOF, 0); }
+		public TerminalNode EOF() { return getToken(Recognizer.EOF, 0); }
 		public PackageDeclarationContext packageDeclaration() {
 			return getRuleContext(PackageDeclarationContext.class,0);
 		}
@@ -17086,6 +17085,7 @@ public class Java8Parser extends Parser {
 		return _localctx;
 	}
 
+	@Override
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
 		case 26:

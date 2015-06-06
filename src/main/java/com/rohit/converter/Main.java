@@ -262,7 +262,7 @@ public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype, lastActualParameter = "",
-			variableModifier = "", variableListType = "";
+			variableModifier = "", variableListType = "", forByValue = "1";
 	static boolean enterif = false;
 	static boolean enterfor = false;
 	static boolean enterwhile = false;
@@ -278,9 +278,10 @@ public class Main {
 	static Stack<String> operators = new Stack<String>();
 	static String lastInterface;
 	protected static String firstVariableInList;
-	protected static boolean enterTypeArgumentsList;
-	protected static boolean enterTypeParametersList;
-	protected static boolean enterConstructor;
+	protected static boolean enterTypeArgumentsList = false;
+	protected static boolean enterTypeParametersList = false;
+	protected static boolean enterConstructor = false;
+	protected static boolean enterForUpdate;
 
 	/**
 	 * Main Method
@@ -507,7 +508,9 @@ public class Main {
 
 				public void enterAssignment(AssignmentContext ctx) {
 					// TODO Auto-generated method stub
-
+					if(enterForUpdate) {
+						forByValue = ctx.expression().getText();
+					}
 				}
 
 				public void visitTerminal(TerminalNode node) {
@@ -1381,8 +1384,9 @@ public class Main {
 
 				public void exitForUpdate(ForUpdateContext ctx) {
 					// TODO change by(1) according to step
+					enterForUpdate = false;
 					try {
-						bw.write(".by(1))");
+						bw.write(".by("+ forByValue + "))");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2786,7 +2790,7 @@ public class Main {
 
 				public void enterLeftHandSide(LeftHandSideContext ctx) {
 					// TODO Auto-generated method stub
-					if (enterfor)
+					if (enterfor && !enterForUpdate)
 						try {
 							bw.write(ctx.getText());
 						} catch (IOException e) {
@@ -2981,7 +2985,7 @@ public class Main {
 				public void enterForUpdate(ForUpdateContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-
+						enterForUpdate = true;
 						if (forConditionOperator.equals("<=")
 								|| forConditionOperator.equals(">="))
 							bw.write(".." + forlimit + ")");
@@ -3616,7 +3620,7 @@ public class Main {
 //			frame.add(jScrollPane);
 //			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 //			frame.setSize(500, 500);
-//			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 //
 //			frame.setVisible(true);
 
