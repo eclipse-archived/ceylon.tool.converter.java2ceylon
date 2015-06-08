@@ -282,6 +282,8 @@ public class Main {
 	protected static boolean enterTypeParametersList = false;
 	protected static boolean enterConstructor = false;
 	protected static boolean enterForUpdate;
+	protected static boolean firstImport = true;
+	protected static String packageName;
 
 	/**
 	 * Main Method
@@ -508,7 +510,7 @@ public class Main {
 
 				public void enterAssignment(AssignmentContext ctx) {
 					// TODO Auto-generated method stub
-					if(enterForUpdate) {
+					if (enterForUpdate) {
 						forByValue = ctx.expression().getText();
 					}
 				}
@@ -1386,7 +1388,7 @@ public class Main {
 					// TODO change by(1) according to step
 					enterForUpdate = false;
 					try {
-						bw.write(".by("+ forByValue + "))");
+						bw.write(".by(" + forByValue + "))");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2158,8 +2160,11 @@ public class Main {
 						TypeImportOnDemandDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					try {
+						if (!firstImport) {
+							bw.write("\n}\n");
+						}
 						bw.write("import " + ctx.packageOrTypeName().getText()
-								+ "{...}\n");
+								+ "{\n...");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2168,7 +2173,16 @@ public class Main {
 
 				public void enterTypeDeclaration(TypeDeclarationContext ctx) {
 					// TODO Auto-generated method stub
-
+					if (!firstImport) {
+						try {
+							bw.write("\n}\n");
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					firstImport = true;
 				}
 
 				public void enterTypeBound(TypeBoundContext ctx) {
@@ -2350,9 +2364,30 @@ public class Main {
 						SingleTypeImportDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write("import "
-								+ ctx.typeName().getChild(0).getText() + " {"
-								+ ctx.typeName().getChild(2).getText() + "}\n");
+						// bw.write("import "
+						// + ctx.typeName().getChild(0).getText() + " {"
+						// + ctx.typeName().getChild(2).getText() + "}\n");
+
+						if (firstImport) {
+							packageName = ctx.typeName().packageOrTypeName()
+									.getText();
+							firstImport = false;
+							bw.write("import " + packageName + "{\n"
+									+ ctx.typeName().getChild(2).getText());
+						} else {
+							if (packageName.equals(ctx.typeName()
+									.packageOrTypeName().getText())) {
+								bw.write(",\n"
+										+ ctx.typeName().getChild(2).getText());
+							} else {
+								bw.write("\n}\n");
+								packageName = ctx.typeName()
+										.packageOrTypeName().getText();
+								bw.write("import " + packageName + "{"
+										+ ctx.typeName().getChild(2).getText());
+							}
+
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2580,8 +2615,9 @@ public class Main {
 						NormalInterfaceDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					String modifier = " ";
-					if (ctx.interfaceModifier(0).getText().equals("public"))
-						modifier = "shared ";
+					if (ctx.interfaceModifier(0) != null)
+						if (ctx.interfaceModifier(0).getText().equals("public"))
+							modifier = "shared ";
 
 					try {
 						bw.write(modifier + "interface " + ctx.Identifier()

@@ -73,5 +73,11 @@ public class MainTest {
 		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
 	}
 	
-	
+	@Test
+	public void testImports() throws IOException {
+		Main.main(new String[]{testFile + "TestImports.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testImports.ceylon");
+		assertTrue("Imports test failed", FileUtils.contentEquals(file1, file2));
+	}
 }
