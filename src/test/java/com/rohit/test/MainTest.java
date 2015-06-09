@@ -80,4 +80,12 @@ public class MainTest {
 		File file2 = new File(ceylonFile + "testImports.ceylon");
 		assertTrue("Imports test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testArrays() throws IOException {
+		Main.main(new String[]{testFile + "TestArrays.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testArrays.ceylon");
+		assertTrue("Arrays test failed", FileUtils.contentEquals(file1, file2));
+	}
 }

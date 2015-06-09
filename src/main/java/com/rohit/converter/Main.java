@@ -281,9 +281,13 @@ public class Main {
 	protected static boolean enterTypeArgumentsList = false;
 	protected static boolean enterTypeParametersList = false;
 	protected static boolean enterConstructor = false;
-	protected static boolean enterForUpdate;
+	protected static boolean enterForUpdate = false;
 	protected static boolean firstImport = true;
-	protected static String packageName;
+	protected static String packageName = "";
+	protected static boolean enterArray = false;
+	protected static boolean enterArrayAccessSet = false;
+	protected static boolean enterArrayAccess = false;
+	protected static boolean enterArrayAccess_lfno_primary = false;
 
 	/**
 	 * Main Method
@@ -378,40 +382,41 @@ public class Main {
 					// TODO Auto-generated method stub
 					String type = ctx.getText();
 					String ceylonType = "";
-
-					try {
-						if (!enterfor && !enterresult) {
-							if (!variableModifier.equals("final")
-									&& !enterConstructor) {
-								bw.write("variable ");
-								variableListType = "variable ";
+					if (!enterArray) {
+						try {
+							if (!enterfor && !enterresult) {
+								if (!variableModifier.equals("final")
+										&& !enterConstructor) {
+									bw.write("variable ");
+									variableListType = "variable ";
+								}
 							}
+							variableModifier = "";
+
+							if (type.equals("int") || type.equals("short")
+									|| type.equals("long")) {
+								ceylonType = "Integer ";
+							} else if (type.equals("byte")) {
+								ceylonType = "Byte ";
+							} else if (type.equals("char")) {
+								ceylonType = "Character ";
+							} else if (type.equals("float")
+									|| type.equals("double")) {
+								ceylonType = "Float ";
+							} else if (type.equals("boolean")) {
+								ceylonType = "Boolean ";
+							} else {
+								ceylonType = type + " ";
+							}
+
+							variableListType += ceylonType;
+
+							if (!enterConstructor)
+								bw.write(ceylonType);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
-						variableModifier = "";
-
-						if (type.equals("int") || type.equals("short")
-								|| type.equals("long")) {
-							ceylonType = "Integer ";
-						} else if (type.equals("byte")) {
-							ceylonType = "Byte ";
-						} else if (type.equals("char")) {
-							ceylonType = "Character ";
-						} else if (type.equals("float")
-								|| type.equals("double")) {
-							ceylonType = "Float ";
-						} else if (type.equals("boolean")) {
-							ceylonType = "Boolean ";
-						} else {
-							ceylonType = type + " ";
-						}
-
-						variableListType += ceylonType;
-
-						if (!enterConstructor)
-							bw.write(ceylonType);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
 				}
 
@@ -665,7 +670,6 @@ public class Main {
 
 				public void exitUnannArrayType(UnannArrayTypeContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void exitTypeVariable(TypeVariableContext ctx) {
@@ -1840,13 +1844,19 @@ public class Main {
 				public void exitArrayCreationExpression(
 						ArrayCreationExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterArray = false;
+					try {
+						bw.write(")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void exitArrayAccess_lfno_primary(
 						ArrayAccess_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterArrayAccess_lfno_primary = false;
 				}
 
 				public void exitArrayAccess_lf_primary(
@@ -1857,7 +1867,8 @@ public class Main {
 
 				public void exitArrayAccess(ArrayAccessContext ctx) {
 					// TODO Auto-generated method stub
-
+					enterArrayAccessSet = true;
+					enterArrayAccess = false;
 				}
 
 				public void exitArgumentList(ArgumentListContext ctx) {
@@ -2113,6 +2124,45 @@ public class Main {
 				public void enterUnannArrayType(UnannArrayTypeContext ctx) {
 					// TODO Auto-generated method stub
 
+					enterArray = true;
+
+					String type = ctx.unannPrimitiveType().getText();
+					String ceylonType = "";
+					try {
+						if (!variableModifier.equals("final")
+								&& !enterConstructor) {
+							bw.write("variable ");
+							variableListType = "variable ";
+						}
+						variableModifier = "";
+
+						if (type.equals("int")) {
+							ceylonType = "IntArray ";
+						} else if (type.equals("short")) {
+							ceylonType = "ShortArray ";
+						} else if (type.equals("boolean")) {
+							ceylonType = "BooleanArray ";
+						} else if (type.equals("byte")) {
+							ceylonType = "ByteArray ";
+						} else if (type.equals("long")) {
+							ceylonType = "LongArray ";
+						} else if (type.equals("float")) {
+							ceylonType = "FloatArray ";
+						} else if (type.equals("double")) {
+							ceylonType = "DoubleArray ";
+						} else if (type.equals("char")) {
+							ceylonType = "CharArray ";
+						} else {
+							ceylonType = type + " ";
+						}
+
+						variableListType += ceylonType;
+
+						if (!enterConstructor)
+							bw.write(ceylonType);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 
 				public void enterTypeVariable(TypeVariableContext ctx) {
@@ -2181,7 +2231,7 @@ public class Main {
 							e.printStackTrace();
 						}
 					}
-					
+
 					firstImport = true;
 				}
 
@@ -2811,22 +2861,27 @@ public class Main {
 
 				public void enterLiteral(LiteralContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						if (!enterfor) {
-							bw.write(ctx.getText());
-						} else {
-							forinit = ctx.getText();
-							forlimit = forinit;
+					if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
+						try {
+							if (enterArrayAccessSet) {
+								bw.write(ctx.getText() + ")");
+								enterArrayAccessSet = false;
+							} else if (!enterfor) {
+								bw.write(ctx.getText());
+							} else {
+								forinit = ctx.getText();
+								forlimit = forinit;
+							}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
 				}
 
 				public void enterLeftHandSide(LeftHandSideContext ctx) {
 					// TODO Auto-generated method stub
-					if (enterfor && !enterForUpdate)
+					if (enterfor && !enterForUpdate
+							&& ctx.arrayAccess() == null)
 						try {
 							bw.write(ctx.getText());
 						} catch (IOException e) {
@@ -3135,22 +3190,27 @@ public class Main {
 
 				public void enterExpressionName(ExpressionNameContext ctx) {
 					// TODO Auto-generated method stub
-					try {
-						if (!isInstanceOf)
-							if (!enterfor) {
-								bw.write(ctx.getText());
-							} else {
-								forinit = ctx.getText();
-								forlimit = forinit;
-							}
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
+						try {
+							if (enterArrayAccessSet) {
+								bw.write(ctx.getText() + ")");
+								enterArrayAccessSet = false;
+							} else if (!isInstanceOf)
+								if (!enterfor) {
+									bw.write(ctx.getText());
+								} else {
+									forinit = ctx.getText();
+									forlimit = forinit;
+								}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 
 				public void enterExpression(ExpressionContext ctx) {
 					// TODO Auto-generated method stub
+
 				}
 
 				public void enterExplicitConstructorInvocation(
@@ -3516,7 +3576,7 @@ public class Main {
 						AssignmentOperatorContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						if (!enterfor)
+						if (!enterfor && !enterArrayAccessSet)
 							bw.write(ctx.getText());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -3548,13 +3608,47 @@ public class Main {
 				public void enterArrayCreationExpression(
 						ArrayCreationExpressionContext ctx) {
 					// TODO Auto-generated method stub
+					String type = ctx.primitiveType().getText();
+					String ceylonType = "";
+					try {
+						if (type.equals("int")) {
+							ceylonType = "IntArray";
+						} else if (type.equals("short")) {
+							ceylonType = "ShortArray";
+						} else if (type.equals("boolean")) {
+							ceylonType = "BooleanArray ";
+						} else if (type.equals("byte")) {
+							ceylonType = "ByteArray";
+						} else if (type.equals("long")) {
+							ceylonType = "LongArray";
+						} else if (type.equals("float")) {
+							ceylonType = "FloatArray";
+						} else if (type.equals("double")) {
+							ceylonType = "DoubleArray";
+						} else if (type.equals("char")) {
+							ceylonType = "CharArray";
+						} else {
+							ceylonType = type;
+						}
 
+						if (!enterConstructor)
+							bw.write(ceylonType + "(");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 
 				public void enterArrayAccess_lfno_primary(
 						ArrayAccess_lfno_primaryContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						enterArrayAccess_lfno_primary = true;
+						bw.write(ctx.expressionName().getText() + ".get("
+								+ ctx.expression(0).getText() + ")");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterArrayAccess_lf_primary(
@@ -3565,7 +3659,14 @@ public class Main {
 
 				public void enterArrayAccess(ArrayAccessContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						enterArrayAccess = true;
+						bw.write(ctx.expressionName().getText() + ".set("
+								+ ctx.expression(0).getText() + ", ");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterArgumentList(ArgumentListContext ctx) {
@@ -3646,19 +3747,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			// JFrame frame = new JFrame("Antlr AST");
+			// JPanel panel = new JPanel();
+			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+			// .getRuleNames()), tree);
+			// viewer.setScale(1.1);
+			// panel.add(viewer);
+			// JScrollPane jScrollPane = new JScrollPane(panel);
+			// frame.add(jScrollPane);
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setSize(500, 500);
+			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+			//
+			// frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
