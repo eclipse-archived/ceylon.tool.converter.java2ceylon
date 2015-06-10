@@ -1,11 +1,17 @@
 package com.rohit.converter;
 
+import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +20,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.AdditionalBoundContext;
 import com.rohit.converter.Java8Parser.AdditiveExpressionContext;
@@ -262,6 +269,7 @@ public class Main {
 
 	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype, lastActualParameter = "",
+			lastTypeArgument = "", lastTypeParameter = "",
 			variableModifier = "", variableListType = "", forByValue = "1";
 	static boolean enterif = false;
 	static boolean enterfor = false;
@@ -288,6 +296,7 @@ public class Main {
 	protected static boolean enterArrayAccessSet = false;
 	protected static boolean enterArrayAccess = false;
 	protected static boolean enterArrayAccess_lfno_primary = false;
+	protected static boolean enterInterfaceDeclaration = false;
 
 	/**
 	 * Main Method
@@ -680,7 +689,10 @@ public class Main {
 				public void exitTypeParameters(TypeParametersContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(">()");
+						if(enterInterfaceDeclaration)
+							bw.write("> ");
+						else 
+							bw.write(">() ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2188,13 +2200,17 @@ public class Main {
 
 				public void enterTypeParameterList(TypeParameterListContext ctx) {
 					// TODO Auto-generated method stub
-
+					lastTypeParameter = ctx.getChild(ctx.getChildCount() - 1)
+							.getText();
 				}
 
 				public void enterTypeParameter(TypeParameterContext ctx) {
 					// TODO Auto-generated method stub
 					try {
 						bw.write(ctx.getText());
+
+						if (!ctx.getText().equals(lastTypeParameter))
+							bw.write(", ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2254,6 +2270,8 @@ public class Main {
 				public void enterTypeArgumentList(TypeArgumentListContext ctx) {
 					// TODO Auto-generated method stub
 					try {
+						lastTypeArgument = ctx
+								.getChild(ctx.getChildCount() - 1).getText();
 						enterTypeArgumentsList = true;
 						bw.write("<");
 					} catch (IOException e) {
@@ -2664,6 +2682,8 @@ public class Main {
 				public void enterNormalInterfaceDeclaration(
 						NormalInterfaceDeclarationContext ctx) {
 					// TODO Auto-generated method stub
+					enterInterfaceDeclaration = true;
+					
 					String modifier = " ";
 					if (ctx.interfaceModifier(0) != null)
 						if (ctx.interfaceModifier(0).getText().equals("public"))
@@ -2945,7 +2965,7 @@ public class Main {
 				public void enterInterfaceType(InterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						bw.write(ctx.getText());
+						bw.write(ctx.classType().getChild(0).getText());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2990,6 +3010,7 @@ public class Main {
 				public void enterInterfaceBody(InterfaceBodyContext ctx) {
 					// TODO Auto-generated method stub
 					try {
+						enterInterfaceDeclaration = false;
 						bw.write(ctx.getChild(0).toString() + "\n");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -3423,7 +3444,15 @@ public class Main {
 						ClassType_lfno_classOrInterfaceTypeContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						if (!isInstanceOf) {
+						if (enterTypeArgumentsList) {
+							bw.write(ctx.getChild(0).getText());
+
+							if (!ctx.getText().equals(lastTypeArgument))
+								bw.write(", ");
+						}
+
+						if (!isInstanceOf && !enterTypeArgumentsList
+								&& !enterTypeParametersList) {
 							bw.write(ctx.getText());
 						} else {
 							isInstanceOf = false;
@@ -3442,7 +3471,7 @@ public class Main {
 
 				public void enterClassType(ClassTypeContext ctx) {
 					// TODO Auto-generated method stub
-
+					
 				}
 
 				public void enterClassOrInterfaceType(
@@ -3747,19 +3776,19 @@ public class Main {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			// .getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+//			JFrame frame = new JFrame("Antlr AST");
+//			JPanel panel = new JPanel();
+//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//					.getRuleNames()), tree);
+//			viewer.setScale(1.1);
+//			panel.add(viewer);
+//			JScrollPane jScrollPane = new JScrollPane(panel);
+//			frame.add(jScrollPane);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(500, 500);
+//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+//
+//			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();

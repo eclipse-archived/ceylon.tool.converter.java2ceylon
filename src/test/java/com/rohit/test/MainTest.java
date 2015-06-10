@@ -88,4 +88,12 @@ public class MainTest {
 		File file2 = new File(ceylonFile + "testArrays.ceylon");
 		assertTrue("Arrays test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testGenerics() throws IOException {
+		Main.main(new String[]{testFile + "TestGenerics.java", convertedFile});
+		File file1 = new File(convertedFile);
+		File file2 = new File(ceylonFile + "testGenerics.ceylon");
+		assertTrue("Generics test failed", FileUtils.contentEquals(file1, file2));
+	}
 }
