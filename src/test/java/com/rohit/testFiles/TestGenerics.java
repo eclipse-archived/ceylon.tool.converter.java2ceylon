@@ -1,4 +1,4 @@
-package com.rohit.test;
+package com.rohit.testFiles;
 
 public class TestGenerics<K, V> {
 	public void foo() {

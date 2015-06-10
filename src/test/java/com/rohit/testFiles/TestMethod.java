@@ -1,4 +1,4 @@
-package com.rohit.test;
+package com.rohit.testFiles;
 
 public class TestMethod {
 	public void foo() {

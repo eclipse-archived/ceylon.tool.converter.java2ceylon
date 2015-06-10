@@ -1,4 +1,4 @@
-package com.rohit.test;
+package com.rohit.testFiles;
 
 public interface TestInterface2 extends TestInterface {
 	public void foo();

@@ -13,87 +13,83 @@ import com.rohit.converter.Main;
 public class MainTest {
 
 	String workingDir = System.getProperty("user.dir");
-	String testFile = workingDir + "/src/test/java/com/rohit/test/";
-	String convertedFile = "src/test/java/com/rohit/test/testConvertedFile.ceylon";
-	String ceylonFile = "src/test/java/com/rohit/test/";
+	String testFile = workingDir + "/src/test/java/com/rohit/testFiles/";
+	String convertedFile = "src/test/java/com/rohit/testFiles/testConvertedFile.ceylon";
+	File file1 = new File(convertedFile);
+	String ceylonFile = "src/test/java/com/rohit/testFiles/";
 
 	@Test
 	public void testMethod() throws IOException {
-		Main.main(new String[]{testFile + "TestMethod.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestMethod.java", convertedFile });
 		File file2 = new File(ceylonFile + "testMethod.ceylon");
 		assertTrue("Method test failed", FileUtils.contentEquals(file1, file2));
 	}
 
 	@Test
 	public void testIf() throws IOException {
-		Main.main(new String[]{testFile + "TestIf.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestIf.java", convertedFile });
 		File file2 = new File(ceylonFile + "testIf.ceylon");
 		assertTrue("If test failed", FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testFor() throws IOException {
-		Main.main(new String[]{testFile + "TestFor.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestFor.java", convertedFile });
 		File file2 = new File(ceylonFile + "testFor.ceylon");
 		assertTrue("For test failed", FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testSwitch() throws IOException {
-		Main.main(new String[]{testFile + "TestSwitch.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestSwitch.java", convertedFile });
 		File file2 = new File(ceylonFile + "testSwitch.ceylon");
 		assertTrue("Switch test failed", FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testInterface() throws IOException {
-		Main.main(new String[]{testFile + "TestInterface.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestInterface.java", convertedFile });
 		File file2 = new File(ceylonFile + "testInterface.ceylon");
-		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+		assertTrue("Interface test failed",
+				FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testClass() throws IOException {
-		Main.main(new String[]{testFile + "TestClass.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestClass.java", convertedFile });
 		File file2 = new File(ceylonFile + "testClass.ceylon");
-		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+		assertTrue("Interface test failed",
+				FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testInterface2() throws IOException {
-		Main.main(new String[]{testFile + "TestInterface2.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestInterface2.java",
+				convertedFile });
 		File file2 = new File(ceylonFile + "testInterface2.ceylon");
-		assertTrue("Interface test failed", FileUtils.contentEquals(file1, file2));
+		assertTrue("Interface test failed",
+				FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testImports() throws IOException {
-		Main.main(new String[]{testFile + "TestImports.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestImports.java", convertedFile });
 		File file2 = new File(ceylonFile + "testImports.ceylon");
 		assertTrue("Imports test failed", FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testArrays() throws IOException {
-		Main.main(new String[]{testFile + "TestArrays.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestArrays.java", convertedFile });
 		File file2 = new File(ceylonFile + "testArrays.ceylon");
 		assertTrue("Arrays test failed", FileUtils.contentEquals(file1, file2));
 	}
-	
+
 	@Test
 	public void testGenerics() throws IOException {
-		Main.main(new String[]{testFile + "TestGenerics.java", convertedFile});
-		File file1 = new File(convertedFile);
+		Main.main(new String[] { testFile + "TestGenerics.java", convertedFile });
 		File file2 = new File(ceylonFile + "testGenerics.ceylon");
-		assertTrue("Generics test failed", FileUtils.contentEquals(file1, file2));
+		assertTrue("Generics test failed",
+				FileUtils.contentEquals(file1, file2));
 	}
 }
