@@ -324,19 +324,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-//			 JFrame frame = new JFrame("Antlr AST");
-//			 JPanel panel = new JPanel();
-//			 TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//			 .getRuleNames()), tree);
-//			 viewer.setScale(1.1);
-//			 panel.add(viewer);
-//			 JScrollPane jScrollPane = new JScrollPane(panel);
-//			 frame.add(jScrollPane);
-//			 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			 frame.setSize(500, 500);
-//			 frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-//			
-//			 frame.setVisible(true);
+			// JFrame frame = new JFrame("Antlr AST");
+			// JPanel panel = new JPanel();
+			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+			// .getRuleNames()), tree);
+			// viewer.setScale(1.1);
+			// panel.add(viewer);
+			// JScrollPane jScrollPane = new JScrollPane(panel);
+			// frame.add(jScrollPane);
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setSize(500, 500);
+			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+			//
+			// frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -878,6 +878,15 @@ public class Main implements Java8Listener {
 	public void exitStatementWithoutTrailingSubstatement(
 			StatementWithoutTrailingSubstatementContext ctx) {
 		// TODO Auto-generated method stub
+		if (ctx.block() == null
+				&& !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
+			try {
+				bw.write("}\n");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
@@ -2360,7 +2369,15 @@ public class Main implements Java8Listener {
 	public void enterStatementWithoutTrailingSubstatement(
 			StatementWithoutTrailingSubstatementContext ctx) {
 		// TODO Auto-generated method stub
-
+		if (ctx.block() == null
+				&& !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
+			try {
+				bw.write(" {\n");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void enterStatementNoShortIf(StatementNoShortIfContext ctx) {
