@@ -682,9 +682,9 @@ public class Main {
 				public void exitTypeParameters(TypeParametersContext ctx) {
 					// TODO Auto-generated method stub
 					try {
-						if(enterInterfaceDeclaration)
+						if (enterInterfaceDeclaration)
 							bw.write("> ");
-						else 
+						else
 							bw.write(">() ");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -861,7 +861,6 @@ public class Main {
 				public void exitStatementWithoutTrailingSubstatement(
 						StatementWithoutTrailingSubstatementContext ctx) {
 					// TODO Auto-generated method stub
-
 				}
 
 				public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
@@ -1394,10 +1393,10 @@ public class Main {
 				}
 
 				public void exitForUpdate(ForUpdateContext ctx) {
-					// TODO change by(1) according to step
 					enterForUpdate = false;
 					try {
-						bw.write(".by(" + forByValue + "))");
+						if (!forByValue.equals("1"))
+							bw.write(".by(" + forByValue + "))");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2035,7 +2034,13 @@ public class Main {
 				public void enterUnaryExpressionNotPlusMinus(
 						UnaryExpressionNotPlusMinusContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						if (ctx.getChild(0).getText().equals("!"))
+							bw.write("!");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterUnaryExpression(UnaryExpressionContext ctx) {
@@ -2608,13 +2613,25 @@ public class Main {
 				public void enterPreIncrementExpression(
 						PreIncrementExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						operators.push("");
+						bw.write(ctx.getChild(0).getText());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterPreDecrementExpression(
 						PreDecrementExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						operators.push("");
+						bw.write("--");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterPostfixExpression(PostfixExpressionContext ctx) {
@@ -2625,7 +2642,12 @@ public class Main {
 				public void enterPostIncrementExpression_lf_postfixExpression(
 						PostIncrementExpression_lf_postfixExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("++");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterPostIncrementExpression(
@@ -2637,7 +2659,12 @@ public class Main {
 				public void enterPostDecrementExpression_lf_postfixExpression(
 						PostDecrementExpression_lf_postfixExpressionContext ctx) {
 					// TODO Auto-generated method stub
-
+					try {
+						bw.write("--");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 				public void enterPostDecrementExpression(
@@ -2676,7 +2703,7 @@ public class Main {
 						NormalInterfaceDeclarationContext ctx) {
 					// TODO Auto-generated method stub
 					enterInterfaceDeclaration = true;
-					
+
 					String modifier = " ";
 					if (ctx.interfaceModifier(0) != null)
 						if (ctx.interfaceModifier(0).getText().equals("public"))
@@ -2850,13 +2877,16 @@ public class Main {
 
 				public void enterMarkerAnnotation(MarkerAnnotationContext ctx) {
 					// TODO Auto-generated method stub
-					if (ctx.typeName().getText().equals("Override")) {
-						try {
+
+					try {
+						if (ctx.typeName().getText().equals("Override")) {
 							bw.write("actual ");
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						} else {
+							bw.write(ctx.typeName().getText() + " ");
 						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 
@@ -3464,7 +3494,7 @@ public class Main {
 
 				public void enterClassType(ClassTypeContext ctx) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				public void enterClassOrInterfaceType(
