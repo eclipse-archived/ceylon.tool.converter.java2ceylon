@@ -324,19 +324,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			// .getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+//			 JFrame frame = new JFrame("Antlr AST");
+//			 JPanel panel = new JPanel();
+//			 TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//			 .getRuleNames()), tree);
+//			 viewer.setScale(1.1);
+//			 panel.add(viewer);
+//			 JScrollPane jScrollPane = new JScrollPane(panel);
+//			 frame.add(jScrollPane);
+//			 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			 frame.setSize(500, 500);
+//			 frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+//			
+//			 frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -1374,7 +1374,7 @@ public class Main implements Java8Listener {
 
 	public void exitFormalParameterList(FormalParameterListContext ctx) {
 		// TODO Auto-generated method stub
-
+		lastFormalParameter = "";
 	}
 
 	public void exitFormalParameter(FormalParameterContext ctx) {
