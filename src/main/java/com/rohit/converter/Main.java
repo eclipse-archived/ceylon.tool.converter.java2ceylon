@@ -324,19 +324,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			// .getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+//			JFrame frame = new JFrame("Antlr AST");
+//			JPanel panel = new JPanel();
+//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//					.getRuleNames()), tree);
+//			viewer.setScale(1.1);
+//			panel.add(viewer);
+//			JScrollPane jScrollPane = new JScrollPane(panel);
+//			frame.add(jScrollPane);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(500, 500);
+//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+//
+//			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -620,10 +620,12 @@ public class Main implements Java8Listener {
 	public void exitUnaryExpression(UnaryExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (!operators.isEmpty()) {
-				bw.write(" " + operators.lastElement() + " ");
-				operators.pop();
-			}
+			if (ctx.preIncrementExpression() == null
+					&& ctx.preDecrementExpression() == null)
+				if (!operators.isEmpty()) {
+					bw.write(" " + operators.lastElement() + " ");
+					operators.pop();
+				}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2580,7 +2582,6 @@ public class Main implements Java8Listener {
 	public void enterPreIncrementExpression(PreIncrementExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			operators.push("");
 			bw.write(ctx.getChild(0).getText());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -2591,7 +2592,6 @@ public class Main implements Java8Listener {
 	public void enterPreDecrementExpression(PreDecrementExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			operators.push("");
 			bw.write("--");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -2972,7 +2972,14 @@ public class Main implements Java8Listener {
 	public void enterInterfaceMethodDeclaration(
 			InterfaceMethodDeclarationContext ctx) {
 		// TODO Auto-generated method stub
-
+		if (ctx.methodBody().getText().equals(";")) {
+			try {
+				bw.write("formal ");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void enterInterfaceMemberDeclaration(
