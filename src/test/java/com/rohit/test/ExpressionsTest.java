@@ -18,7 +18,7 @@ public class ExpressionsTest {
 	String ceylonFile = "src/test/java/com/rohit/testFiles/";
 
 	@Test
-	public void testFor() throws IOException {
+	public void testExpressions() throws IOException {
 		Main.main(new String[] { testFile + "TestExpressions.java", convertedFile });
 		File file2 = new File(ceylonFile + "testExpressions.ceylon");
 		assertTrue("Expressions test failed", FileUtils.contentEquals(file1, file2));

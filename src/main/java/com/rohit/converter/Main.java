@@ -260,36 +260,37 @@ import com.rohit.converter.Java8Parser.WildcardContext;
  */
 public class Main implements Java8Listener {
 
-	static String lastFormalParameter, forinit, forlimit, forConditionOperator,
+	String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype, lastActualParameter = "",
 			lastTypeArgument = "", lastTypeParameter = "",
 			variableModifier = "", variableListType = "", forByValue = "1";
-	static boolean enterif = false;
-	static boolean enterfor = false;
-	static boolean enterwhile = false;
-	static boolean enterelse = false;
-	static boolean enterresult = false;
-	static boolean enterswitch = false;
-	static boolean isInstanceOf = false;
-	static boolean enterArgumentList = false;
-	static boolean multipleVariables = false;
+	boolean enterif = false;
+	boolean enterfor = false;
+	boolean enterwhile = false;
+	boolean enterelse = false;
+	boolean enterresult = false;
+	boolean enterswitch = false;
+	boolean isInstanceOf = false;
+	boolean enterArgumentList = false;
+	boolean multipleVariables = false;
 
-	static int lastActualParameterIndex = 0, numOfArguments = 0;
+	int lastActualParameterIndex = 0, numOfArguments = 0;
 
-	static Stack<String> operators = new Stack<String>();
-	static String lastInterface;
-	protected static String firstVariableInList;
-	protected static boolean enterTypeArgumentsList = false;
-	protected static boolean enterTypeParametersList = false;
-	protected static boolean enterConstructor = false;
-	protected static boolean enterForUpdate = false;
-	protected static boolean firstImport = true;
-	protected static String packageName = "";
-	protected static boolean enterArray = false;
-	protected static boolean enterArrayAccessSet = false;
-	protected static boolean enterArrayAccess = false;
-	protected static boolean enterArrayAccess_lfno_primary = false;
-	protected static boolean enterInterfaceDeclaration = false;
+	Stack<String> operators = new Stack<String>();
+	String lastInterface;
+	String firstVariableInList;
+	boolean enterTypeArgumentsList = false;
+	boolean enterTypeParametersList = false;
+	boolean enterConstructor = false;
+	boolean enterForUpdate = false;
+	boolean firstImport = true;
+	String packageName = "";
+	boolean enterArray = false;
+	boolean enterArrayAccessSet = false;
+	boolean enterArrayAccess = false;
+	boolean enterArrayAccess_lfno_primary = false;
+	boolean enterInterfaceDeclaration = false;
+	private boolean openParenthesis;
 
 	static BufferedWriter bw;
 
@@ -619,17 +620,17 @@ public class Main implements Java8Listener {
 
 	public void exitUnaryExpression(UnaryExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		try {
-			if (ctx.preIncrementExpression() == null
-					&& ctx.preDecrementExpression() == null)
-				if (!operators.isEmpty()) {
-					bw.write(" " + operators.lastElement() + " ");
-					operators.pop();
-				}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// try {
+		// if (ctx.preIncrementExpression() == null
+		// && ctx.preDecrementExpression() == null)
+		// if (!operators.isEmpty()) {
+		// bw.write(" " + operators.lastElement() + " ");
+		// operators.pop();
+		// }
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 	}
 
 	public void exitUnannTypeVariable(UnannTypeVariableContext ctx) {
@@ -1470,7 +1471,27 @@ public class Main implements Java8Listener {
 
 	public void exitExpressionName(ExpressionNameContext ctx) {
 		// TODO Auto-generated method stub
+		try {
+			if (!(ctx.getParent() instanceof PostfixExpressionContext && ctx
+					.getParent().getChildCount() > 1))
+				if (!operators.isEmpty()) {
 
+					if (operators.lastElement().equals(")") && !openParenthesis) {
+						bw.write(" " + operators.lastElement());
+						operators.pop();
+					}
+
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+
+					openParenthesis = false;
+				}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitExpression(ExpressionContext ctx) {
@@ -2491,9 +2512,13 @@ public class Main implements Java8Listener {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			} else if (!enterfor)
+			} else if (!enterfor) {
 				operators.push(ctx.getChild(1).getText());
-			else
+				if (openParenthesis) {
+					operators.push("(");
+				}
+
+			} else
 				forConditionOperator = ctx.getChild(1).getText();
 		}
 	}
@@ -2528,15 +2553,20 @@ public class Main implements Java8Listener {
 	public void enterPrimaryNoNewArray_lfno_primary(
 			PrimaryNoNewArray_lfno_primaryContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.typeName() != null) {
-			try {
+
+		try {
+			if (ctx.typeName() != null) {
 				bw.write(ctx.typeName().getText() + ctx.getChild(1).getText()
 						+ ctx.getChild(2).getText());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} else if (ctx.expression() != null) {
+				operators.push(")");
+				openParenthesis = true;
 			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
 	}
 
 	public void enterPrimaryNoNewArray_lfno_arrayAccess(
@@ -2609,6 +2639,10 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			bw.write("++");
+			if (!operators.isEmpty()) {
+				bw.write(" " + operators.lastElement() + " ");
+				operators.pop();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2625,6 +2659,10 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			bw.write("--");
+			if (!operators.isEmpty()) {
+				bw.write(" " + operators.lastElement() + " ");
+				operators.pop();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2687,8 +2725,12 @@ public class Main implements Java8Listener {
 	public void enterMultiplicativeExpression(
 			MultiplicativeExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterMethodReference_lfno_primary(
@@ -3022,8 +3064,12 @@ public class Main implements Java8Listener {
 
 	public void enterInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterImportDeclaration(ImportDeclarationContext ctx) {
@@ -3185,8 +3231,15 @@ public class Main implements Java8Listener {
 
 	public void enterExpressionName(ExpressionNameContext ctx) {
 		// TODO Auto-generated method stub
-		if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
-			try {
+		try {
+			if (!operators.isEmpty() && operators.lastElement().equals("(")) {
+				if (!operators.isEmpty()) {
+					bw.write(" ( ");
+					operators.pop();
+				}
+			}
+
+			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
 				if (enterArrayAccessSet) {
 					bw.write(ctx.getText() + ")");
 					enterArrayAccessSet = false;
@@ -3197,10 +3250,10 @@ public class Main implements Java8Listener {
 						forinit = ctx.getText();
 						forlimit = forinit;
 					}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void enterExpression(ExpressionContext ctx) {
@@ -3216,8 +3269,12 @@ public class Main implements Java8Listener {
 
 	public void enterExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterExceptionTypeList(ExceptionTypeListContext ctx) {
@@ -3232,8 +3289,12 @@ public class Main implements Java8Listener {
 
 	public void enterEqualityExpression(EqualityExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterEnumDeclaration(EnumDeclarationContext ctx) {
@@ -3380,8 +3441,12 @@ public class Main implements Java8Listener {
 
 	public void enterConditionalOrExpression(ConditionalOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterConditionalExpression(ConditionalExpressionContext ctx) {
@@ -3392,8 +3457,12 @@ public class Main implements Java8Listener {
 	public void enterConditionalAndExpression(
 			ConditionalAndExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterCompilationUnit(CompilationUnitContext ctx) {
@@ -3701,8 +3770,12 @@ public class Main implements Java8Listener {
 
 	public void enterAndExpression(AndExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterAmbiguousName(AmbiguousNameContext ctx) {
@@ -3712,8 +3785,12 @@ public class Main implements Java8Listener {
 
 	public void enterAdditiveExpression(AdditiveExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getChildCount() > 1)
+		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
+			if (openParenthesis) {
+				operators.push("(");
+			}
+		}
 	}
 
 	public void enterAdditionalBound(AdditionalBoundContext ctx) {

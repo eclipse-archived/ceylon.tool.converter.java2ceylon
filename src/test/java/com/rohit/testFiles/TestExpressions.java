@@ -7,6 +7,8 @@ public class TestExpressions {
 
 		c = b--;
 
-		a = c * b + b / c + c % a;
+		a = (c * b) + (b / c) + (c % a);
+		
+		a = a / (b + c);
 	}
 }
