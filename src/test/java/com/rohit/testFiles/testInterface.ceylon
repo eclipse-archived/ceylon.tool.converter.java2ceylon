@@ -1,3 +1,3 @@
 shared interface TestInterface {
-shared void foo() ;
+formal shared void foo() ;
 }

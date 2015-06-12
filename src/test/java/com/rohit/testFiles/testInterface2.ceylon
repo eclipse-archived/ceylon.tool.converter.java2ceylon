@@ -1,4 +1,4 @@
 shared interface TestInterface2 satisfies TestInterface{
-shared void foo() ;
-shared void bar() ;
+formal shared void foo() ;
+formal shared void bar() ;
 }
