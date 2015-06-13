@@ -290,7 +290,8 @@ public class Main implements Java8Listener {
 	boolean enterArrayAccess = false;
 	boolean enterArrayAccess_lfno_primary = false;
 	boolean enterInterfaceDeclaration = false;
-	private boolean openParenthesis;
+	private boolean openParenthesis = false;
+	private Object bracketInstance;
 
 	static BufferedWriter bw;
 
@@ -884,7 +885,14 @@ public class Main implements Java8Listener {
 		if (ctx.block() == null
 				&& !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
 			try {
-				bw.write("}\n");
+				bw.write("}");
+				
+				if (enterelse) {
+					bw.write(" else ");
+					enterelse = false;
+				} else {
+					bw.write("\n");
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -971,7 +979,22 @@ public class Main implements Java8Listener {
 
 	public void exitRelationalExpression(RelationalExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof RelationalExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitReferenceType(ReferenceTypeContext ctx) {
@@ -1127,7 +1150,24 @@ public class Main implements Java8Listener {
 
 	public void exitMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
 		// TODO Auto-generated method stub
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+				openParenthesis = false;
+			}
 
+			if (ctx.getParent() instanceof MultiplicativeExpressionContext)
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+
+				}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitMethodReference_lfno_primary(
@@ -1355,7 +1395,22 @@ public class Main implements Java8Listener {
 
 	public void exitInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof InclusiveOrExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitImportDeclaration(ImportDeclarationContext ctx) {
@@ -1471,27 +1526,27 @@ public class Main implements Java8Listener {
 
 	public void exitExpressionName(ExpressionNameContext ctx) {
 		// TODO Auto-generated method stub
-		try {
-			if (!(ctx.getParent() instanceof PostfixExpressionContext && ctx
-					.getParent().getChildCount() > 1))
-				if (!operators.isEmpty()) {
-
-					if (operators.lastElement().equals(")") && !openParenthesis) {
-						bw.write(" " + operators.lastElement());
-						operators.pop();
-					}
-
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-
-					openParenthesis = false;
-				}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// try {
+		// if (!(ctx.getParent() instanceof PostfixExpressionContext && ctx
+		// .getParent().getChildCount() > 1))
+		// if (!operators.isEmpty()) {
+		//
+		// if (operators.lastElement().equals(")") && !openParenthesis) {
+		// bw.write(" " + operators.lastElement());
+		// operators.pop();
+		// }
+		//
+		// if (!operators.isEmpty()) {
+		// bw.write(" " + operators.lastElement() + " ");
+		// operators.pop();
+		// }
+		//
+		// openParenthesis = false;
+		// }
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 	}
 
 	public void exitExpression(ExpressionContext ctx) {
@@ -1499,10 +1554,14 @@ public class Main implements Java8Listener {
 
 		try {
 
-			if (enterif || enterwhile || enterswitch) {
+			if (ctx.getParent() instanceof IfThenElseStatementContext
+					|| ctx.getParent() instanceof IfThenStatementContext
+					|| ctx.getParent() instanceof WhileStatementContext
+					|| ctx.getParent() instanceof WhileStatementNoShortIfContext
+					|| ctx.getParent() instanceof SwitchStatementContext) {
 				bw.write(")");
 				enterif = enterwhile = enterswitch = false;
-			} else if (enterArgumentList) {
+			} else if (enterArgumentList && !enterArrayAccess_lfno_primary) {
 				numOfArguments++;
 				if (!(ctx.getText().equals(lastActualParameter) && lastActualParameterIndex == numOfArguments)) {
 					bw.write(", ");
@@ -1523,7 +1582,22 @@ public class Main implements Java8Listener {
 
 	public void exitExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof ExclusiveOrExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitExceptionTypeList(ExceptionTypeListContext ctx) {
@@ -1538,7 +1612,22 @@ public class Main implements Java8Listener {
 
 	public void exitEqualityExpression(EqualityExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof EqualityExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitEnumDeclaration(EnumDeclarationContext ctx) {
@@ -1685,7 +1774,22 @@ public class Main implements Java8Listener {
 
 	public void exitConditionalOrExpression(ConditionalOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof ConditionalOrExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitConditionalExpression(ConditionalExpressionContext ctx) {
@@ -1695,7 +1799,22 @@ public class Main implements Java8Listener {
 
 	public void exitConditionalAndExpression(ConditionalAndExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof ConditionalAndExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitCompilationUnit(CompilationUnitContext ctx) {
@@ -1923,7 +2042,22 @@ public class Main implements Java8Listener {
 
 	public void exitAndExpression(AndExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof AndExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitAmbiguousName(AmbiguousNameContext ctx) {
@@ -1933,7 +2067,22 @@ public class Main implements Java8Listener {
 
 	public void exitAdditiveExpression(AdditiveExpressionContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (bracketInstance == ctx) {
+				bw.write(")");
+			}
+			if (ctx.getParent() instanceof AdditiveExpressionContext) {
+				if (!operators.isEmpty()) {
+					if (!operators.isEmpty()) {
+						bw.write(" " + operators.lastElement() + " ");
+						operators.pop();
+					}
+				}
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitAdditionalBound(AdditionalBoundContext ctx) {
@@ -2515,7 +2664,14 @@ public class Main implements Java8Listener {
 			} else if (!enterfor) {
 				operators.push(ctx.getChild(1).getText());
 				if (openParenthesis) {
-					operators.push("(");
+					bracketInstance = ctx;
+					try {
+						bw.write("(");
+						openParenthesis = false;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 			} else
@@ -2558,8 +2714,9 @@ public class Main implements Java8Listener {
 			if (ctx.typeName() != null) {
 				bw.write(ctx.typeName().getText() + ctx.getChild(1).getText()
 						+ ctx.getChild(2).getText());
-			} else if (ctx.expression() != null) {
-				operators.push(")");
+			}
+
+			if (ctx.expression() != null) {
 				openParenthesis = true;
 			}
 		} catch (IOException e) {
@@ -2728,7 +2885,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3067,7 +3231,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3232,12 +3403,6 @@ public class Main implements Java8Listener {
 	public void enterExpressionName(ExpressionNameContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (!operators.isEmpty() && operators.lastElement().equals("(")) {
-				if (!operators.isEmpty()) {
-					bw.write(" ( ");
-					operators.pop();
-				}
-			}
 
 			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
 				if (enterArrayAccessSet) {
@@ -3272,7 +3437,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3292,7 +3464,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3444,7 +3623,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3460,7 +3646,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3773,7 +3966,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -3788,7 +3988,14 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				operators.push("(");
+				bracketInstance = ctx;
+				try {
+					bw.write("(");
+					openParenthesis = false;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
