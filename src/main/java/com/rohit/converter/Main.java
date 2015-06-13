@@ -277,6 +277,8 @@ public class Main implements Java8Listener {
 	int lastActualParameterIndex = 0, numOfArguments = 0;
 
 	Stack<String> operators = new Stack<String>();
+	Stack<Object> bracketInstance = new Stack<Object>();
+
 	String lastInterface;
 	String firstVariableInList;
 	boolean enterTypeArgumentsList = false;
@@ -290,8 +292,7 @@ public class Main implements Java8Listener {
 	boolean enterArrayAccess = false;
 	boolean enterArrayAccess_lfno_primary = false;
 	boolean enterInterfaceDeclaration = false;
-	private boolean openParenthesis = false;
-	private Object bracketInstance;
+	boolean openParenthesis = false;
 
 	static BufferedWriter bw;
 
@@ -326,19 +327,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			// JFrame frame = new JFrame("Antlr AST");
+			// JPanel panel = new JPanel();
+			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+			// .getRuleNames()), tree);
+			// viewer.setScale(1.1);
+			// panel.add(viewer);
+			// JScrollPane jScrollPane = new JScrollPane(panel);
+			// frame.add(jScrollPane);
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setSize(500, 500);
+			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+			//
+			// frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -886,7 +887,7 @@ public class Main implements Java8Listener {
 				&& !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
 			try {
 				bw.write("}");
-				
+
 				if (enterelse) {
 					bw.write(" else ");
 					enterelse = false;
@@ -980,8 +981,10 @@ public class Main implements Java8Listener {
 	public void exitRelationalExpression(RelationalExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof RelationalExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -1151,9 +1154,10 @@ public class Main implements Java8Listener {
 	public void exitMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
-				openParenthesis = false;
+				bracketInstance.pop();
 			}
 
 			if (ctx.getParent() instanceof MultiplicativeExpressionContext)
@@ -1396,8 +1400,10 @@ public class Main implements Java8Listener {
 	public void exitInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof InclusiveOrExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -1583,8 +1589,10 @@ public class Main implements Java8Listener {
 	public void exitExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof ExclusiveOrExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -1613,8 +1621,10 @@ public class Main implements Java8Listener {
 	public void exitEqualityExpression(EqualityExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof EqualityExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -1775,8 +1785,10 @@ public class Main implements Java8Listener {
 	public void exitConditionalOrExpression(ConditionalOrExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof ConditionalOrExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -1800,8 +1812,10 @@ public class Main implements Java8Listener {
 	public void exitConditionalAndExpression(ConditionalAndExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof ConditionalAndExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -2043,8 +2057,10 @@ public class Main implements Java8Listener {
 	public void exitAndExpression(AndExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof AndExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -2068,8 +2084,10 @@ public class Main implements Java8Listener {
 	public void exitAdditiveExpression(AdditiveExpressionContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (bracketInstance == ctx) {
+			if (!bracketInstance.isEmpty()
+					&& bracketInstance.lastElement() == ctx) {
 				bw.write(")");
+				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof AdditiveExpressionContext) {
 				if (!operators.isEmpty()) {
@@ -2664,7 +2682,7 @@ public class Main implements Java8Listener {
 			} else if (!enterfor) {
 				operators.push(ctx.getChild(1).getText());
 				if (openParenthesis) {
-					bracketInstance = ctx;
+					bracketInstance.push(ctx);
 					try {
 						bw.write("(");
 						openParenthesis = false;
@@ -2885,7 +2903,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3231,7 +3249,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3437,7 +3455,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3464,7 +3482,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3623,7 +3641,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3646,7 +3664,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3966,7 +3984,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;
@@ -3988,7 +4006,7 @@ public class Main implements Java8Listener {
 		if (ctx.getChildCount() > 1) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
-				bracketInstance = ctx;
+				bracketInstance.push(ctx);
 				try {
 					bw.write("(");
 					openParenthesis = false;

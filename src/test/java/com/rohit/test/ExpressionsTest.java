@@ -19,8 +19,19 @@ public class ExpressionsTest {
 
 	@Test
 	public void testExpressions() throws IOException {
-		Main.main(new String[] { testFile + "TestExpressions.java", convertedFile });
+		Main.main(new String[] { testFile + "TestExpressions.java",
+				convertedFile });
 		File file2 = new File(ceylonFile + "testExpressions.ceylon");
-		assertTrue("Expressions test failed", FileUtils.contentEquals(file1, file2));
+		assertTrue("Expressions test failed",
+				FileUtils.contentEquals(file1, file2));
+	}
+
+	@Test
+	public void testExpressions2() throws IOException {
+		Main.main(new String[] { testFile + "TestExpressions2.java",
+				convertedFile });
+		File file2 = new File(ceylonFile + "testExpressions2.ceylon");
+		assertTrue("Expressions 2 test failed",
+				FileUtils.contentEquals(file1, file2));
 	}
 }
