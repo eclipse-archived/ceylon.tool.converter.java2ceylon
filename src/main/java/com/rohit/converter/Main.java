@@ -327,19 +327,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-			// .getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+//			JFrame frame = new JFrame("Antlr AST");
+//			JPanel panel = new JPanel();
+//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+//					.getRuleNames()), tree);
+//			viewer.setScale(1.1);
+//			panel.add(viewer);
+//			JScrollPane jScrollPane = new JScrollPane(panel);
+//			frame.add(jScrollPane);
+//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame.setSize(500, 500);
+//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+//
+//			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -1205,9 +1205,11 @@ public class Main implements Java8Listener {
 			MethodInvocation_lfno_primaryContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (enterfor)
-				forlimit += ")";
-			bw.write(")");
+			if (!isInstanceOf) {
+				if (enterfor)
+					forlimit += ")";
+				bw.write(")");
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1219,7 +1221,9 @@ public class Main implements Java8Listener {
 			MethodInvocation_lf_primaryContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			bw.write(")");
+			if (!isInstanceOf) {
+				bw.write(")");
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2673,6 +2677,11 @@ public class Main implements Java8Listener {
 			if (ctx.getChild(1).getText().equals("instanceof")) {
 				try {
 					isInstanceOf = true;
+					if (openParenthesis) {
+						bracketInstance.push(ctx);
+						bw.write("(");
+						openParenthesis = false;
+					}
 					bw.write("is " + ctx.getChild(2).getText() + " "
 							+ ctx.getChild(0).getText());
 				} catch (IOException e) {
@@ -2729,13 +2738,16 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 
 		try {
-			if (ctx.typeName() != null) {
-				bw.write(ctx.typeName().getText() + ctx.getChild(1).getText()
-						+ ctx.getChild(2).getText());
-			}
+			if (!isInstanceOf) {
+				if (ctx.typeName() != null) {
+					bw.write(ctx.typeName().getText()
+							+ ctx.getChild(1).getText()
+							+ ctx.getChild(2).getText());
+				}
 
-			if (ctx.expression() != null) {
-				openParenthesis = true;
+				if (ctx.expression() != null) {
+					openParenthesis = true;
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -2941,30 +2953,32 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 
 		try {
-			int a = ctx.getChildCount();
-			String str = "";
+			if (!isInstanceOf) {
+				int a = ctx.getChildCount();
+				String str = "";
 
-			for (int i = 0; i < a; i++) {
-				if (ctx.getChild(i).getText().equals("("))
-					break;
+				for (int i = 0; i < a; i++) {
+					if (ctx.getChild(i).getText().equals("("))
+						break;
 
-				str += ctx.getChild(i).getText();
+					str += ctx.getChild(i).getText();
 
-			}
-			if (!enterfor) {
-				if (str.equals("System.out.println")) {
-					bw.write("print");
-					if (ctx.argumentList() == null)
-						bw.write("\"\"");
-				} else if (str.equals("System.out.print")) {
-					bw.write("process.write");
-				} else {
-					bw.write(str);
-					if (ctx.argumentList() == null)
-						bw.write("(");
 				}
-			} else {
-				forlimit = str + "(";
+				if (!enterfor) {
+					if (str.equals("System.out.println")) {
+						bw.write("print");
+						if (ctx.argumentList() == null)
+							bw.write("\"\"");
+					} else if (str.equals("System.out.print")) {
+						bw.write("process.write");
+					} else {
+						bw.write(str);
+						if (ctx.argumentList() == null)
+							bw.write("(");
+					}
+				} else {
+					forlimit = str + "(";
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -2977,29 +2991,30 @@ public class Main implements Java8Listener {
 			MethodInvocation_lf_primaryContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			int a = ctx.getChildCount();
-			String str = "";
+			if (!isInstanceOf) {
+				int a = ctx.getChildCount();
+				String str = "";
 
-			for (int i = 0; i < a; i++) {
-				if (ctx.getChild(i).getText().equals("("))
-					break;
+				for (int i = 0; i < a; i++) {
+					if (ctx.getChild(i).getText().equals("("))
+						break;
 
-				str += ctx.getChild(i).getText();
+					str += ctx.getChild(i).getText();
 
+				}
+
+				if (str.equals("System.out.println")) {
+					bw.write("print");
+					if (ctx.argumentList() == null)
+						bw.write("\"\"");
+				} else if (str.equals("System.out.print")) {
+					bw.write("process.write");
+				} else {
+					bw.write(str);
+					if (ctx.argumentList() == null)
+						bw.write("(");
+				}
 			}
-
-			if (str.equals("System.out.println")) {
-				bw.write("print");
-				if (ctx.argumentList() == null)
-					bw.write("\"\"");
-			} else if (str.equals("System.out.print")) {
-				bw.write("process.write");
-			} else {
-				bw.write(str);
-				if (ctx.argumentList() == null)
-					bw.write("(");
-			}
-
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
