@@ -327,19 +327,19 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-//			JFrame frame = new JFrame("Antlr AST");
-//			JPanel panel = new JPanel();
-//			TreeViewer viewer = new TreeViewer(Arrays.asList(parser
-//					.getRuleNames()), tree);
-//			viewer.setScale(1.1);
-//			panel.add(viewer);
-//			JScrollPane jScrollPane = new JScrollPane(panel);
-//			frame.add(jScrollPane);
-//			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setSize(500, 500);
-//			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-//
-//			frame.setVisible(true);
+			// JFrame frame = new JFrame("Antlr AST");
+			// JPanel panel = new JPanel();
+			// TreeViewer viewer = new TreeViewer(Arrays.asList(parser
+			// .getRuleNames()), tree);
+			// viewer.setScale(1.1);
+			// panel.add(viewer);
+			// JScrollPane jScrollPane = new JScrollPane(panel);
+			// frame.add(jScrollPane);
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setSize(500, 500);
+			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+			//
+			// frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -2305,42 +2305,44 @@ public class Main implements Java8Listener {
 		enterArray = true;
 
 		String type = "";
-		if (ctx.unannPrimitiveType() != null)
+		if (ctx.unannPrimitiveType() != null) {
 			type = ctx.unannPrimitiveType().getText();
-		String ceylonType = "";
-		try {
-			if (!variableModifier.equals("final") && !enterConstructor) {
-				bw.write("variable ");
-				variableListType = "variable ";
+			String ceylonType = "";
+			try {
+				if (!variableModifier.equals("final") && !enterConstructor) {
+					bw.write("variable ");
+					variableListType = "variable ";
+				}
+				variableModifier = "";
+
+				if (type.equals("int")) {
+					ceylonType = "IntArray ";
+				} else if (type.equals("short")) {
+					ceylonType = "ShortArray ";
+				} else if (type.equals("boolean")) {
+					ceylonType = "BooleanArray ";
+				} else if (type.equals("byte")) {
+					ceylonType = "ByteArray ";
+				} else if (type.equals("long")) {
+					ceylonType = "LongArray ";
+				} else if (type.equals("float")) {
+					ceylonType = "FloatArray ";
+				} else if (type.equals("double")) {
+					ceylonType = "DoubleArray ";
+				} else if (type.equals("char")) {
+					ceylonType = "CharArray ";
+				} else {
+					ceylonType = type + " ";
+				}
+
+				variableListType += ceylonType;
+
+				if (!enterConstructor)
+					bw.write(ceylonType);
+
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			variableModifier = "";
-
-			if (type.equals("int")) {
-				ceylonType = "IntArray ";
-			} else if (type.equals("short")) {
-				ceylonType = "ShortArray ";
-			} else if (type.equals("boolean")) {
-				ceylonType = "BooleanArray ";
-			} else if (type.equals("byte")) {
-				ceylonType = "ByteArray ";
-			} else if (type.equals("long")) {
-				ceylonType = "LongArray ";
-			} else if (type.equals("float")) {
-				ceylonType = "FloatArray ";
-			} else if (type.equals("double")) {
-				ceylonType = "DoubleArray ";
-			} else if (type.equals("char")) {
-				ceylonType = "CharArray ";
-			} else {
-				ceylonType = type + " ";
-			}
-
-			variableListType += ceylonType;
-
-			if (!enterConstructor)
-				bw.write(ceylonType);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
