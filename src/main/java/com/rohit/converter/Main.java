@@ -2280,23 +2280,25 @@ public class Main implements Java8Listener {
 		String type = ctx.getChild(0).getText();
 		String ceylonType = "";
 
-		try {
-			if (!enterfor && !enterresult) {
-				if (!variableModifier.equals("final")) {
-					bw.write("variable ");
-					variableListType = "variable ";
+		if (!(ctx.getParent().getParent() instanceof UnannArrayTypeContext)) {
+			try {
+				if (!enterfor && !enterresult) {
+					if (!variableModifier.equals("final")) {
+						bw.write("variable ");
+						variableListType = "variable ";
+					}
 				}
+				variableModifier = "";
+
+				ceylonType = type + " ";
+
+				variableListType += ceylonType;
+
+				bw.write(ceylonType);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			variableModifier = "";
-
-			ceylonType = type + " ";
-
-			variableListType += ceylonType;
-
-			bw.write(ceylonType);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 	}
@@ -2331,42 +2333,44 @@ public class Main implements Java8Listener {
 		String type = "";
 		if (ctx.unannPrimitiveType() != null) {
 			type = ctx.unannPrimitiveType().getText();
-			String ceylonType = "";
-			try {
-				if (!variableModifier.equals("final") && !enterConstructor) {
-					bw.write("variable ");
-					variableListType = "variable ";
-				}
-				variableModifier = "";
-
-				if (type.equals("int")) {
-					ceylonType = "IntArray ";
-				} else if (type.equals("short")) {
-					ceylonType = "ShortArray ";
-				} else if (type.equals("boolean")) {
-					ceylonType = "BooleanArray ";
-				} else if (type.equals("byte")) {
-					ceylonType = "ByteArray ";
-				} else if (type.equals("long")) {
-					ceylonType = "LongArray ";
-				} else if (type.equals("float")) {
-					ceylonType = "FloatArray ";
-				} else if (type.equals("double")) {
-					ceylonType = "DoubleArray ";
-				} else if (type.equals("char")) {
-					ceylonType = "CharArray ";
-				} else {
-					ceylonType = type + " ";
-				}
-
-				variableListType += ceylonType;
-
-				if (!enterConstructor)
-					bw.write(ceylonType);
-
-			} catch (IOException e) {
-				e.printStackTrace();
+		} else if (ctx.unannClassOrInterfaceType() != null) {
+			type = ctx.unannClassOrInterfaceType().getText();
+		}
+		String ceylonType = "";
+		try {
+			if (!variableModifier.equals("final") && !enterConstructor) {
+				bw.write("variable ");
+				variableListType = "variable ";
 			}
+			variableModifier = "";
+
+			if (type.equals("int")) {
+				ceylonType = "IntArray ";
+			} else if (type.equals("short")) {
+				ceylonType = "ShortArray ";
+			} else if (type.equals("boolean")) {
+				ceylonType = "BooleanArray ";
+			} else if (type.equals("byte")) {
+				ceylonType = "ByteArray ";
+			} else if (type.equals("long")) {
+				ceylonType = "LongArray ";
+			} else if (type.equals("float")) {
+				ceylonType = "FloatArray ";
+			} else if (type.equals("double")) {
+				ceylonType = "DoubleArray ";
+			} else if (type.equals("char")) {
+				ceylonType = "CharArray ";
+			} else {
+				ceylonType = "ObjectArray<" + type + "> ";
+			}
+
+			variableListType += ceylonType;
+
+			if (!enterConstructor)
+				bw.write(ceylonType);
+
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -3725,24 +3729,25 @@ public class Main implements Java8Listener {
 	public void enterClassType_lfno_classOrInterfaceType(
 			ClassType_lfno_classOrInterfaceTypeContext ctx) {
 		// TODO Auto-generated method stub
-		try {
-			if (enterTypeArgumentsList) {
-				bw.write(ctx.getChild(0).getText());
+		if (!(ctx.getParent().getParent() instanceof ArrayCreationExpressionContext))
+			try {
+				if (enterTypeArgumentsList) {
+					bw.write(ctx.getChild(0).getText());
 
-				if (!ctx.getText().equals(lastTypeArgument))
-					bw.write(", ");
-			}
+					if (!ctx.getText().equals(lastTypeArgument))
+						bw.write(", ");
+				}
 
-			if (!isInstanceOf && !enterTypeArgumentsList
-					&& !enterTypeParametersList) {
-				bw.write(ctx.getText());
-			} else {
-				isInstanceOf = false;
+				if (!isInstanceOf && !enterTypeArgumentsList
+						&& !enterTypeParametersList) {
+					bw.write(ctx.getText());
+				} else {
+					isInstanceOf = false;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	public void enterClassType_lf_classOrInterfaceType(
@@ -3911,7 +3916,12 @@ public class Main implements Java8Listener {
 
 	public void enterArrayCreationExpression(ArrayCreationExpressionContext ctx) {
 		// TODO Auto-generated method stub
-		String type = ctx.primitiveType().getText();
+		String type = "";
+		if (ctx.primitiveType() != null)
+			type = ctx.primitiveType().getText();
+		else if (ctx.classOrInterfaceType() != null) {
+			type = ctx.classOrInterfaceType().getText();
+		}
 		String ceylonType = "";
 		try {
 			if (type.equals("int")) {
@@ -3931,7 +3941,7 @@ public class Main implements Java8Listener {
 			} else if (type.equals("char")) {
 				ceylonType = "CharArray";
 			} else {
-				ceylonType = type;
+				ceylonType = "ObjectArray<" + type + ">";
 			}
 
 			if (!enterConstructor)
