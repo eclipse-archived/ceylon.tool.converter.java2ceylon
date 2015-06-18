@@ -23,4 +23,11 @@ public class ArrayTest {
 		File file2 = new File(ceylonFile + "testArrays.ceylon");
 		assertTrue("Arrays test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testArrays2() throws IOException {
+		Main.main(new String[] { testFile + "TestArrays2.java", convertedFile });
+		File file2 = new File(ceylonFile + "testArrays2.ceylon");
+		assertTrue("Arrays 2 test failed", FileUtils.contentEquals(file1, file2));
+	}
 }

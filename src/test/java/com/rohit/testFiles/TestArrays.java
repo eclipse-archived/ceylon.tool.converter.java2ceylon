@@ -7,7 +7,5 @@ public class TestArrays {
 		int b;
 		a[2] = 6;
 		b = a[4];
-		
-		TestClass[] c = new TestClass[b];
 	}
 }
