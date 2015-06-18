@@ -792,7 +792,12 @@ public class Main implements Java8Listener {
 
 	public void exitTypeArgument(TypeArgumentContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			if (!ctx.getText().equals(lastTypeArgument))
+				bw.write(", ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitType(TypeContext ctx) {
@@ -3733,9 +3738,6 @@ public class Main implements Java8Listener {
 			try {
 				if (enterTypeArgumentsList) {
 					bw.write(ctx.getChild(0).getText());
-
-					if (!ctx.getText().equals(lastTypeArgument))
-						bw.write(", ");
 				}
 
 				if (!isInstanceOf && !enterTypeArgumentsList
