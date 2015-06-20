@@ -2,9 +2,11 @@ shared class TestIf() {
 shared void foo(variable Integer a, variable Integer b) {
 if(a > b){
 a=b;
-} else if(a < b){
+}
+ else if(a < b){
 a=b;
-} else {
+}
+ else {
 a=b + 1;
 }
 if(a % b == 0){

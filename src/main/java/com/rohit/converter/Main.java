@@ -398,12 +398,7 @@ public class Main implements Java8Listener {
 		int count = ctx.getChildCount();
 		try {
 			bw.write(ctx.getChild(count - 1).toString());
-			if (enterelse) {
-				bw.write(" else ");
-				enterelse = false;
-			} else {
-				bw.write("\n");
-			}
+			bw.write("\n");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -902,14 +897,7 @@ public class Main implements Java8Listener {
 		if (ctx.block() == null
 				&& !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
 			try {
-				bw.write("}");
-
-				if (enterelse) {
-					bw.write(" else ");
-					enterelse = false;
-				} else {
-					bw.write("\n");
-				}
+				bw.write("}\n");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -919,7 +907,14 @@ public class Main implements Java8Listener {
 
 	public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
 		// TODO Auto-generated method stub
-
+		if (ctx.getParent() instanceof IfThenElseStatementContext) {
+			try {
+				bw.write(" else ");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitStatementExpressionList(StatementExpressionListContext ctx) {
