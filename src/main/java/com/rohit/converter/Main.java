@@ -293,6 +293,7 @@ public class Main implements Java8Listener {
 	boolean enterArrayAccess_lfno_primary = false;
 	boolean enterInterfaceDeclaration = false;
 	boolean openParenthesis = false;
+	private boolean enterEnhancedfor;
 
 	static BufferedWriter bw;
 
@@ -647,7 +648,8 @@ public class Main implements Java8Listener {
 
 	public void exitUnannType(UnannTypeContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getParent().getChild(1) != null && ctx.getParent().getChild(1).getText().equals("...")) {
+		if (ctx.getParent().getChild(1) != null
+				&& ctx.getParent().getChild(1).getText().equals("...")) {
 			try {
 				bw.write("* ");
 			} catch (IOException e) {
@@ -1588,9 +1590,10 @@ public class Main implements Java8Listener {
 					|| ctx.getParent() instanceof IfThenStatementContext
 					|| ctx.getParent() instanceof WhileStatementContext
 					|| ctx.getParent() instanceof WhileStatementNoShortIfContext
-					|| ctx.getParent() instanceof SwitchStatementContext) {
+					|| ctx.getParent() instanceof SwitchStatementContext
+					|| ctx.getParent() instanceof EnhancedForStatementContext) {
 				bw.write(")");
-				enterif = enterwhile = enterswitch = false;
+				enterif = enterwhile = enterswitch = enterEnhancedfor = false;
 			} else if (enterArgumentList && !enterArrayAccess_lfno_primary) {
 				numOfArguments++;
 				if (!(ctx.getText().equals(lastActualParameter) && lastActualParameterIndex == numOfArguments)) {
@@ -1707,7 +1710,6 @@ public class Main implements Java8Listener {
 
 	public void exitEnhancedForStatement(EnhancedForStatementContext ctx) {
 		// TODO Auto-generated method stub
-
 	}
 
 	public void exitEmptyStatement(EmptyStatementContext ctx) {
@@ -2291,7 +2293,7 @@ public class Main implements Java8Listener {
 
 		if (!(ctx.getParent().getParent() instanceof UnannArrayTypeContext)) {
 			try {
-				if (!enterfor && !enterresult) {
+				if (!enterEnhancedfor && !enterfor && !enterresult) {
 					if (!variableModifier.equals("final")) {
 						bw.write("variable ");
 						variableListType = "variable ";
@@ -3486,6 +3488,9 @@ public class Main implements Java8Listener {
 					enterArrayAccessSet = false;
 				} else if (!isInstanceOf)
 					if (!enterfor) {
+						if (enterEnhancedfor) {
+							bw.write(" in ");
+						}
 						bw.write(ctx.getText());
 					} else {
 						forinit = ctx.getText();
@@ -3595,7 +3600,13 @@ public class Main implements Java8Listener {
 
 	public void enterEnhancedForStatement(EnhancedForStatementContext ctx) {
 		// TODO Auto-generated method stub
-
+		try {
+			enterEnhancedfor = true;
+			bw.write("for(");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void enterEmptyStatement(EmptyStatementContext ctx) {

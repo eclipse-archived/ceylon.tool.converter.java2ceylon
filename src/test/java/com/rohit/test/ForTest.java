@@ -23,4 +23,11 @@ public class ForTest {
 		File file2 = new File(ceylonFile + "testFor.ceylon");
 		assertTrue("For test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testFor2() throws IOException {
+		Main.main(new String[] { testFile + "TestFor2.java", convertedFile });
+		File file2 = new File(ceylonFile + "testFor2.ceylon");
+		assertTrue("For each test failed", FileUtils.contentEquals(file1, file2));
+	}
 }
