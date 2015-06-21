@@ -271,12 +271,11 @@ public class Main implements Java8Listener {
 	boolean enterresult = false;
 	boolean enterswitch = false;
 	boolean isInstanceOf = false;
-	boolean enterArgumentList = false;
+	
 	boolean multipleVariables = false;
 
-	int lastActualParameterIndex = 0, numOfArguments = 0;
-
 	Stack<String> operators = new Stack<String>();
+	Stack<Boolean> enterArgumentList = new Stack<Boolean>();
 	Stack<Object> bracketInstance = new Stack<Object>();
 
 	String lastInterface;
@@ -1594,9 +1593,12 @@ public class Main implements Java8Listener {
 					|| ctx.getParent() instanceof EnhancedForStatementContext) {
 				bw.write(")");
 				enterif = enterwhile = enterswitch = enterEnhancedfor = false;
-			} else if (enterArgumentList && !enterArrayAccess_lfno_primary) {
-				numOfArguments++;
-				if (!(ctx.getText().equals(lastActualParameter) && lastActualParameterIndex == numOfArguments)) {
+			} else if (!enterArgumentList.isEmpty()
+					&& enterArgumentList.lastElement()
+					&& !enterArrayAccess_lfno_primary) {
+				ParserRuleContext parentContext = ctx.getParent();
+				if (ctx != parentContext
+						.getChild(parentContext.getChildCount() - 1)) {
 					bw.write(", ");
 				}
 			}
@@ -2051,8 +2053,7 @@ public class Main implements Java8Listener {
 
 	public void exitArgumentList(ArgumentListContext ctx) {
 		// TODO Auto-generated method stub
-		enterArgumentList = false;
-		numOfArguments = 0;
+		enterArgumentList.pop();
 	}
 
 	public void exitAnnotationTypeMemberDeclaration(
@@ -3140,7 +3141,7 @@ public class Main implements Java8Listener {
 	public void enterLocalVariableDeclaration(
 			LocalVariableDeclarationContext ctx) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void enterLiteral(LiteralContext ctx) {
@@ -3804,7 +3805,7 @@ public class Main implements Java8Listener {
 			bw.write(ctx.getChild(1).getText());
 
 			if (ctx.argumentList() != null) {
-				enterArgumentList = true;
+				enterArgumentList.push(true);
 			} else if (ctx.typeArgumentsOrDiamond() != null) {
 				enterTypeArgumentsList = true;
 			} else {
@@ -4004,7 +4005,7 @@ public class Main implements Java8Listener {
 
 	public void enterArgumentList(ArgumentListContext ctx) {
 		// TODO Auto-generated method stub
-		enterArgumentList = true;
+		enterArgumentList.push(true);
 		try {
 			bw.write("(");
 		} catch (IOException e) {
@@ -4013,8 +4014,6 @@ public class Main implements Java8Listener {
 		}
 
 		lastActualParameter = ctx.getChild(ctx.getChildCount() - 1).getText();
-		lastActualParameterIndex = ctx.getChildCount() / 2 + 1;
-		numOfArguments = 0;
 	}
 
 	public void enterAnnotationTypeMemberDeclaration(
