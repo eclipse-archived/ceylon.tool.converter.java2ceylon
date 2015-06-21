@@ -647,7 +647,7 @@ public class Main implements Java8Listener {
 
 	public void exitUnannType(UnannTypeContext ctx) {
 		// TODO Auto-generated method stub
-		if (ctx.getParent().getChild(1).getText().equals("...")) {
+		if (ctx.getParent().getChild(1) != null && ctx.getParent().getChild(1).getText().equals("...")) {
 			try {
 				bw.write("* ");
 			} catch (IOException e) {
