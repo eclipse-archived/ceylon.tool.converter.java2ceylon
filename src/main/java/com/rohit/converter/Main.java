@@ -261,8 +261,7 @@ import com.rohit.converter.Java8Parser.WildcardContext;
 public class Main implements Java8Listener {
 
 	String lastFormalParameter, forinit, forlimit, forConditionOperator,
-			forCounterDatatype, lastActualParameter = "",
-			lastTypeArgument = "", lastTypeParameter = "",
+			forCounterDatatype, lastActualParameter = "", lastTypeParameter = "",
 			variableModifier = "", variableListType = "", forByValue = "1";
 	boolean enterif = false;
 	boolean enterfor = false;
@@ -796,8 +795,10 @@ public class Main implements Java8Listener {
 	public void exitTypeArgument(TypeArgumentContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			if (!ctx.getText().equals(lastTypeArgument))
+			ParserRuleContext parentContext = ctx.getParent();
+			if(ctx != parentContext.getChild(parentContext.getChildCount() - 1)) {
 				bw.write(", ");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -2475,7 +2476,6 @@ public class Main implements Java8Listener {
 	public void enterTypeArgumentList(TypeArgumentListContext ctx) {
 		// TODO Auto-generated method stub
 		try {
-			lastTypeArgument = ctx.getChild(ctx.getChildCount() - 1).getText();
 			enterTypeArgumentsList = true;
 			bw.write("<");
 		} catch (IOException e) {
