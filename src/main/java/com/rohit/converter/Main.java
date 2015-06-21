@@ -1482,7 +1482,9 @@ public class Main implements Java8Listener {
 		enterForUpdate = false;
 		try {
 			if (!forByValue.equals("1"))
-				bw.write(".by(" + forByValue + "))");
+				bw.write(".by(" + forByValue + ")");
+
+			bw.write(")");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
