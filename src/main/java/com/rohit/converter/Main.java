@@ -647,7 +647,14 @@ public class Main implements Java8Listener {
 
 	public void exitUnannType(UnannTypeContext ctx) {
 		// TODO Auto-generated method stub
-
+		if (ctx.getParent().getChild(1).getText().equals("...")) {
+			try {
+				bw.write("* ");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitUnannReferenceType(UnannReferenceTypeContext ctx) {
@@ -3166,8 +3173,12 @@ public class Main implements Java8Listener {
 
 	public void enterLastFormalParameter(LastFormalParameterContext ctx) {
 		// TODO Auto-generated method stub
-		lastFormalParameter = ctx.formalParameter().variableDeclaratorId()
-				.getText();
+		if (ctx.formalParameter() != null) {
+			lastFormalParameter = ctx.formalParameter().variableDeclaratorId()
+					.getText();
+		} else {
+			lastFormalParameter = ctx.variableDeclaratorId().getText();
+		}
 	}
 
 	public void enterLambdaParameters(LambdaParametersContext ctx) {
