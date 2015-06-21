@@ -2217,7 +2217,7 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			if (!enterConstructor)
-				bw.write(ctx.getText());
+				bw.write(ctx.getChild(0).getText());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -3140,7 +3140,7 @@ public class Main implements Java8Listener {
 	public void enterLocalVariableDeclaration(
 			LocalVariableDeclarationContext ctx) {
 		// TODO Auto-generated method stub
-
+		
 	}
 
 	public void enterLiteral(LiteralContext ctx) {
