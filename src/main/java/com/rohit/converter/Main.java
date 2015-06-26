@@ -261,8 +261,9 @@ import com.rohit.converter.Java8Parser.WildcardContext;
 public class Main implements Java8Listener {
 
 	String lastFormalParameter, forinit, forlimit, forConditionOperator,
-			forCounterDatatype, lastActualParameter = "", lastTypeParameter = "",
-			variableModifier = "", variableListType = "", forByValue = "1";
+			forCounterDatatype, lastActualParameter = "",
+			lastTypeParameter = "", variableModifier = "",
+			variableListType = "", forByValue = "1";
 	boolean enterif = false;
 	boolean enterfor = false;
 	boolean enterwhile = false;
@@ -270,7 +271,7 @@ public class Main implements Java8Listener {
 	boolean enterresult = false;
 	boolean enterswitch = false;
 	boolean isInstanceOf = false;
-	
+
 	boolean multipleVariables = false;
 
 	Stack<String> operators = new Stack<String>();
@@ -314,6 +315,7 @@ public class Main implements Java8Listener {
 			Java8Lexer lexer = new Java8Lexer(input);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			Java8Parser parser = new Java8Parser(tokens);
+
 			ParseTree tree = parser.compilationUnit();
 
 			bw = new BufferedWriter(new FileWriter(new File(args[1])));
@@ -796,7 +798,8 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			ParserRuleContext parentContext = ctx.getParent();
-			if(ctx != parentContext.getChild(parentContext.getChildCount() - 1)) {
+			if (ctx != parentContext
+					.getChild(parentContext.getChildCount() - 1)) {
 				bw.write(", ");
 			}
 		} catch (IOException e) {
@@ -1585,7 +1588,7 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 
 		try {
-
+			ParserRuleContext parentContext = ctx.getParent();
 			if (ctx.getParent() instanceof IfThenElseStatementContext
 					|| ctx.getParent() instanceof IfThenStatementContext
 					|| ctx.getParent() instanceof WhileStatementContext
@@ -1595,9 +1598,8 @@ public class Main implements Java8Listener {
 				bw.write(")");
 				enterif = enterwhile = enterswitch = enterEnhancedfor = false;
 			} else if (!enterArgumentList.isEmpty()
-					&& enterArgumentList.lastElement()
-					&& !enterArrayAccess_lfno_primary) {
-				ParserRuleContext parentContext = ctx.getParent();
+					&& !enterArrayAccess_lfno_primary
+					&& !(parentContext instanceof ReturnStatementContext)) {
 				if (ctx != parentContext
 						.getChild(parentContext.getChildCount() - 1)) {
 					bw.write(", ");
@@ -2780,6 +2782,9 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 
 		try {
+			if (ctx.getText().equals("this")) {
+				bw.write("this");
+			}
 			if (!isInstanceOf) {
 				if (ctx.typeName() != null) {
 					bw.write(ctx.typeName().getText()
