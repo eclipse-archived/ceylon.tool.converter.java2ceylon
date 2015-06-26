@@ -263,13 +263,10 @@ public class Main implements Java8Listener {
 	String lastFormalParameter, forinit, forlimit, forConditionOperator,
 			forCounterDatatype, lastActualParameter = "",
 			lastTypeParameter = "", variableModifier = "",
-			variableListType = "", forByValue = "1";
-	boolean enterif = false;
+			variableListType = "", forByValue = "1", packageName = "",
+			lastInterface = "", firstVariableInList = "";
 	boolean enterfor = false;
-	boolean enterwhile = false;
-	boolean enterelse = false;
 	boolean enterresult = false;
-	boolean enterswitch = false;
 	boolean isInstanceOf = false;
 
 	boolean multipleVariables = false;
@@ -278,21 +275,18 @@ public class Main implements Java8Listener {
 	Stack<Boolean> enterArgumentList = new Stack<Boolean>();
 	Stack<Object> bracketInstance = new Stack<Object>();
 
-	String lastInterface;
-	String firstVariableInList;
 	boolean enterTypeArgumentsList = false;
 	boolean enterTypeParametersList = false;
 	boolean enterConstructor = false;
 	boolean enterForUpdate = false;
 	boolean firstImport = true;
-	String packageName = "";
 	boolean enterArray = false;
 	boolean enterArrayAccessSet = false;
 	boolean enterArrayAccess = false;
 	boolean enterArrayAccess_lfno_primary = false;
 	boolean enterInterfaceDeclaration = false;
 	boolean openParenthesis = false;
-	private boolean enterEnhancedfor;
+	boolean enterEnhancedfor = false;
 
 	static BufferedWriter bw;
 
@@ -1596,7 +1590,7 @@ public class Main implements Java8Listener {
 					|| ctx.getParent() instanceof SwitchStatementContext
 					|| ctx.getParent() instanceof EnhancedForStatementContext) {
 				bw.write(")");
-				enterif = enterwhile = enterswitch = enterEnhancedfor = false;
+				enterEnhancedfor = false;
 			} else if (!enterArgumentList.isEmpty()
 					&& !enterArrayAccess_lfno_primary
 					&& !(parentContext instanceof ReturnStatementContext)) {
@@ -2175,7 +2169,6 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			bw.write("while(");
-			enterwhile = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2531,7 +2524,6 @@ public class Main implements Java8Listener {
 		// TODO Auto-generated method stub
 		try {
 			bw.write("switch(");
-			enterswitch = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -3335,7 +3327,6 @@ public class Main implements Java8Listener {
 	public void enterIfThenStatement(IfThenStatementContext ctx) {
 		// TODO Auto-generated method stub
 
-		enterif = true;
 		try {
 			bw.write(ctx.getChild(0).getText() + ctx.getChild(1).getText());
 		} catch (IOException e) {
@@ -3351,8 +3342,6 @@ public class Main implements Java8Listener {
 
 	public void enterIfThenElseStatement(IfThenElseStatementContext ctx) {
 		// TODO Auto-generated method stub
-		enterif = true;
-		enterelse = true;
 		try {
 			bw.write(ctx.getChild(0).getText() + ctx.getChild(1).getText());
 		} catch (IOException e) {
