@@ -1,11 +1,17 @@
 package com.rohit.converter;
 
+import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +20,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.*;
 
@@ -82,19 +89,18 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new
-			// TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -477,7 +483,15 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
-
+		try {
+			if (!(ctx.getParent().getChild(4) instanceof ArgumentListContext)) {
+				bw.write("(");
+			} else {
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void exitTypeArguments(TypeArgumentsContext ctx) {
