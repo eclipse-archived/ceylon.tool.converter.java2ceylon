@@ -478,6 +478,7 @@ public class Main implements Java8Listener {
 
 	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
 		try {
+			//TODO change getChild(4)
 			if (!(ctx.getParent().getChild(4) instanceof ArgumentListContext)) {
 				bw.write("(");
 			} else {

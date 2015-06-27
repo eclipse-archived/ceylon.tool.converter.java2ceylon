@@ -23,4 +23,11 @@ public class MethodTest {
 		File file2 = new File(ceylonFile + "testMethod.ceylon");
 		assertTrue("Method test failed", FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testMethod2() throws IOException {
+		Main.main(new String[] { testFile + "TestMethod2.java", convertedFile });
+		File file2 = new File(ceylonFile + "testMethod2.ceylon");
+		assertTrue("Method 2 test failed", FileUtils.contentEquals(file1, file2));
+	}
 }
