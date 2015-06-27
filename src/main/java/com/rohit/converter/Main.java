@@ -122,7 +122,6 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitExpressionStatement(ExpressionStatementContext ctx) {
-
 		try {
 			bw.write(ctx.getChild(ctx.getChildCount() - 1) + "\n");
 		} catch (IOException e) {
@@ -132,7 +131,6 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitClassBody(ClassBodyContext ctx) {
-
 		int count = ctx.getChildCount();
 
 		try {
@@ -144,7 +142,6 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitBlock(BlockContext ctx) {
-
 		int count = ctx.getChildCount();
 		try {
 			bw.write(ctx.getChild(count - 1).toString());
@@ -481,12 +478,6 @@ public class Main implements Java8Listener {
 
 	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
 
-		try {
-			bw.write("(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 	}
 
 	public void exitTypeArguments(TypeArgumentsContext ctx) {
@@ -1656,10 +1647,11 @@ public class Main implements Java8Listener {
 	public void enterWildcard(WildcardContext ctx) {
 
 		try {
-			if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?extends"))
-				bw.write("out ");
-			else if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?super"))
-				bw.write("in ");
+			if (ctx.wildcardBounds() != null)
+				if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?extends"))
+					bw.write("out ");
+				else if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?super"))
+					bw.write("in ");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -2222,9 +2214,6 @@ public class Main implements Java8Listener {
 	public void enterPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
 
 		try {
-			if (ctx.getText().equals("this")) {
-				bw.write("this");
-			}
 			if (!isInstanceOf) {
 				if (ctx.typeName() != null) {
 					bw.write(ctx.typeName().getText() + ctx.getChild(1).getText() + ctx.getChild(2).getText());
