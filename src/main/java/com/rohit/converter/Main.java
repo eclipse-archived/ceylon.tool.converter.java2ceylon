@@ -478,7 +478,7 @@ public class Main implements Java8Listener {
 
 	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
 		try {
-			//TODO change getChild(4)
+			// TODO change getChild(4)
 			if (!(ctx.getParent().getChild(4) instanceof ArgumentListContext)) {
 				bw.write("(");
 			} else {
@@ -1176,17 +1176,19 @@ public class Main implements Java8Listener {
 
 		try {
 			ParserRuleContext parentContext = ctx.getParent();
-			if (ctx.getParent() instanceof IfThenElseStatementContext
-					|| ctx.getParent() instanceof IfThenStatementContext
-					|| ctx.getParent() instanceof WhileStatementContext
-					|| ctx.getParent() instanceof WhileStatementNoShortIfContext
-					|| ctx.getParent() instanceof SwitchStatementContext
-					|| ctx.getParent() instanceof EnhancedForStatementContext) {
+			if (parentContext instanceof IfThenElseStatementContext
+					|| parentContext instanceof IfThenStatementContext
+					|| parentContext instanceof WhileStatementContext
+					|| parentContext instanceof WhileStatementNoShortIfContext
+					|| parentContext instanceof SwitchStatementContext
+					|| parentContext instanceof EnhancedForStatementContext) {
 				bw.write(")");
 				enterEnhancedfor = false;
 			} else if (!enterArgumentList.isEmpty() && !enterArrayAccess_lfno_primary
 					&& !(parentContext instanceof ReturnStatementContext)) {
-				if (ctx != parentContext.getChild(parentContext.getChildCount() - 1)) {
+				ParseTree lastExpression = parentContext.getChild(parentContext.getChildCount() - 1);
+				if (lastExpression instanceof ExpressionContext
+						&& ctx != lastExpression) {
 					bw.write(", ");
 				}
 			}
@@ -2230,6 +2232,11 @@ public class Main implements Java8Listener {
 
 				if (ctx.expression() != null) {
 					openParenthesis = true;
+				}
+				if (!(ctx.getParent().getParent() instanceof FieldAccessContext)) {
+					if (ctx.getText().equals("this")) {
+						bw.write("this");
+					}
 				}
 			}
 		} catch (IOException e) {
