@@ -688,13 +688,14 @@ public class Main implements Java8Listener {
 				bracketInstance.pop();
 			}
 			if (ctx.getParent() instanceof RelationalExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
+				if (!operators.isEmpty() && !isInstanceOf) {
+					bw.write(" " + operators.lastElement() + " ");
+					operators.pop();
 				}
 			}
+
+			if (!(ctx.getParent() instanceof RelationalExpressionContext))
+				isInstanceOf = false;
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1176,8 +1177,7 @@ public class Main implements Java8Listener {
 
 		try {
 			ParserRuleContext parentContext = ctx.getParent();
-			if (parentContext instanceof IfThenElseStatementContext
-					|| parentContext instanceof IfThenStatementContext
+			if (parentContext instanceof IfThenElseStatementContext || parentContext instanceof IfThenStatementContext
 					|| parentContext instanceof WhileStatementContext
 					|| parentContext instanceof WhileStatementNoShortIfContext
 					|| parentContext instanceof SwitchStatementContext
@@ -1187,8 +1187,7 @@ public class Main implements Java8Listener {
 			} else if (!enterArgumentList.isEmpty() && !enterArrayAccess_lfno_primary
 					&& !(parentContext instanceof ReturnStatementContext)) {
 				ParseTree lastExpression = parentContext.getChild(parentContext.getChildCount() - 1);
-				if (lastExpression instanceof ExpressionContext
-						&& ctx != lastExpression) {
+				if (lastExpression instanceof ExpressionContext && ctx != lastExpression) {
 					bw.write(", ");
 				}
 			}
@@ -3094,8 +3093,6 @@ public class Main implements Java8Listener {
 
 				if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList) {
 					bw.write(ctx.getText());
-				} else {
-					isInstanceOf = false;
 				}
 			} catch (IOException e) {
 
