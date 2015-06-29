@@ -484,7 +484,7 @@ public class Main implements Java8Listener {
 		try {
 			// TODO change getChild(4)
 			if (!(ctx.getParent().getChild(4) instanceof ArgumentListContext)) {
-				bw.write("(");
+				bw.write("()");
 			} else {
 			}
 		} catch (IOException e) {
@@ -866,41 +866,18 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitMethodInvocation_lfno_primary(MethodInvocation_lfno_primaryContext ctx) {
-
-		try {
-			if (!isInstanceOf) {
-				if (enterfor)
-					forlimit += ")";
-				bw.write(")");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		if (!isInstanceOf) {
+			if (enterfor)
+				forlimit += ")";
 		}
-
 	}
 
 	public void exitMethodInvocation_lf_primary(MethodInvocation_lf_primaryContext ctx) {
-
-		try {
-			if (!isInstanceOf) {
-				bw.write(")");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 
 	}
 
 	public void exitMethodInvocation(MethodInvocationContext ctx) {
 
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 	}
 
 	public void exitMethodHeader(MethodHeaderContext ctx) {
@@ -1195,8 +1172,8 @@ public class Main implements Java8Listener {
 				}
 			} else if (parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
 				bw.write(" else ");
-			} else if(parentContext instanceof DoStatementContext) {
-				bw.write(") {break;}"); 
+			} else if (parentContext instanceof DoStatementContext) {
+				bw.write(") {break;}");
 			}
 		} catch (IOException e) {
 
@@ -1464,12 +1441,6 @@ public class Main implements Java8Listener {
 	public void exitClassInstanceCreationExpression_lfno_primary(
 			ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 	}
 
 	public void exitClassInstanceCreationExpression_lf_primary(ClassInstanceCreationExpression_lf_primaryContext ctx) {
@@ -1594,8 +1565,12 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitArgumentList(ArgumentListContext ctx) {
-
 		enterArgumentList.pop();
+		try {
+			bw.write(")");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclarationContext ctx) {
@@ -1713,7 +1688,6 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterVariableInitializer(VariableInitializerContext ctx) {
-
 		try {
 			if (!enterfor && !(ctx.getParent() instanceof VariableInitializerListContext))
 				bw.write(" = ");
@@ -3171,14 +3145,24 @@ public class Main implements Java8Listener {
 			ClassInstanceCreationExpression_lfno_primaryContext ctx) {
 
 		try {
+			if (ctx.classBody() != null) {
+				if (ctx.argumentList() == null) {
+					bw.write("object satisfies "); // assuming it is an
+													// interface because of no
+													// arguments
+				} else {
+					bw.write("object extends ");
+				}
+			}
+
 			bw.write(ctx.getChild(1).getText());
 
-			if (ctx.argumentList() != null) {
-				enterArgumentList.push(true);
-			} else if (ctx.typeArgumentsOrDiamond() != null) {
+			if (ctx.typeArgumentsOrDiamond() != null) {
 				enterTypeArgumentsList = true;
-			} else {
-				bw.write("(");
+			} else if (ctx.argumentList() != null) {
+				enterArgumentList.push(true);
+			} else if (ctx.classBody() == null) {
+				bw.write("()");
 			}
 
 		} catch (IOException e) {
