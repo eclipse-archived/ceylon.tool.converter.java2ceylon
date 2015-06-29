@@ -24,4 +24,12 @@ public class GenericsTest {
 		assertTrue("Generics test failed",
 				FileUtils.contentEquals(file1, file2));
 	}
+	
+	@Test
+	public void testGenerics2() throws IOException {
+		Main.main(new String[] { testFile + "TestGenerics2.java", convertedFile });
+		File file2 = new File(ceylonFile + "testGenerics2.ceylon");
+		assertTrue("Generics 2 test failed",
+				FileUtils.contentEquals(file1, file2));
+	}
 }
