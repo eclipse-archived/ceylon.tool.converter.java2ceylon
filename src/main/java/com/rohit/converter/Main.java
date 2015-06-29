@@ -1,11 +1,17 @@
 package com.rohit.converter;
 
+import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +20,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.*;
 
@@ -39,7 +46,6 @@ public class Main implements Java8Listener {
 
 	boolean enterTypeArgumentsList = false;
 	boolean enterTypeParametersList = false;
-	boolean enterConstructor = false;
 	boolean enterForUpdate = false;
 	boolean firstImport = true;
 	boolean enterArray = false;
@@ -82,19 +88,18 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new
-			// TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -159,7 +164,7 @@ public class Main implements Java8Listener {
 		if (!enterArray) {
 			try {
 				if (!enterfor && !enterresult) {
-					if (!variableModifier.equals("final") && !enterConstructor) {
+					if (!variableModifier.equals("final")) {
 						bw.write("variable ");
 						variableListType = "variable ";
 					}
@@ -182,8 +187,7 @@ public class Main implements Java8Listener {
 
 				variableListType += ceylonType;
 
-				if (!enterConstructor)
-					bw.write(ceylonType);
+				bw.write(ceylonType);
 			} catch (IOException e) {
 
 				e.printStackTrace();
@@ -1080,7 +1084,7 @@ public class Main implements Java8Listener {
 	public void exitFormalParameter(FormalParameterContext ctx) {
 
 		try {
-			if (!ctx.variableDeclaratorId().getText().equals(lastFormalParameter) && !enterConstructor)
+			if (!ctx.variableDeclaratorId().getText().equals(lastFormalParameter))
 				bw.write(", ");
 		} catch (IOException e) {
 
@@ -1190,7 +1194,7 @@ public class Main implements Java8Listener {
 				if (lastExpression instanceof ExpressionContext && ctx != lastExpression) {
 					bw.write(", ");
 				}
-			} else if(parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
+			} else if (parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
 				bw.write(" else ");
 			}
 		} catch (IOException e) {
@@ -1348,7 +1352,6 @@ public class Main implements Java8Listener {
 
 	public void exitConstructorDeclaration(ConstructorDeclarationContext ctx) {
 
-		enterConstructor = false;
 	}
 
 	public void exitConstructorBody(ConstructorBodyContext ctx) {
@@ -1722,8 +1725,7 @@ public class Main implements Java8Listener {
 	public void enterVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
 
 		try {
-			if (!enterConstructor)
-				bw.write(ctx.getChild(0).getText());
+			bw.write(ctx.getChild(0).getText());
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1849,7 +1851,7 @@ public class Main implements Java8Listener {
 		}
 		String ceylonType = "";
 		try {
-			if (!variableModifier.equals("final") && !enterConstructor) {
+			if (!variableModifier.equals("final")) {
 				bw.write("variable ");
 				variableListType = "variable ";
 			}
@@ -1877,8 +1879,7 @@ public class Main implements Java8Listener {
 
 			variableListType += ceylonType;
 
-			if (!enterConstructor)
-				bw.write(ceylonType);
+			bw.write(ceylonType);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -2434,7 +2435,7 @@ public class Main implements Java8Listener {
 					if (str.equals("System.out.println")) {
 						bw.write("print");
 						if (ctx.argumentList() == null)
-							bw.write("\"\"");
+							bw.write("(" + "\"\"");
 					} else if (str.equals("System.out.print")) {
 						bw.write("process.write");
 					} else {
@@ -2471,7 +2472,7 @@ public class Main implements Java8Listener {
 				if (str.equals("System.out.println")) {
 					bw.write("print");
 					if (ctx.argumentList() == null)
-						bw.write("\"\"");
+						bw.write("(\"\"");
 				} else if (str.equals("System.out.print")) {
 					bw.write("process.write");
 				} else {
@@ -2503,7 +2504,7 @@ public class Main implements Java8Listener {
 			if (str.equals("System.out.println")) {
 				bw.write("print");
 				if (ctx.argumentList() == null)
-					bw.write("\"\"");
+					bw.write("(\"\"");
 			} else if (str.equals("System.out.print")) {
 				bw.write("process.write");
 			} else {
@@ -3028,7 +3029,6 @@ public class Main implements Java8Listener {
 
 	public void enterConstructorDeclaration(ConstructorDeclarationContext ctx) {
 
-		enterConstructor = true;
 	}
 
 	public void enterConstructorBody(ConstructorBodyContext ctx) {
@@ -3065,7 +3065,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterConditionalExpression(ConditionalExpressionContext ctx) {
-		//TODO add brackets if they are not present
+		// TODO add brackets if they are not present
 		if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("?")) {
 			try {
 				bw.write("if");
@@ -3284,8 +3284,7 @@ public class Main implements Java8Listener {
 				ceylonType = "ObjectArray<" + type + ">";
 			}
 
-			if (!enterConstructor)
-				bw.write(ceylonType + "(");
+			bw.write(ceylonType + "(");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
