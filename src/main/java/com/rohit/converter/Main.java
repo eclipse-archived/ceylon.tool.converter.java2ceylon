@@ -48,6 +48,7 @@ public class Main implements Java8Listener {
 	boolean enterInterfaceDeclaration = false;
 	boolean openParenthesis = false;
 	boolean enterEnhancedfor = false;
+	private boolean notEqualNull = false;
 
 	static BufferedWriter bw;
 
@@ -2422,13 +2423,13 @@ public class Main implements Java8Listener {
 					if (str.equals("System.out.println")) {
 						bw.write("print");
 						if (ctx.argumentList() == null)
-							bw.write("(" + "\"\"");
+							bw.write("(\"\")");
 					} else if (str.equals("System.out.print")) {
 						bw.write("process.write");
 					} else {
 						bw.write(str);
 						if (ctx.argumentList() == null)
-							bw.write("(");
+							bw.write("()");
 					}
 				} else {
 					forlimit = str + "(";
@@ -2459,13 +2460,13 @@ public class Main implements Java8Listener {
 				if (str.equals("System.out.println")) {
 					bw.write("print");
 					if (ctx.argumentList() == null)
-						bw.write("(\"\"");
+						bw.write("(\"\")");
 				} else if (str.equals("System.out.print")) {
 					bw.write("process.write");
 				} else {
 					bw.write(str);
 					if (ctx.argumentList() == null)
-						bw.write("(");
+						bw.write("()");
 				}
 			}
 		} catch (IOException e) {
@@ -2552,21 +2553,22 @@ public class Main implements Java8Listener {
 
 	public void enterLiteral(LiteralContext ctx) {
 
-		if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
-			try {
-				if (enterArrayAccessSet) {
-					bw.write(ctx.getText() + ")");
-					enterArrayAccessSet = false;
-				} else if (!enterfor) {
-					bw.write(ctx.getText());
-				} else {
-					forinit = ctx.getText();
-					forlimit = forinit;
-				}
-			} catch (IOException e) {
+		if (!notEqualNull)
+			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
+				try {
+					if (enterArrayAccessSet) {
+						bw.write(ctx.getText() + ")");
+						enterArrayAccessSet = false;
+					} else if (!enterfor) {
+						bw.write(ctx.getText());
+					} else {
+						forinit = ctx.getText();
+						forlimit = forinit;
+					}
+				} catch (IOException e) {
 
-				e.printStackTrace();
-			}
+					e.printStackTrace();
+				}
 	}
 
 	public void enterLeftHandSide(LeftHandSideContext ctx) {
@@ -2902,19 +2904,22 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterEqualityExpression(EqualityExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
+		try {
+			if (ctx.getChildCount() > 1) {
+				if (!ctx.getChild(2).getText().equals("null")) {
+					operators.push(ctx.getChild(1).getText());
+				} else {
+					bw.write("exists ");
+					notEqualNull = true;
+				}
+				if (openParenthesis) {
+					bracketInstance.push(ctx);
 					bw.write("(");
 					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
 				}
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -3105,8 +3110,8 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterClassType_lfno_classOrInterfaceType(ClassType_lfno_classOrInterfaceTypeContext ctx) {
-
-		if (!(ctx.getParent().getParent() instanceof ArrayCreationExpressionContext))
+		if (!(ctx.getParent().getParent() instanceof ArrayCreationExpressionContext)
+				&& !(ctx.getParent().getParent().getParent() instanceof CastExpressionContext))
 			try {
 				if (enterTypeArgumentsList) {
 					bw.write(ctx.getChild(0).getText());
