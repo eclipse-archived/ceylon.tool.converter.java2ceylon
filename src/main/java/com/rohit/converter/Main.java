@@ -482,7 +482,6 @@ public class Main implements Java8Listener {
 			} else {
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -1341,7 +1340,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitConstructorDeclarator(ConstructorDeclaratorContext ctx) {
-
+		try {
+			bw.write(") ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitConstructorDeclaration(ConstructorDeclarationContext ctx) {
@@ -1349,7 +1352,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitConstructorBody(ConstructorBodyContext ctx) {
-
+		try {
+			bw.write("}\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitConstantModifier(ConstantModifierContext ctx) {
@@ -3014,11 +3021,21 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterConstructorModifier(ConstructorModifierContext ctx) {
+		if (ctx.getText().equals("public"))
+			try {
+				bw.write("shared ");
+			} catch (IOException e) {
 
+				e.printStackTrace();
+			}
 	}
 
 	public void enterConstructorDeclarator(ConstructorDeclaratorContext ctx) {
-
+		try {
+			bw.write("new (");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterConstructorDeclaration(ConstructorDeclarationContext ctx) {
@@ -3026,7 +3043,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterConstructorBody(ConstructorBodyContext ctx) {
-
+		try {
+			bw.write("{\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterConstantModifier(ConstantModifierContext ctx) {
