@@ -143,8 +143,14 @@ public class Main implements Java8Listener {
 	public void exitBlock(BlockContext ctx) {
 		int count = ctx.getChildCount();
 		try {
-			bw.write(ctx.getChild(count - 1).toString());
-			bw.write("\n");
+
+			if (!(ctx.getParent().getParent().getParent() instanceof DoStatementContext)) {
+				bw.write(ctx.getChild(count - 1).toString());
+				bw.write("\n");
+			} else {
+				bw.write("if(");
+			}
+
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1189,6 +1195,8 @@ public class Main implements Java8Listener {
 				}
 			} else if (parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
 				bw.write(" else ");
+			} else if(parentContext instanceof DoStatementContext) {
+				bw.write(") {break;}"); 
 			}
 		} catch (IOException e) {
 
@@ -1312,7 +1320,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitDoStatement(DoStatementContext ctx) {
-
+		try {
+			bw.write("}\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitDims(DimsContext ctx) {
@@ -2546,7 +2558,8 @@ public class Main implements Java8Listener {
 				bw.write("actual ");
 			} else {
 				String typeName = ctx.typeName().getText();
-				typeName = Character.toLowerCase(typeName.charAt(0)) + (typeName.length() > 1 ? typeName.substring(1) : "");
+				typeName = Character.toLowerCase(typeName.charAt(0))
+						+ (typeName.length() > 1 ? typeName.substring(1) : "");
 				bw.write(typeName + " ");
 			}
 		} catch (IOException e) {
@@ -2999,7 +3012,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterDoStatement(DoStatementContext ctx) {
-
+		try {
+			bw.write("while(true) ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterDims(DimsContext ctx) {
