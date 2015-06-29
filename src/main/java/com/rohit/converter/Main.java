@@ -2545,7 +2545,9 @@ public class Main implements Java8Listener {
 			if (ctx.typeName().getText().equals("Override")) {
 				bw.write("actual ");
 			} else {
-				bw.write(ctx.typeName().getText() + " ");
+				String typeName = ctx.typeName().getText();
+				typeName = Character.toLowerCase(typeName.charAt(0)) + (typeName.length() > 1 ? typeName.substring(1) : "");
+				bw.write(typeName + " ");
 			}
 		} catch (IOException e) {
 
