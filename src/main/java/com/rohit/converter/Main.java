@@ -1190,6 +1190,8 @@ public class Main implements Java8Listener {
 				if (lastExpression instanceof ExpressionContext && ctx != lastExpression) {
 					bw.write(", ");
 				}
+			} else if(parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
+				bw.write(" else ");
 			}
 		} catch (IOException e) {
 
@@ -1379,6 +1381,10 @@ public class Main implements Java8Listener {
 						operators.pop();
 					}
 				}
+			}
+
+			if (ctx.getParent() instanceof ConditionalExpressionContext && ctx.getParent().getChildCount() > 1) {
+				bw.write(" then ");
 			}
 		} catch (IOException e) {
 
@@ -3059,7 +3065,14 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterConditionalExpression(ConditionalExpressionContext ctx) {
-
+		//TODO add brackets if they are not present
+		if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("?")) {
+			try {
+				bw.write("if");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void enterConditionalAndExpression(ConditionalAndExpressionContext ctx) {
