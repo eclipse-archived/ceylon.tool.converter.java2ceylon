@@ -1,5 +1,5 @@
 shared class TestExpressions2() {
-shared void foo() {
+shared void foo(){
 variable Boolean a = true;
 variable Integer b = 5;
 variable Integer c = 7;

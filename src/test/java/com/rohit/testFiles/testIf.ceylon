@@ -1,5 +1,5 @@
 shared class TestIf() {
-shared void foo(variable Integer a, variable Integer b) {
+shared void foo(variable Integer a, variable Integer b){
 if(a > b){
 a=b;
 }

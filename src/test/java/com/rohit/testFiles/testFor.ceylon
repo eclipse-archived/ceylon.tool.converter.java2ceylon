@@ -1,5 +1,5 @@
 shared class TestFor() {
-shared void foo() {
+shared void foo(){
 for(Integer i in (0..4)){
 print(i);
 }

@@ -1,11 +1,17 @@
 package com.rohit.converter;
 
+import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -14,6 +20,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.gui.TreeViewer;
 
 import com.rohit.converter.Java8Parser.*;
 
@@ -82,19 +89,18 @@ public class Main implements Java8Listener {
 
 			// Use to generate a viewable AST diagram
 
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new
-			// TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
+			JFrame frame = new JFrame("Antlr AST");
+			JPanel panel = new JPanel();
+			TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
+			viewer.setScale(1.1);
+			panel.add(viewer);
+			JScrollPane jScrollPane = new JScrollPane(panel);
+			frame.add(jScrollPane);
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setSize(500, 500);
+			frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+
+			frame.setVisible(true);
 
 			bw.flush();
 			bw.close();
@@ -199,9 +205,11 @@ public class Main implements Java8Listener {
 	public void enterResult(ResultContext ctx) {
 
 		try {
-			enterresult = true;
-			if (ctx.getChild(0).toString().equals("void"))
-				bw.write(ctx.getChild(0).toString() + " ");
+			if (((MethodHeaderContext) ctx.getParent()).typeParameters() == null) {
+				enterresult = true;
+				if (ctx.getChild(0).toString().equals("void"))
+					bw.write(ctx.getChild(0).toString() + " ");
+			}
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -255,7 +263,12 @@ public class Main implements Java8Listener {
 	public void enterMethodDeclarator(MethodDeclaratorContext ctx) {
 
 		try {
-			bw.write(ctx.Identifier() + "(");
+			if (((MethodHeaderContext) ctx.getParent()).typeParameters() == null) {
+				bw.write(ctx.Identifier().getText());
+				if (ctx.formalParameterList() == null) {
+					bw.write("()");
+				}
+			}
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -443,10 +456,9 @@ public class Main implements Java8Listener {
 	public void exitTypeParameters(TypeParametersContext ctx) {
 
 		try {
-			if (enterInterfaceDeclaration)
-				bw.write("> ");
-			else
-				bw.write(">() ");
+			bw.write("> ");
+			if(ctx.getParent() instanceof NormalClassDeclarationContext)
+				bw.write("() ");
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -887,12 +899,6 @@ public class Main implements Java8Listener {
 
 	public void exitMethodDeclarator(MethodDeclaratorContext ctx) {
 
-		try {
-			bw.write(") ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 	}
 
 	public void exitMethodDeclaration(MethodDeclarationContext ctx) {
@@ -1055,6 +1061,11 @@ public class Main implements Java8Listener {
 
 	public void exitFormalParameterList(FormalParameterListContext ctx) {
 
+		try {
+			bw.write(")");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		lastFormalParameter = "";
 	}
 
@@ -2508,7 +2519,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterMethodHeader(MethodHeaderContext ctx) {
-
+		try {
+			if (ctx.typeParameters() != null) {
+				bw.write(ctx.result().getText() + " " + ctx.methodDeclarator().getChild(0).getText());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterMethodDeclaration(MethodDeclarationContext ctx) {
@@ -2741,7 +2758,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterFormalParameterList(FormalParameterListContext ctx) {
-
+		try {
+			bw.write("(");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterFormalParameter(FormalParameterContext ctx) {
