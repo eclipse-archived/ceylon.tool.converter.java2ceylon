@@ -48,7 +48,9 @@ public class Main implements Java8Listener {
 	boolean enterInterfaceDeclaration = false;
 	boolean openParenthesis = false;
 	boolean enterEnhancedfor = false;
-	private boolean notEqualNull = false;
+	boolean notEqualNull = false; //to convert !=null to exists
+	boolean noVariable  = false; //to check if value has to be a variable or not
+	boolean isinstanceofForCast = false; //check if cast is after instanceofF
 
 	static BufferedWriter bw;
 
@@ -114,7 +116,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitLocalVariableDeclarationStatement(LocalVariableDeclarationStatementContext ctx) {
+		try {
+			if (!enterfor)
+				bw.write(";\n");
+		} catch (IOException e) {
 
+			e.printStackTrace();
+		}
 	}
 
 	public void exitFieldDeclaration(FieldDeclarationContext ctx) {
@@ -164,7 +172,7 @@ public class Main implements Java8Listener {
 		String ceylonType = "";
 		if (!enterArray) {
 			try {
-				if (!enterfor && !enterresult) {
+				if (!enterfor && !enterresult && !noVariable) {
 					if (!variableModifier.equals("final")) {
 						bw.write("variable ");
 						variableListType = "variable ";
@@ -354,13 +362,6 @@ public class Main implements Java8Listener {
 
 	public void exitVariableDeclarator(VariableDeclaratorContext ctx) {
 
-		try {
-			if (!enterfor)
-				bw.write(";\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
 	}
 
 	public void exitUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
@@ -451,7 +452,7 @@ public class Main implements Java8Listener {
 
 		try {
 			bw.write("> ");
-			if(ctx.getParent() instanceof NormalClassDeclarationContext)
+			if (ctx.getParent() instanceof NormalClassDeclarationContext)
 				bw.write("() ");
 		} catch (IOException e) {
 
@@ -908,7 +909,18 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-
+		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression().assignmentExpression()
+				.conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression()
+				.exclusiveOrExpression().andExpression().equalityExpression().relationalExpression().shiftExpression()
+				.additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
+				.castExpression() != null && !isinstanceofForCast) {
+			try {
+				bw.write(")");
+				noVariable = false;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitLiteral(LiteralContext ctx) {
@@ -1038,7 +1050,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitIfThenStatement(IfThenStatementContext ctx) {
-
+		isinstanceofForCast = false;
 	}
 
 	public void exitIfThenElseStatementNoShortIf(IfThenElseStatementNoShortIfContext ctx) {
@@ -1792,7 +1804,7 @@ public class Main implements Java8Listener {
 
 		if (!(ctx.getParent().getParent() instanceof UnannArrayTypeContext)) {
 			try {
-				if (!enterEnhancedfor && !enterfor && !enterresult) {
+				if (!enterEnhancedfor && !enterfor && !enterresult && !noVariable) {
 					if (!variableModifier.equals("final")) {
 						bw.write("variable ");
 						variableListType = "variable ";
@@ -1844,7 +1856,7 @@ public class Main implements Java8Listener {
 		}
 		String ceylonType = "";
 		try {
-			if (!variableModifier.equals("final")) {
+			if (!variableModifier.equals("final") && !noVariable) {
 				bw.write("variable ");
 				variableListType = "variable ";
 			}
@@ -2171,6 +2183,7 @@ public class Main implements Java8Listener {
 			if (ctx.getChild(1).getText().equals("instanceof")) {
 				try {
 					isInstanceOf = true;
+					isinstanceofForCast = true;
 					if (openParenthesis) {
 						bracketInstance.push(ctx);
 						bw.write("(");
@@ -2559,7 +2572,20 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-
+		
+		//TODO make this code smaller
+		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression().assignmentExpression()
+				.conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression()
+				.exclusiveOrExpression().andExpression().equalityExpression().relationalExpression().shiftExpression()
+				.additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
+				.castExpression() != null && !isinstanceofForCast) {
+			try {
+				noVariable = true;
+				bw.write("assert(is ");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void enterLiteral(LiteralContext ctx) {
