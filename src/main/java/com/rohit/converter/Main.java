@@ -48,9 +48,9 @@ public class Main implements Java8Listener {
 	boolean enterInterfaceDeclaration = false;
 	boolean openParenthesis = false;
 	boolean enterEnhancedfor = false;
-	boolean notEqualNull = false; //to convert !=null to exists
-	boolean noVariable  = false; //to check if value has to be a variable or not
-	boolean isinstanceofForCast = false; //check if cast is after instanceofF
+	boolean notEqualNull = false; // to convert !=null to exists
+	boolean noVariable = false; // to check if value has to be a variable or not
+	boolean isinstanceofForCast = false; // check if cast is after instanceofF
 
 	static BufferedWriter bw;
 
@@ -365,7 +365,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitVariableDeclarator(VariableDeclaratorContext ctx) {
-
+		if (multipleVariables && ctx != ctx.getParent().getChild(ctx.getParent().getChildCount() - 1)) {
+			try {
+				bw.write(";\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
@@ -913,18 +919,19 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression().assignmentExpression()
-				.conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression()
-				.exclusiveOrExpression().andExpression().equalityExpression().relationalExpression().shiftExpression()
-				.additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
-				.castExpression() != null && !isinstanceofForCast) {
-			try {
-				bw.write(")");
-				noVariable = false;
-			} catch (IOException e) {
-				e.printStackTrace();
+		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer() != null)
+			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
+					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
+					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
+					.relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression()
+					.unaryExpression().unaryExpressionNotPlusMinus().castExpression() != null && !isinstanceofForCast) {
+				try {
+					bw.write(")");
+					noVariable = false;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}
 	}
 
 	public void exitLiteral(LiteralContext ctx) {
@@ -2576,20 +2583,21 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-		
-		//TODO do this in a much more elegant way
-		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression().assignmentExpression()
-				.conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression()
-				.exclusiveOrExpression().andExpression().equalityExpression().relationalExpression().shiftExpression()
-				.additiveExpression().multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
-				.castExpression() != null && !isinstanceofForCast) {
-			try {
-				noVariable = true;
-				bw.write("assert(is ");
-			} catch (IOException e) {
-				e.printStackTrace();
+
+		// TODO do this in a much more elegant way
+		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer() != null)
+			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
+					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
+					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
+					.relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression()
+					.unaryExpression().unaryExpressionNotPlusMinus().castExpression() != null && !isinstanceofForCast) {
+				try {
+					noVariable = true;
+					bw.write("assert(is ");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}
 	}
 
 	public void enterLiteral(LiteralContext ctx) {
