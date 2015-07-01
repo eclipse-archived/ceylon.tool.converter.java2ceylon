@@ -1378,7 +1378,8 @@ public class Main implements Java8Listener {
 
 	public void exitConstructorDeclarator(ConstructorDeclaratorContext ctx) {
 		try {
-			bw.write(") ");
+			if (ctx.formalParameterList() == null)
+				bw.write(") ");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -3120,7 +3121,9 @@ public class Main implements Java8Listener {
 
 	public void enterConstructorDeclarator(ConstructorDeclaratorContext ctx) {
 		try {
-			bw.write("new (");
+			bw.write("new ");
+			if (ctx.formalParameterList() == null)
+				bw.write("(");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
