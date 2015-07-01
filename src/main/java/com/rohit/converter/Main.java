@@ -81,8 +81,6 @@ public class Main implements Java8Listener {
 			// Java8Listener listener = new Java8Listener(this);
 			Main m = new Main();
 
-			ParseTreeWalker.DEFAULT.walk(m, tree);
-
 			// Use to generate a viewable AST diagram
 
 			// JFrame frame = new JFrame("Antlr AST");
@@ -98,6 +96,8 @@ public class Main implements Java8Listener {
 			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 			//
 			// frame.setVisible(true);
+
+			ParseTreeWalker.DEFAULT.walk(m, tree);
 
 			bw.flush();
 			bw.close();
@@ -925,15 +925,20 @@ public class Main implements Java8Listener {
 			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
 					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
 					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
-					.relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression()
-					.unaryExpression().unaryExpressionNotPlusMinus().castExpression() != null && !isinstanceofForCast) {
-				try {
-					bw.write(")");
-					noVariable = false;
-				} catch (IOException e) {
-					e.printStackTrace();
+					.relationalExpression().shiftExpression() != null)
+				if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
+						.assignmentExpression().conditionalExpression().conditionalOrExpression()
+						.conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression()
+						.equalityExpression().relationalExpression().shiftExpression().additiveExpression()
+						.multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
+						.castExpression() != null && !isinstanceofForCast) {
+					try {
+						bw.write(")");
+						noVariable = false;
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
 	}
 
 	public void exitLiteral(LiteralContext ctx) {
@@ -2215,7 +2220,11 @@ public class Main implements Java8Listener {
 						bw.write("(");
 						openParenthesis = false;
 					}
-					bw.write("is " + ctx.getChild(2).getText() + " " + ctx.getChild(0).getText());
+
+					if (inExpression)
+						bw.write(ctx.getChild(0).getText() + " is " + ctx.getChild(2).getText());
+					else
+						bw.write("is " + ctx.getChild(2).getText() + " " + ctx.getChild(0).getText());
 				} catch (IOException e) {
 
 					e.printStackTrace();
@@ -2604,15 +2613,20 @@ public class Main implements Java8Listener {
 			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
 					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
 					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
-					.relationalExpression().shiftExpression().additiveExpression().multiplicativeExpression()
-					.unaryExpression().unaryExpressionNotPlusMinus().castExpression() != null && !isinstanceofForCast) {
-				try {
-					noVariable = true;
-					bw.write("assert(is ");
-				} catch (IOException e) {
-					e.printStackTrace();
+					.relationalExpression().shiftExpression() != null)
+				if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
+						.assignmentExpression().conditionalExpression().conditionalOrExpression()
+						.conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression()
+						.equalityExpression().relationalExpression().shiftExpression().additiveExpression()
+						.multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
+						.castExpression() != null && !isinstanceofForCast) {
+					try {
+						noVariable = true;
+						bw.write("assert(is ");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
 	}
 
 	public void enterLiteral(LiteralContext ctx) {
