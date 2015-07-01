@@ -52,6 +52,7 @@ public class Main implements Java8Listener {
 	boolean noVariable = false; // to check if value has to be a variable or not
 	boolean isinstanceofForCast = false; // check if cast is after instanceofF
 	boolean inExpression = false; // to check if != is in expression
+	boolean equalsequalsNull = false; //x == null
 
 	static BufferedWriter bw;
 
@@ -78,7 +79,6 @@ public class Main implements Java8Listener {
 			bw = new BufferedWriter(new FileWriter(new File(args[1])));
 
 			// Java8Listener listener = new Java8Listener(this);
-
 			Main m = new Main();
 
 			ParseTreeWalker.DEFAULT.walk(m, tree);
@@ -1183,7 +1183,7 @@ public class Main implements Java8Listener {
 		// e.printStackTrace();
 		// }
 
-		if (inExpression && notEqualNull) {
+		if (inExpression && (notEqualNull || equalsequalsNull)) {
 			try {
 				bw.write(" exists");
 			} catch (IOException e) {
@@ -1270,6 +1270,7 @@ public class Main implements Java8Listener {
 				}
 			} else {
 				notEqualNull = false;
+				equalsequalsNull = false;
 			}
 
 		} catch (IOException e) {
@@ -2616,7 +2617,7 @@ public class Main implements Java8Listener {
 
 	public void enterLiteral(LiteralContext ctx) {
 
-		if (!notEqualNull)
+		if (!notEqualNull && !equalsequalsNull)
 			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
 				try {
 					if (enterArrayAccessSet) {
@@ -2916,7 +2917,10 @@ public class Main implements Java8Listener {
 	public void enterExpressionName(ExpressionNameContext ctx) {
 
 		try {
-
+			if(equalsequalsNull) {
+				bw.write("!");
+			}
+			
 			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
 				if (enterArrayAccessSet) {
 					bw.write(ctx.getText() + ")");
@@ -2973,13 +2977,17 @@ public class Main implements Java8Listener {
 	public void enterEqualityExpression(EqualityExpressionContext ctx) {
 		try {
 			if (ctx.getChildCount() > 1) {
-				if (!ctx.getChild(2).getText().equals("null") && !ctx.getChild(1).getText().equals("!=")) {
+				if (!ctx.getChild(2).getText().equals("null") && !ctx.getChild(1).getText().equals("!=")
+						&& !ctx.getChild(1).getText().equals("==")) {
 					operators.push(ctx.getChild(1).getText());
 				} else {
 					if (!inExpression) {
 						bw.write("exists ");
 					}
-					notEqualNull = true;
+					if (ctx.getChild(1).getText().equals("!="))
+						notEqualNull = true;
+					else if(ctx.getChild(1).getText().equals("==")) 
+						equalsequalsNull = true;
 				}
 				if (openParenthesis) {
 					bracketInstance.push(ctx);
