@@ -126,7 +126,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitFieldDeclaration(FieldDeclarationContext ctx) {
-
+		try {
+			bw.write(";\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitExpressionStatement(ExpressionStatementContext ctx) {
@@ -2573,7 +2577,7 @@ public class Main implements Java8Listener {
 
 	public void enterLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
 		
-		//TODO make this code smaller
+		//TODO do this in a much more elegant way
 		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression().assignmentExpression()
 				.conditionalExpression().conditionalOrExpression().conditionalAndExpression().inclusiveOrExpression()
 				.exclusiveOrExpression().andExpression().equalityExpression().relationalExpression().shiftExpression()
