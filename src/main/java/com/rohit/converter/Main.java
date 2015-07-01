@@ -147,7 +147,7 @@ public class Main implements Java8Listener {
 		int count = ctx.getChildCount();
 
 		try {
-			bw.write(ctx.getChild(count - 1).toString());
+			bw.write(ctx.getChild(count - 1).toString() + "\n");
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1023,7 +1023,7 @@ public class Main implements Java8Listener {
 		int count = ctx.getChildCount();
 
 		try {
-			bw.write(ctx.getChild(count - 1).toString());
+			bw.write(ctx.getChild(count - 1).toString() + "\n");
 		} catch (IOException e) {
 
 			e.printStackTrace();
