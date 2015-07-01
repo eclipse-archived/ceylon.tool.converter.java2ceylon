@@ -51,6 +51,7 @@ public class Main implements Java8Listener {
 	boolean notEqualNull = false; // to convert !=null to exists
 	boolean noVariable = false; // to check if value has to be a variable or not
 	boolean isinstanceofForCast = false; // check if cast is after instanceofF
+	boolean inExpression = false; // to check if != is in expression
 
 	static BufferedWriter bw;
 
@@ -365,6 +366,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitVariableDeclarator(VariableDeclaratorContext ctx) {
+		inExpression = false;
 		if (multipleVariables && ctx != ctx.getParent().getChild(ctx.getParent().getChildCount() - 1)) {
 			try {
 				bw.write(";\n");
@@ -647,7 +649,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitStatementExpression(StatementExpressionContext ctx) {
-
+		inExpression = false;
 	}
 
 	public void exitStatement(StatementContext ctx) {
@@ -1180,6 +1182,14 @@ public class Main implements Java8Listener {
 		//
 		// e.printStackTrace();
 		// }
+
+		if (inExpression && notEqualNull) {
+			try {
+				bw.write(" exists");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void exitExpression(ExpressionContext ctx) {
@@ -1258,7 +1268,10 @@ public class Main implements Java8Listener {
 						operators.pop();
 					}
 				}
+			} else {
+				notEqualNull = false;
 			}
+
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1750,6 +1763,7 @@ public class Main implements Java8Listener {
 
 	public void enterVariableDeclarator(VariableDeclaratorContext ctx) {
 
+		inExpression = true;
 		if (multipleVariables && !ctx.getText().equals(firstVariableInList)) {
 			try {
 				bw.write(variableListType);
@@ -2116,7 +2130,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterStatementExpression(StatementExpressionContext ctx) {
-
+		inExpression = true;
 	}
 
 	public void enterStatement(StatementContext ctx) {
@@ -2959,10 +2973,12 @@ public class Main implements Java8Listener {
 	public void enterEqualityExpression(EqualityExpressionContext ctx) {
 		try {
 			if (ctx.getChildCount() > 1) {
-				if (!ctx.getChild(2).getText().equals("null")) {
+				if (!ctx.getChild(2).getText().equals("null") && !ctx.getChild(1).getText().equals("!=")) {
 					operators.push(ctx.getChild(1).getText());
 				} else {
-					bw.write("exists ");
+					if (!inExpression) {
+						bw.write("exists ");
+					}
 					notEqualNull = true;
 				}
 				if (openParenthesis) {
