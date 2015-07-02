@@ -808,7 +808,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitPostIncrementExpression(PostIncrementExpressionContext ctx) {
+		try {
+			if (!enterfor)
+				bw.write("++");
+		} catch (IOException e) {
 
+			e.printStackTrace();
+		}
 	}
 
 	public void exitPostDecrementExpression_lf_postfixExpression(
@@ -817,7 +823,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitPostDecrementExpression(PostDecrementExpressionContext ctx) {
+		try {
+			if (!enterfor)
+				bw.write("--");
+		} catch (IOException e) {
 
+			e.printStackTrace();
+		}
 	}
 
 	public void exitPackageOrTypeName(PackageOrTypeNameContext ctx) {
@@ -1226,7 +1238,7 @@ public class Main implements Java8Listener {
 			} else if (parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
 				bw.write(" else ");
 			} else if (parentContext instanceof DoStatementContext) {
-				bw.write(") {break;}");
+				bw.write(") {break;}\n");
 			}
 		} catch (IOException e) {
 
@@ -2343,7 +2355,8 @@ public class Main implements Java8Listener {
 	public void enterPreIncrementExpression(PreIncrementExpressionContext ctx) {
 
 		try {
-			bw.write(ctx.getChild(0).getText());
+			if (!enterfor)
+				bw.write(ctx.getChild(0).getText());
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -2353,7 +2366,8 @@ public class Main implements Java8Listener {
 	public void enterPreDecrementExpression(PreDecrementExpressionContext ctx) {
 
 		try {
-			bw.write("--");
+			if (!enterfor)
+				bw.write("--");
 		} catch (IOException e) {
 
 			e.printStackTrace();
