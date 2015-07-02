@@ -2584,13 +2584,13 @@ public class Main implements Java8Listener {
 			if (str.equals("System.out.println")) {
 				bw.write("print");
 				if (ctx.argumentList() == null)
-					bw.write("(\"\"");
+					bw.write("(\"\")");
 			} else if (str.equals("System.out.print")) {
 				bw.write("process.write");
 			} else {
 				bw.write(str);
 				if (ctx.argumentList() == null)
-					bw.write("(");
+					bw.write("()");
 			}
 
 		} catch (IOException e) {
