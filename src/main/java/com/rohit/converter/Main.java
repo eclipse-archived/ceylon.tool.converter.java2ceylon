@@ -565,7 +565,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitThrowStatement(ThrowStatementContext ctx) {
-
+		try {
+			bw.write(";\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitSynchronizedStatement(SynchronizedStatementContext ctx) {
@@ -2068,7 +2072,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterThrowStatement(ThrowStatementContext ctx) {
-
+		try {
+			bw.write("throw ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterSynchronizedStatement(SynchronizedStatementContext ctx) {
