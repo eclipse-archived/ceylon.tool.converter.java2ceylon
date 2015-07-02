@@ -53,6 +53,7 @@ public class Main implements Java8Listener {
 	boolean isinstanceofForCast = false; // check if cast is after instanceofF
 	boolean inExpression = false; // to check if != is in expression
 	boolean equalsequalsNull = false; // x == null
+	boolean typeConstraints = false;
 
 	static BufferedWriter bw;
 
@@ -285,6 +286,14 @@ public class Main implements Java8Listener {
 	public void enterClassBody(ClassBodyContext ctx) {
 
 		try {
+			if (typeConstraints) {
+				bw.write(" given "
+						+ ((NormalClassDeclarationContext) ctx.getParent()).typeParameters().typeParameterList()
+								.typeParameter(0).getChild(0).getText()
+						+ " satisfies " + ((NormalClassDeclarationContext) ctx.getParent()).typeParameters()
+								.typeParameterList().typeParameter(0).typeBound().typeVariable().getText());
+			}
+			typeConstraints = false;
 			bw.write(ctx.getChild(0).toString() + "\n");
 		} catch (IOException e) {
 
@@ -1949,7 +1958,14 @@ public class Main implements Java8Listener {
 	public void enterTypeParameter(TypeParameterContext ctx) {
 
 		try {
-			bw.write(ctx.getText());
+			if (ctx.typeBound() != null) {
+				if (!ctx.getChild(0).getText().equals("?")) {
+					typeConstraints = true;
+				}
+				bw.write(ctx.getChild(0).getText());
+			} else {
+				bw.write(ctx.getText());
+			}
 
 			if (!ctx.getText().equals(lastTypeParameter))
 				bw.write(", ");
@@ -2576,6 +2592,19 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterMethodBody(MethodBodyContext ctx) {
+
+		if (typeConstraints) {
+			try {
+				bw.write(" given "
+						+ ((MethodDeclarationContext) ctx.getParent()).methodHeader().typeParameters()
+								.typeParameterList().typeParameter(0).getChild(0).getText()
+						+ " satisfies " + ((MethodDeclarationContext) ctx.getParent()).methodHeader().typeParameters()
+								.typeParameterList().typeParameter(0).typeBound().typeVariable().getText());
+				typeConstraints = false;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
 		if (ctx.getText().equals(";"))
 			try {

@@ -2,3 +2,5 @@
 /target/
 /target/
 /target/
+/.exploded/
+/TestClass.ceylon
