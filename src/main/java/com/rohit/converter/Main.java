@@ -622,7 +622,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitSuperclass(SuperclassContext ctx) {
-
+		try {
+			bw.write("() ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitStaticInitializer(StaticInitializerContext ctx) {
@@ -2137,7 +2141,7 @@ public class Main implements Java8Listener {
 	public void enterSuperclass(SuperclassContext ctx) {
 
 		try {
-			bw.write(ctx.getChild(0).getText() + " " + ctx.getChild(1).getText() + "() ");
+			bw.write(ctx.getChild(0).getText() + " " + ctx.classType().getChild(0).getText());
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -2759,6 +2763,9 @@ public class Main implements Java8Listener {
 
 		try {
 			bw.write(ctx.classType().getChild(0).getText());
+			if (ctx.classType().getChildCount() > 1 && ctx.classType().typeArguments() == null) {
+				bw.write(ctx.classType().getChild(1).getText() + ctx.classType().getChild(2).getText());
+			}
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -3476,7 +3483,8 @@ public class Main implements Java8Listener {
 
 		try {
 			enterArrayAccess = true;
-			bw.write(ctx.expressionName().getText() + ".set(" + ctx.expression(0).getText() + ", ");
+			if (ctx.expressionName() != null)
+				bw.write(ctx.expressionName().getText() + ".set(" + ctx.expression(0).getText() + ", ");
 		} catch (IOException e) {
 
 			e.printStackTrace();
