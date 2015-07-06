@@ -670,7 +670,14 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitStatement(StatementContext ctx) {
-
+		try {
+			if (ctx.getParent() instanceof BasicForStatementContext
+					&& ctx.statementWithoutTrailingSubstatement() == null) {
+				bw.write("}\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitSingleTypeImportDeclaration(SingleTypeImportDeclarationContext ctx) {
@@ -2192,7 +2199,14 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterStatement(StatementContext ctx) {
-
+		try {
+			if (ctx.getParent() instanceof BasicForStatementContext
+					&& ctx.statementWithoutTrailingSubstatement() == null) {
+				bw.write("{\n");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterSingleTypeImportDeclaration(SingleTypeImportDeclarationContext ctx) {
