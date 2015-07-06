@@ -1790,7 +1790,14 @@ public class Main implements Java8Listener {
 	public void enterVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
 
 		try {
-			bw.write(ctx.getChild(0).getText());
+			String expressionName = "";
+			if (Character.isUpperCase(ctx.getText().charAt(0))) {
+				expressionName = "\\i" + ctx.getText();
+			} else {
+				expressionName = ctx.getText();
+			}
+			bw.write(expressionName);
+			// bw.write(ctx.getChild(0).getText());
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -2997,6 +3004,12 @@ public class Main implements Java8Listener {
 	public void enterExpressionName(ExpressionNameContext ctx) {
 
 		try {
+			String expressionName = "";
+			if (Character.isUpperCase(ctx.getText().charAt(0))) {
+				expressionName = "\\i" + ctx.getText();
+			} else {
+				expressionName = ctx.getText();
+			}
 
 			if (!enterArrayAccess && !enterArrayAccess_lfno_primary) {
 				if (equalsequalsNull) {
@@ -3004,14 +3017,14 @@ public class Main implements Java8Listener {
 				}
 
 				if (enterArrayAccessSet) {
-					bw.write(ctx.getText() + ")");
+					bw.write(expressionName + ")");
 					enterArrayAccessSet = false;
 				} else if (!isInstanceOf)
 					if (!enterfor) {
 						if (enterEnhancedfor) {
 							bw.write(" in ");
 						}
-						bw.write(ctx.getText());
+						bw.write(expressionName);
 					}
 				// else {
 				// forinit = ctx.getText();
