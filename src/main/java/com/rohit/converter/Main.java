@@ -1302,7 +1302,7 @@ public class Main implements Java8Listener {
 						operators.pop();
 					}
 				}
-			} else {
+			} else if (ctx.getChildCount() > 1) {
 				notEqualNull = false;
 				equalsequalsNull = false;
 			}
@@ -1800,13 +1800,17 @@ public class Main implements Java8Listener {
 	public void enterVariableDeclarator(VariableDeclaratorContext ctx) {
 
 		inExpression = true;
-		if (multipleVariables && !ctx.getText().equals(firstVariableInList)) {
-			try {
-				bw.write(variableListType);
-			} catch (IOException e) {
 
-				e.printStackTrace();
+		try {
+			if (enterfor) {
+				forinit = ctx.variableInitializer().getText();
 			}
+
+			if (multipleVariables && !ctx.getText().equals(firstVariableInList)) {
+				bw.write(variableListType);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -2283,8 +2287,10 @@ public class Main implements Java8Listener {
 					}
 				}
 
-			} else
+			} else {
 				forConditionOperator = ctx.getChild(1).getText();
+				forlimit = ctx.getChild(2).getText();
+			}
 		}
 	}
 
@@ -2470,7 +2476,7 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
-		if (ctx.getChildCount() > 1) {
+		if (ctx.getChildCount() > 1 && !enterfor) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
 				bracketInstance.push(ctx);
@@ -2695,10 +2701,11 @@ public class Main implements Java8Listener {
 						enterArrayAccessSet = false;
 					} else if (!enterfor) {
 						bw.write(ctx.getText());
-					} else {
-						forinit = ctx.getText();
-						forlimit = forinit;
 					}
+					// else {
+					// forinit = ctx.getText();
+					// forlimit = forinit;
+					// }
 				} catch (IOException e) {
 
 					e.printStackTrace();
@@ -2832,7 +2839,7 @@ public class Main implements Java8Listener {
 
 	public void enterInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
 
-		if (ctx.getChildCount() > 1) {
+		if (ctx.getChildCount() > 1 && !enterfor) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
 				bracketInstance.push(ctx);
@@ -2990,11 +2997,12 @@ public class Main implements Java8Listener {
 	public void enterExpressionName(ExpressionNameContext ctx) {
 
 		try {
-			if (equalsequalsNull) {
-				bw.write("!");
-			}
 
-			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
+			if (!enterArrayAccess && !enterArrayAccess_lfno_primary) {
+				if (equalsequalsNull) {
+					bw.write("!");
+				}
+
 				if (enterArrayAccessSet) {
 					bw.write(ctx.getText() + ")");
 					enterArrayAccessSet = false;
@@ -3004,10 +3012,12 @@ public class Main implements Java8Listener {
 							bw.write(" in ");
 						}
 						bw.write(ctx.getText());
-					} else {
-						forinit = ctx.getText();
-						forlimit = forinit;
 					}
+				// else {
+				// forinit = ctx.getText();
+				// forlimit = forinit;
+				// }
+			}
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -3024,7 +3034,7 @@ public class Main implements Java8Listener {
 
 	public void enterExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
 
-		if (ctx.getChildCount() > 1) {
+		if (ctx.getChildCount() > 1 && !enterfor) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
 				bracketInstance.push(ctx);
@@ -3468,6 +3478,11 @@ public class Main implements Java8Listener {
 
 		try {
 			enterArrayAccess_lfno_primary = true;
+
+			if (equalsequalsNull) {
+				bw.write("!");
+			}
+
 			bw.write(ctx.expressionName().getText() + ".get(" + ctx.expression(0).getText() + ")");
 		} catch (IOException e) {
 
@@ -3551,7 +3566,7 @@ public class Main implements Java8Listener {
 
 	public void enterAdditiveExpression(AdditiveExpressionContext ctx) {
 
-		if (ctx.getChildCount() > 1) {
+		if (ctx.getChildCount() > 1 && !enterfor) {
 			operators.push(ctx.getChild(1).getText());
 			if (openParenthesis) {
 				bracketInstance.push(ctx);
