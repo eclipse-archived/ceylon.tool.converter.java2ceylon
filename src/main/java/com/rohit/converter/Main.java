@@ -689,7 +689,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitSingleElementAnnotation(SingleElementAnnotationContext ctx) {
-
+		try {
+			bw.write(") ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitSimpleTypeName(SimpleTypeNameContext ctx) {
@@ -716,7 +720,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void exitResourceSpecification(ResourceSpecificationContext ctx) {
-
+		try {
+			bw.write(") ");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
 	}
 
 	public void exitResourceList(ResourceListContext ctx) {
@@ -2241,7 +2249,13 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterSingleElementAnnotation(SingleElementAnnotationContext ctx) {
-
+		try {
+			String text = ctx.typeName().getText();
+			text = Character.toLowerCase(text.charAt(0)) + text.substring(1);
+			bw.write(text + "(");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterSimpleTypeName(SimpleTypeNameContext ctx) {
@@ -2263,7 +2277,11 @@ public class Main implements Java8Listener {
 	}
 
 	public void enterResourceSpecification(ResourceSpecificationContext ctx) {
-
+		try {
+			bw.write("(");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterResourceList(ResourceListContext ctx) {
