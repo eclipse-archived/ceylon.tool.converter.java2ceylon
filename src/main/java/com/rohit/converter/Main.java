@@ -75,28 +75,13 @@ public class Main implements Java8Listener {
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			Java8Parser parser = new Java8Parser(tokens);
 
-			ParseTree tree = parser.compilationUnit();
+			ParserRuleContext tree = (ParserRuleContext) parser.compilationUnit();
+			//tree.inspect(parser);
 
 			bw = new BufferedWriter(new FileWriter(new File(args[1])));
 
 			// Java8Listener listener = new Java8Listener(this);
 			Main m = new Main();
-
-			// Use to generate a viewable AST diagram
-
-			// JFrame frame = new JFrame("Antlr AST");
-			// JPanel panel = new JPanel();
-			// TreeViewer viewer = new
-			// TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
-			// viewer.setScale(1.1);
-			// panel.add(viewer);
-			// JScrollPane jScrollPane = new JScrollPane(panel);
-			// frame.add(jScrollPane);
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setSize(500, 500);
-			// frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-			//
-			// frame.setVisible(true);
 
 			ParseTreeWalker.DEFAULT.walk(m, tree);
 
