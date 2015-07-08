@@ -24,9 +24,9 @@ import com.rohit.converter.Java8Parser.*;
  */
 public class Main implements Java8Listener {
 
-	String lastFormalParameter, forinit, forlimit, forConditionOperator, forCounterDatatype, lastActualParameter = "",
-			lastTypeParameter = "", variableModifier = "", variableListType = "", forByValue = "1", packageName = "",
-			lastInterface = "", firstVariableInList = "";
+	String lastFormalParameter = "", forinit = "", forlimit = "", forConditionOperator = "", forCounterDatatype = "",
+			lastActualParameter = "", lastTypeParameter = "", variableModifier = "", variableListType = "",
+			forByValue = "1", packageName = "", lastInterface = "", firstVariableInList = "";
 	boolean enterfor = false;
 	boolean enterresult = false;
 	boolean isInstanceOf = false;
@@ -529,7 +529,8 @@ public class Main implements Java8Listener {
 
 		try {
 			enterTypeArgumentsList = false;
-			bw.write("> ");
+			if (!typeConstraints)
+				bw.write("> ");
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -724,7 +725,7 @@ public class Main implements Java8Listener {
 			bw.write(") ");
 		} catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
 
 	public void exitResourceList(ResourceListContext ctx) {
@@ -1825,7 +1826,8 @@ public class Main implements Java8Listener {
 
 		try {
 			if (enterfor) {
-				forinit = ctx.variableInitializer().getText();
+				if (ctx.variableInitializer() != null)
+					forinit = ctx.variableInitializer().getText();
 			}
 
 			if (multipleVariables && !ctx.getText().equals(firstVariableInList)) {
@@ -2009,7 +2011,7 @@ public class Main implements Java8Listener {
 					typeConstraints = true;
 				}
 				bw.write(ctx.getChild(0).getText());
-			} else {
+			} else if (!typeConstraints) {
 				bw.write(ctx.getText());
 			}
 
@@ -2068,7 +2070,8 @@ public class Main implements Java8Listener {
 
 		try {
 			enterTypeArgumentsList = true;
-			bw.write("<");
+			if (!typeConstraints)
+				bw.write("<");
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -2856,6 +2859,15 @@ public class Main implements Java8Listener {
 	public void enterInterfaceBody(InterfaceBodyContext ctx) {
 
 		try {
+			if (typeConstraints) {
+				bw.write(" given "
+						+ ((NormalInterfaceDeclarationContext) ctx.getParent()).typeParameters().typeParameterList()
+								.typeParameter(0).getChild(0).getText()
+						+ " satisfies " + ((NormalInterfaceDeclarationContext) ctx.getParent()).typeParameters()
+								.typeParameterList().typeParameter(0).typeBound().getChild(1).getText());
+			}
+			typeConstraints = false;
+
 			enterInterfaceDeclaration = false;
 			bw.write(ctx.getChild(0).toString() + "\n");
 		} catch (IOException e) {
@@ -3319,11 +3331,11 @@ public class Main implements Java8Listener {
 		if (!(ctx.getParent().getParent() instanceof ArrayCreationExpressionContext)
 				&& !(ctx.getParent().getParent().getParent() instanceof CastExpressionContext))
 			try {
-				if (enterTypeArgumentsList) {
+				if (enterTypeArgumentsList && !typeConstraints) {
 					bw.write(ctx.getChild(0).getText());
 				}
 
-				if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList) {
+				if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList && !typeConstraints) {
 					bw.write(ctx.getText());
 				}
 			} catch (IOException e) {
