@@ -1,8 +1,6 @@
 package com.rohit.converter;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Stack;
 
@@ -14,7 +12,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.rohit.converter.Java8Parser.*;
 
 public class JavaToCeylonConverter implements Java8Listener {
-	String fileName = "";
 	String lastFormalParameter = "", forinit = "", forlimit = "", forConditionOperator = "", forCounterDatatype = "",
 			lastActualParameter = "", lastTypeParameter = "", variableModifier = "", variableListType = "",
 			forByValue = "1", packageName = "", lastInterface = "", firstVariableInList = "";
@@ -48,20 +45,14 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 	BufferedWriter bw;
 
-	public JavaToCeylonConverter(String fileName) throws IOException {
-		this.fileName = fileName;
-
-		bw = new BufferedWriter(new FileWriter(new File(fileName)));
-
+	public JavaToCeylonConverter(BufferedWriter bw) {
+		this.bw = bw;
 	}
 
-	public void close() {
-		try {
-			bw.flush();
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void close() throws IOException {
+		bw.flush();
+		bw.close();
+
 	}
 
 	public static boolean isNumeric(String str) {

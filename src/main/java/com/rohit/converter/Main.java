@@ -1,7 +1,9 @@
 package com.rohit.converter;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -37,7 +39,9 @@ public class Main {
 			ParserRuleContext tree = (ParserRuleContext) parser.compilationUnit();
 			// tree.inspect(parser);
 
-			JavaToCeylonConverter javaToCeylonConverter = new JavaToCeylonConverter(args[1]);
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(args[1])));
+			
+			JavaToCeylonConverter javaToCeylonConverter = new JavaToCeylonConverter(bw);
 
 			// Java8Listener listener = new Java8Listener(this);
 
