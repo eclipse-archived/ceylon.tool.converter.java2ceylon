@@ -2533,7 +2533,10 @@ public class JavaToCeylonConverter implements Java8Listener {
 					str += ctx.getChild(i).getText();
 				}
 
-				String str2 = str.replace(ctx.typeName().getText() + ".", "");
+				String str2 = str;
+
+				if (ctx.typeName() != null)
+					str2 = str.replace(ctx.typeName().getText() + ".", "");
 				for (String str1 : keywords) {
 					if (str1.equals(str2)) {
 						str = ctx.typeName().getText() + "." + "\\i" + str2;
@@ -2610,7 +2613,10 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 			}
 
-			String str2 = str.replace(ctx.typeName().getText() + ".", "");
+			String str2 = str;
+
+			if (ctx.typeName() != null)
+				str2 = str.replace(ctx.typeName().getText() + ".", "");
 			for (String str1 : keywords) {
 				if (str1.equals(str2)) {
 					str = ctx.typeName().getText() + "." + "\\i" + str2;
