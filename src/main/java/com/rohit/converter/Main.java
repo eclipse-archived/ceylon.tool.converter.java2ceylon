@@ -40,14 +40,14 @@ public class Main {
 			// tree.inspect(parser);
 
 			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(args[1])));
-			
-			JavaToCeylonConverter javaToCeylonConverter = new JavaToCeylonConverter(bw);
+
+			JavaToCeylonConverter converter = new JavaToCeylonConverter(bw);
 
 			// Java8Listener listener = new Java8Listener(this);
 
-			ParseTreeWalker.DEFAULT.walk(javaToCeylonConverter, tree);
+			ParseTreeWalker.DEFAULT.walk(converter, tree);
 
-			javaToCeylonConverter.close();
+			converter.close();
 		}
 	}
 }
