@@ -41,7 +41,7 @@
 						<phase>test-compile</phase>
 						<configuration>
 							<testExcludes>
-								<exclude>com/rohit/testFiles/*.java</exclude>
+								<exclude>com/redhat/ceylon/testFiles/*.java</exclude>
 							</testExcludes>
 						</configuration>
 						<goals>
@@ -63,7 +63,7 @@
 				</executions>
 
 				<configuration>
-					<mainClass>com.rohit.converter.Main</mainClass>
+					<mainClass>com.redhat.ceylon.converter.Main</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -74,7 +74,7 @@
 						<fileset>
 							<directory>src/test/java</directory>
 							<includes>
-								<include>com/rohit/testFiles/testConvertedFile.ceylon</include>
+								<include>com/redhat/ceylon/testFiles/testConvertedFile.ceylon</include>
 							</includes>
 							<followSymlinks>false</followSymlinks>
 						</fileset>
@@ -93,7 +93,7 @@
 					<!-- MainClass in mainfest make a executable jar -->
 					<archive>
 						<manifest>
-							<mainClass>com.rohit.converter.Main</mainClass>
+							<mainClass>com.redhat.ceylon.converter.Main</mainClass>
 						</manifest>
 					</archive>
 
