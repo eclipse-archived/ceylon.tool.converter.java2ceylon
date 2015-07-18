@@ -2534,12 +2534,20 @@ public class JavaToCeylonConverter implements Java8Listener {
 				}
 
 				String str2 = str;
+				String typeName = "";
 
-				if (ctx.typeName() != null)
-					str2 = str.replace(ctx.typeName().getText() + ".", "");
-				for (String str1 : keywords) {
-					if (str1.equals(str2)) {
-						str = ctx.typeName().getText() + "." + "\\i" + str2;
+				if (ctx.typeName() != null) {
+					typeName = ctx.typeName().getText();
+					str2 = str.replace(typeName + ".", "");
+
+					for (String str1 : keywords) {
+						if (str1.equals(typeName)) {
+							typeName = "\\i" + ctx.typeName().getText();
+							str = typeName + "." + str2;
+						}
+						if (str1.equals(str2)) {
+							str = typeName + "." + "\\i" + str2;
+						}
 					}
 				}
 
@@ -2614,12 +2622,19 @@ public class JavaToCeylonConverter implements Java8Listener {
 			}
 
 			String str2 = str;
+			String typeName = "";
 
-			if (ctx.typeName() != null)
-				str2 = str.replace(ctx.typeName().getText() + ".", "");
-			for (String str1 : keywords) {
-				if (str1.equals(str2)) {
-					str = ctx.typeName().getText() + "." + "\\i" + str2;
+			if (ctx.typeName() != null) {
+				typeName = ctx.typeName().getText();
+				str2 = str.replace(typeName + ".", "");
+
+				for (String str1 : keywords) {
+					if (str1.equals(ctx.typeName().getText())) {
+						typeName = "\\i" + ctx.typeName().getText();
+					}
+					if (str1.equals(str2)) {
+						str = typeName + "." + "\\i" + str2;
+					}
 				}
 			}
 
