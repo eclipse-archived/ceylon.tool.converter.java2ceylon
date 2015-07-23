@@ -2007,6 +2007,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 				bw.write("\n}\n");
 			}
 			bw.write("import " + ctx.packageOrTypeName().getText() + "{\n...");
+			firstImport = false;
 		} catch (IOException e) {
 
 			e.printStackTrace();
