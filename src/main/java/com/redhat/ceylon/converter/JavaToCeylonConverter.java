@@ -372,14 +372,13 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void exitUnannType(UnannTypeContext ctx) {
-
-		if (ctx.getParent().getChild(1) != null && ctx.getParent().getChild(1).getText().equals("...")) {
-			try {
+		try {
+			if (ctx.getParent().getChild(1) != null && ctx.getParent().getChild(1).getText().equals("...")) {
 				bw.write("* ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
 			}
+		} catch (IOException e) {
+
+			e.printStackTrace();
 		}
 	}
 
@@ -1886,7 +1885,11 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 	public void enterUnannClassType_lf_unannClassOrInterfaceType(
 			UnannClassType_lf_unannClassOrInterfaceTypeContext ctx) {
-
+		try {
+			bw.write(ctx.getText());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterUnannClassType(UnannClassTypeContext ctx) {
@@ -3354,9 +3357,10 @@ public class JavaToCeylonConverter implements Java8Listener {
 					bw.write(ctx.getChild(0).getText());
 				}
 
-				if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList && !typeConstraints) {
-					bw.write(ctx.getText());
-				}
+				if (!(ctx.getParent().getParent().getParent() instanceof InterfaceTypeContext))
+					if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList && !typeConstraints) {
+						bw.write(ctx.getText());
+					}
 			} catch (IOException e) {
 
 				e.printStackTrace();
