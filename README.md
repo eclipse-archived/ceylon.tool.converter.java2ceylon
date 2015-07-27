@@ -1,15 +1,28 @@
 # Java to Ceylon Converter
 
-This is a project to convert java to ceylon. 
-The Main class generates an AST and converts the given java file to ceylon.
-The Main class requires 2 arguments - the location of the source java file and the destination ceylon file.
+This is a project to convert java to Ceylon. 
+The Main class generates an AST and converts the given java file to Ceylon.
+The Main class requires 2 arguments - the location of the source java file and the destination Ceylon file.
 
 ## Instructions
 
-Build using Maven
+###With `ant`
 
-`mvn clean install`
+```
+bash
+git clone https://github.com/rohitmohan96/java-to-ceylon-converter.git
+cd java-to-ceylon-converter
+ant install
+```
 
-Run the jar in the target directory
+The buildfile assumes that `ceylon-dist` (including the Ceylon ant files) is a sibling folder; otherwise, you might have to adjust the paths in `build.properties`.
 
-`java -jar target/Java-to-Ceylon-Converter-0.0.1-SNAPSHOT-jar-with-dependencies.jar 'full/directory/of/java/file.java' 'test.ceylon'`
+###Usage
+
+If you have the plugin installed,
+
+`ceylon convert 'full/directory/of/java/file.java' 'test.ceylon'`
+
+If you don't have the plugin installed run
+
+`ceylon run com.redhat.ceylon.converter 'full/directory/of/java/file.java' 'test.ceylon'`
