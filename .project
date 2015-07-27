@@ -16,19 +16,13 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/com.redhat.ceylon.eclipse.ui.ceylonBuilder.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/Generate Ceylon Module Archive [Builder] (1).launch</value>
 				</dictionary>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.m2e.core.maven2Builder</name>
-			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>com.redhat.ceylon.eclipse.ui.ceylonNature</nature>
-		<nature>org.eclipse.m2e.core.maven2Nature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 </projectDescription>

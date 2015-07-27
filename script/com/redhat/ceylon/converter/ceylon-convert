@@ -1,0 +1,15 @@
+#!/bin/sh
+
+USAGE='[OPTION]... ( FILE [--and FILE]... [--to FILE] )...'
+DESCRIPTION='Convert Java code to Ceylon'
+LONG_USAGE='    ceylon convert "full/directory/of/java/file.java" "test.ceylon"
+
+OPTIONS
+
+--help
+    Print this help message.'
+
+
+. $CEYLON_HOME/bin/ceylon-sh-setup
+
+$CEYLON run com.redhat.ceylon.converter/1.0.0 "$@"
