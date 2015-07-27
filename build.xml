@@ -1,0 +1,93 @@
+<project name="Java to Ceylon Converter" basedir="." default="test">
+	<property file="build.properties" />
+	<property name="ceylon.verbosity" value="false" />
+	<property name="ceylon.executable" value="${dist.bin.dir}/ceylon" />
+	<property name="out.repo" location="modules" />
+
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="${dist.root.dir}/lib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<property name="ceylon.repo.dir" location="${user.home}/.ceylon/repo" />
+
+	<path id="ant-tasks">
+		<pathelement location="${ceylon.ant.lib}" />
+	</path>
+
+	<typedef resource="com/redhat/ceylon/ant/antlib.xml" classpathref="ant-tasks" />
+
+	<reposet id="reposet.compile.source">
+		<repo url="${out.repo}" />
+	</reposet>
+
+	<reposet id="reposet.compile.test">
+		<repo url="${out.repo}" />
+	</reposet>
+
+	<reposet id="reposet.run.test">
+		<reposet refid="reposet.compile.test" />
+		<repo url="${out.repo}" />
+	</reposet>
+
+	<moduleset id="modules.source">
+		<module name="com.redhat.ceylon.converter" />
+	</moduleset>
+
+	<moduleset id="modules.test">
+		<module name="test.com.redhat.ceylon.converter" />
+	</moduleset>
+
+	<target name="clean" description="Deletes the test-modules and modules directories">
+		<delete dir="${out.repo}" />
+	</target>
+
+	<target name="compile-source" description="Compiles the Converter modules without re-generating sources">
+		<ceylon-compile executable="${ceylon.executable}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
+			<moduleset refid="modules.source" />
+		</ceylon-compile>
+	</target>
+
+	<target name="compile" depends="compile-source" description="Compiles the Converter module to the 'modules' repository" />
+
+	<path id="test-sources-path">
+		<pathelement location="source" />
+	</path>
+
+	<property name="test-sources" refid="test-sources-path" />
+
+	<target name="compile-test" description="Compiles the test module">
+		<ceylon-compile executable="${ceylon.executable}" src="${test-sources}" out="${out.repo}" verbose="${ceylon.verbosity}" encoding="UTF-8">
+			<reposet refid="reposet.compile.test" />
+			<moduleset refid="modules.test" />
+		</ceylon-compile>
+	</target>
+
+	<target name="test" depends="compile,compile-test" description="Runs the compiled test module">
+		<ceylon-test>
+			<reposet refid="reposet.run.test" />
+			<moduleset refid="modules.test" />
+		</ceylon-test>
+	</target>
+
+	<target name="publish" depends="compile,scripts" description="Copies the Converter modules to the user's repository">
+		<copy todir="${ceylon.repo.dir}" overwrite="true">
+			<fileset dir="${out.repo}">
+				<include name="com/redhat/ceylon/converter/**" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="scripts">
+		<ceylon-plugin mode="pack">
+			<moduleset refid="modules.source" />
+		</ceylon-plugin>
+	</target>
+
+	<target name="install" depends="publish">
+		<ceylon-plugin mode="install" force="true">
+			<moduleset refid="modules.source" />
+		</ceylon-plugin>
+	</target>
+</project>
