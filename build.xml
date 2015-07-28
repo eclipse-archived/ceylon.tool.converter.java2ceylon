@@ -4,9 +4,21 @@
 	<property name="ceylon.executable" value="${dist.bin.dir}/ceylon" />
 	<property name="out.repo" location="modules" />
 
+	<property name="osgi" location="${basedir}/osgi" />
+	<property name="osgi.p2" location="${osgi}/p2" />
+	<property name="osgi.dist" location="${osgi}/dist" />
+	<property name="osgi.build" location="${osgi}/build" />
+	<property name="osgi.dist.plugins" location="${osgi.dist}/plugins" />
+
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
 			<pathelement location="${dist.root.dir}/lib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<taskdef resource="taskdef.properties">
+		<classpath>
+			<pathelement path="${dist.root.dir}/osgi/lib/org.osgi.impl.bundle.repoindex.ant-2.1.2.jar" />
 		</classpath>
 	</taskdef>
 
@@ -89,5 +101,74 @@
 		<ceylon-plugin mode="install" force="true">
 			<moduleset refid="modules.source" />
 		</ceylon-plugin>
+	</target>
+
+	<target name="copyModuleArchiveForOSGI">
+		<loadproperties>
+			<zipentry zipfile="${currentFile}" name="META-INF/MANIFEST.MF" />
+			<filterchain>
+				<linecontainsregexp>
+					<regexp pattern="^(Bundle-SymbolicName|Bundle-Version)" />
+				</linecontainsregexp>
+				<replaceregex pattern="\s+$" replace="" />
+				<replaceregex pattern="^\s+" replace="" />
+			</filterchain>
+		</loadproperties>
+		<if>
+			<isset property="Bundle-SymbolicName" />
+			<then>
+				<copy file="${currentFile}" tofile="${osgi.dist.plugins}/${Bundle-SymbolicName}_${Bundle-Version}.jar" overwrite="true" />
+			</then>
+		</if>
+	</target>
+
+	<target name="osgi-quick">
+		<mkdir dir="${osgi.dist.plugins}" />
+		<foreach target="copyModuleArchiveForOSGI" param="currentFile">
+			<path>
+				<fileset dir="${out.repo}" includes="**/*.car" />
+			</path>
+		</foreach>
+		<makeurl property="rootUrl" file="${osgi.dist}" />
+		<repoindex name="Ceylon Distribution Bundles" out="${osgi.dist}/repository.xml" compressed="false" rooturl="${rootUrl}">
+			<fileset dir="${osgi.dist.plugins}" includes="*.jar" />
+		</repoindex>
+	</target>
+
+	<!-- Rule to setup a plugins directory with required bundles -->
+	<target name="osgi-p2-quick" depends="osgi-quick">
+		<makeurl property="destinationRepository" file="${osgi.dist}" />
+		<makeurl property="categoryDefinition" file="${osgi.p2}/category.xml" />
+		<mkdir dir="${osgi.build}" />
+		<touch file="${osgi.build}/bundles.info" />
+		<makeurl property="bundlesInfoUrl" file="${osgi.build}/bundles.info" />
+		<loadfile srcfile="${basedir}/../ceylon-dist/osgi/p2/bundlesToStart" property="bundlesToStart">
+			<filterchain>
+				<striplinebreaks />
+			</filterchain>
+		</loadfile>
+		<ceylon-p2 executable="${ceylon.executable}" offline="true" verbose="${ceylon.verbosity}" nodefaultrepositories="true" out="${osgi.dist}" repositoryName="Ceylon SDK Bundles" categoryPrefix="ceylon.sdk" categories="${osgi.p2}/category.xml">
+			<moduleset refid="modules.source" />
+			<rep url="modules" />
+		</ceylon-p2>
+	</target>
+
+	<target name="osgi" depends="compile,osgi-quick" />
+	<target name="osgi-p2" depends="compile,osgi-p2-quick" />
+
+	<target name="ide" depends="osgi-p2" />
+	<target name="ide-quick" depends="osgi-p2-quick">
+		<property name="archivePath" value="${out.repo}/com/redhat/ceylon/converter/${module.com.redhat.ceylon.converter.version}/com.redhat.ceylon.converter-${module.com.redhat.ceylon.converter.version}.car" />
+		<basename file="${archivePath}" property="archiveFileName" />
+		<property name="proxy-project" value="../ceylon-ide-eclipse/required-bundle-proxies/${archiveFileName}" />
+		<mkdir dir="${proxy-project}" />
+		<delete failonerror="false" dir="${proxy-project}/META-INF" />
+		<copy toDir="${proxy-project}" overwrite="true">
+			<zipfileset src="${archivePath}" includes="META-INF/**" />
+			<fileset file="${archivePath}" />
+		</copy>
+		<manifest file="${proxy-project}/META-INF/MANIFEST.MF" mode="update">
+			<attribute name="Bundle-Classpath" value="${archiveFileName}" />
+		</manifest>
 	</target>
 </project>
