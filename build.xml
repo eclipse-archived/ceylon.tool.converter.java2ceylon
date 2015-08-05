@@ -53,6 +53,8 @@
 
 	<target name="clean" description="Deletes the test-modules and modules directories">
 		<delete dir="${out.repo}" />
+		<delete dir="${osgi.dist}"/>
+		<delete dir="${osgi.build}"/>
 	</target>
 
 	<target name="compile-source" description="Compiles the Converter modules without re-generating sources">
@@ -103,7 +105,7 @@
 		</ceylon-plugin>
 	</target>
 
-	<target name="copyModuleArchiveForOSGI">
+	<!-- <target name="copyModuleArchiveForOSGI">
 		<loadproperties>
 			<zipentry zipfile="${currentFile}" name="META-INF/MANIFEST.MF" />
 			<filterchain>
@@ -120,9 +122,67 @@
 				<copy file="${currentFile}" tofile="${osgi.dist.plugins}/${Bundle-SymbolicName}_${Bundle-Version}.jar" overwrite="true" />
 			</then>
 		</if>
+	</target> -->
+
+	<target name="copyModuleArchiveForOSGI">
+			<loadproperties>
+					<zipentry zipfile="${currentFile}" name="META-INF/MANIFEST.MF"/>
+					<filterchain>
+							<linecontainsregexp>
+									<regexp pattern="^(Bundle-SymbolicName|Bundle-Version)"/>
+							</linecontainsregexp>
+							<replaceregex pattern="\s+$" replace=""/>
+							<replaceregex pattern="^\s+" replace=""/>
+						</filterchain>
+			</loadproperties>
+			<basename property="module.jar.name" file="${currentFile}"/>
+			<propertyregex property="CeylonName"
+						input="${module.jar.name}"
+						regexp="(.+)-([^\-]+)\.(j|c)ar"
+						replace="\1">
+			</propertyregex>
+			<propertyregex property="CeylonVersion"
+			input="${module.jar.name}"
+			regexp="(.+)-([^\-]+)\.(j|c)ar"
+			replace="\2">
+			</propertyregex>
+			<if>
+					<or>
+							<not>
+									<isset property="Bundle-SymbolicName"/>
+							</not>
+							<not>
+									<equals arg1="${Bundle-SymbolicName}" arg2="${CeylonName}"/>
+							</not>
+					</or>
+					<then>
+							<antcall target="addRequiredOSGIHeaders" inheritall="true"/>
+							<property name="CheckedBundleSymbolicName" value="${CeylonName}"/>
+							<property name="CheckedBundleVersion" value="${CeylonVersion}"/>
+					</then>
+					<else>
+							<property name="CheckedBundleSymbolicName" value="${Bundle-SymbolicName}"/>
+							<property name="CheckedBundleVersion" value="${Bundle-Version}"/>
+					</else>
+			</if>
+			<copy file="${currentFile}"
+					tofile="${osgi.dist.plugins}/${CheckedBundleSymbolicName}_${CheckedBundleVersion}.jar"
+					overwrite="true"/>
 	</target>
 
-	<target name="osgi-quick">
+	<target name="retrieveDependencies">
+			<ceylon-copy executable="${ceylon.executable}"
+					offline="true"
+					verbose="${ceylon.verbosity}"
+					nodefaultrepositories="true"
+					withdependencies="true"
+					out="${osgi.dist}/tempRepo">
+					<rep url="./modules"/>
+					<sourcemodules/>
+			</ceylon-copy>
+	</target>
+
+	<!-- <target name="osgi-quick">
 		<mkdir dir="${osgi.dist.plugins}" />
 		<foreach target="copyModuleArchiveForOSGI" param="currentFile">
 			<path>
@@ -133,6 +193,23 @@
 		<repoindex name="Ceylon Distribution Bundles" out="${osgi.dist}/repository.xml" compressed="false" rooturl="${rootUrl}">
 			<fileset dir="${osgi.dist.plugins}" includes="*.jar" />
 		</repoindex>
+	</target> -->
+
+	<target name="osgi-quick" depends="retrieveDependencies">
+			<mkdir dir="${osgi.dist.plugins}" />
+			<foreach target="copyModuleArchiveForOSGI" param="currentFile">
+					<path>
+							<fileset dir="${osgi.dist}/tempRepo" includes="**/*.?ar"/>
+					</path>
+			</foreach>
+			<delete dir="${osgi.dist}/tempRepo" failonerror="false" deleteonexit="true"/>
+			<makeurl property="rootUrl" file="${osgi.dist}"/>
+			<repoindex name="Ceylon Distribution Bundles"
+					out="${osgi.dist}/repository.xml"
+					compressed="false"
+					rooturl="${rootUrl}">
+					<fileset dir="${osgi.dist.plugins}" includes="*.jar"/>
+			</repoindex>
 	</target>
 
 	<!-- Rule to setup a plugins directory with required bundles -->
