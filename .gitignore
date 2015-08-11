@@ -4,3 +4,5 @@
 /target/
 /.exploded/
 /TestClass.ceylon
+/modules/
+/repo/
