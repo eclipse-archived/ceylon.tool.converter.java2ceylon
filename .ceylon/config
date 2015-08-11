@@ -8,4 +8,4 @@ source=source
 resource=resource
 
 [repositories]
-lookup=/home/rohitmohan96/ceylon/modules
+lookup=repo
