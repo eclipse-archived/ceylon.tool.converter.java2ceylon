@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <category-def name="module-bundles" label="Java to Ceylon Converter Runtime Bundles">
+   <category-def name="module-bundles" label="Java to Ceylon Converter - All Bundles">
       <description>Java to Ceylon Converter modules available as OSGI bundles</description>
    </category-def>
-   <iu>
+   <category-def name="only-dependencies-bundles" label="Java to Ceylon Converter - Only Binary Dependencies">
+      <description>Fixed binary dependencies of the Java to Ceylon Converter -  Only needed to compile the IDE by using the bundle proxy projects</description>
+   </category-def>
+   <feature id="com.redhat.ceylon.converter.feature" version="0.0.0">
       <category name="module-bundles"/>
-      <query><expression type="match">providedCapabilities.exists(p | p.namespace == 'osgi.bundle')</expression></query>
-   </iu>
+   </feature>
+   <feature id="com.redhat.ceylon.converter.dependencies.feature" version="0.0.0">
+      <category name="only-dependencies-bundles"/>
+   </feature>
 </site>
