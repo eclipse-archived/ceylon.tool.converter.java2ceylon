@@ -9,6 +9,11 @@
 	<property name="osgi.dist" location="${osgi}/dist" />
 	<property name="osgi.build" location="${osgi}/build" />
 	<property name="osgi.dist.plugins" location="${osgi.dist}/plugins" />
+    <property name="osgi.dist.features" location="${osgi.dist}/features" />
+	
+    <tstamp>
+        <format property="qualifier" timezone="GMT" pattern="'v'yyyyMMdd-HHmm"/>
+    </tstamp>        
 
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
@@ -176,8 +181,29 @@
 			</repoindex>
 	</target>
 
+    <target name="generateFeatures">
+        <property name="feature.dir" value="${osgi.dist.features}/${feature.id}_${feature.version}"/>
+        <mkdir dir="${feature.dir}"/>
+        <property name="featureFile" value="${feature.dir}/feature.xml"/>
+        <xslt style="${osgi.p2}/${xslFileName}" in="${osgi.dist}/repository.xml" out="${featureFile}">
+            <param name="featureId" expression="${feature.id}"/>
+            <param name="featureVersion" expression="${feature.version}"/>
+        </xslt>            
+    </target>
+    
 	<!-- Rule to setup a plugins directory with required bundles -->
 	<target name="osgi-p2-quick" depends="osgi-quick">
+        <mkdir dir="${osgi.dist.features}"/>
+        <ant target="generateFeatures" inheritall="true">
+            <property name="feature.id" value="com.redhat.ceylon.converter.feature"/>
+            <property name="feature.version" value="${module.com.redhat.ceylon.converter.version}.${qualifier}"/>
+            <property name="xslFileName" value="generatePluginFeature.xsl"/>
+        </ant>
+        <ant target="generateFeatures" inheritall="true">
+            <property name="feature.id" value="com.redhat.ceylon.converter.dependencies.feature"/>
+            <property name="feature.version" value="${module.com.redhat.ceylon.converter.version}.${qualifier}"/>
+            <property name="xslFileName" value="generateFixedDependenciesFeature.xsl"/>
+        </ant>
 		<makeurl property="destinationRepository" file="${osgi.dist}" />
 		<makeurl property="categoryDefinition" file="${osgi.p2}/category.xml" />
 		<mkdir dir="${osgi.build}" />
