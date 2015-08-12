@@ -13,5 +13,7 @@ public class TestIf {
 		if(a % b == 0) {
 			a = b;
 		}
+
+		String c = a > b ? "gt" : "lt";
 	}
 }

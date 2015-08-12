@@ -1437,7 +1437,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 			}
 
 			if (ctx.getParent() instanceof ConditionalExpressionContext && ctx.getParent().getChildCount() > 1) {
-				bw.write(" then ");
+				bw.write(") then ");
 			}
 		} catch (IOException e) {
 
@@ -3326,7 +3326,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 		// TODO add brackets if they are not present
 		if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("?")) {
 			try {
-				bw.write("if");
+				bw.write("if (");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
