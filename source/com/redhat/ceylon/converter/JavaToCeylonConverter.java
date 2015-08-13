@@ -15,6 +15,9 @@ import com.redhat.ceylon.converter.Java8Parser.*;
 
 /**
  *
+ * Converts Java code to Ceylon. It generates an AST using Antlr and uses a
+ * listener to convert the code to Ceylon.
+ * 
  * @author rohitmohan96
  *
  */

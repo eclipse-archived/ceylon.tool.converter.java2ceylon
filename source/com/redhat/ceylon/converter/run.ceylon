@@ -13,7 +13,9 @@ import org.antlr.v4.runtime.tree {
 	ParseTreeWalker
 }
 
+"Converts the given Java file to Ceylon."
 shared void convert(String? file1, String? file2, Boolean transformGetters = false) {
+
 	File f = File(file1);
 	
 	ANTLRInputStream input = ANTLRInputStream(FileInputStream(f));
