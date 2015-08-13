@@ -3,6 +3,8 @@ package com.redhat.ceylon.converter;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -12,7 +14,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.redhat.ceylon.converter.Java8Parser.*;
 
 /**
- * 
+ *
  * @author rohitmohan96
  *
  */
@@ -54,9 +56,17 @@ public class JavaToCeylonConverter implements Java8Listener {
 	boolean typeConstraints = false;
 
 	BufferedWriter bw;
+	private boolean transformGetters;
+
+	private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
 
 	public JavaToCeylonConverter(BufferedWriter bw) {
 		this.bw = bw;
+	}
+
+	public JavaToCeylonConverter(BufferedWriter bw, boolean transformGetters) {
+		this.bw = bw;
+		this.transformGetters = transformGetters;
 	}
 
 	public void close() throws IOException {
@@ -2531,14 +2541,28 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 		try {
 			if (!isInstanceOf) {
-				int a = ctx.getChildCount();
 				String str = "";
+				boolean isGetter = false;
 
-				for (int i = 0; i < a; i++) {
-					if (ctx.getChild(i).getText().equals("("))
+				for (ParseTree child : ctx.children) {
+					if (child.getText().equals("(")) {
 						break;
+					}
 
-					str += ctx.getChild(i).getText();
+					Matcher matcher = GETTER_PATTERN.matcher(child.getText());
+
+					if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
+						isGetter = true;
+						String property = matcher.group(2);
+						if (property.length() > 1) {
+							property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
+						} else {
+							property = property.toLowerCase();
+						}
+						str += property;
+					} else {
+						str += child.getText();
+					}
 				}
 
 				String str2 = str;
@@ -2568,8 +2592,9 @@ public class JavaToCeylonConverter implements Java8Listener {
 						bw.write("process.write");
 					} else {
 						bw.write(str);
-						if (ctx.argumentList() == null)
+						if (ctx.argumentList() == null && !isGetter) {
 							bw.write("()");
+						}
 					}
 				} else {
 					forlimit = str + "(";
@@ -2618,15 +2643,28 @@ public class JavaToCeylonConverter implements Java8Listener {
 	public void enterMethodInvocation(MethodInvocationContext ctx) {
 
 		try {
-			int a = ctx.getChildCount();
 			String str = "";
+			boolean isGetter = false;
 
-			for (int i = 0; i < a; i++) {
-				if (ctx.getChild(i).getText().equals("("))
+			for (ParseTree child : ctx.children) {
+				if (child.getText().equals("(")) {
 					break;
+				}
 
-				str += ctx.getChild(i).getText();
+				Matcher matcher = GETTER_PATTERN.matcher(child.getText());
 
+				if (matcher.matches() && ctx.argumentList() == null) {
+					isGetter = true;
+					String property = matcher.group(2);
+					if (property.length() > 1) {
+						property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
+					} else {
+						property = property.toLowerCase();
+					}
+					str += property;
+				} else {
+					str += child.getText();
+				}
 			}
 
 			String str2 = str;
@@ -2654,8 +2692,9 @@ public class JavaToCeylonConverter implements Java8Listener {
 				bw.write("process.write");
 			} else {
 				bw.write(str);
-				if (ctx.argumentList() == null)
+				if (ctx.argumentList() == null && !isGetter) {
 					bw.write("()");
+				}
 			}
 
 		} catch (IOException e) {

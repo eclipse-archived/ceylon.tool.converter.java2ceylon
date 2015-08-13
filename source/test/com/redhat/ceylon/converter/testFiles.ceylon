@@ -1,6 +1,6 @@
 import ceylon.test {
 	test,
-	assertTrue
+    assertEquals
 }
 import com.redhat.ceylon.converter {
 	convert
@@ -16,10 +16,10 @@ import org.apache.commons.io {
 }
 
 shared void testFiles(String javaFileName, String ceylonFileName) {
-	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon");
+	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", true);
 	File file1 = File(ceylonFileName + ".ceylon");
 	File file2 = File("testFiles/testConvertedFile.ceylon");
-	assertTrue(FileUtils.contentEquals(file1, file2));
+	assertEquals(FileUtils.readFileToString(file2), FileUtils.readFileToString(file1));
 }
 
 test
@@ -195,5 +195,13 @@ shared void testVariableDeclaration() {
 	String workingDir = System.getProperty("user.dir");
 	String javaFileName = workingDir + "/testFiles/TestVariableDeclaration";
 	String ceylonFileName = workingDir + "/testFiles/testVariableDeclaration";
+	testFiles(javaFileName, ceylonFileName);
+}
+
+test
+shared void testGetterSetter() {
+	String workingDir = System.getProperty("user.dir");
+	String javaFileName = workingDir + "/testFiles/TestGetterSetter";
+	String ceylonFileName = workingDir + "/testFiles/testGetterSetter";
 	testFiles(javaFileName, ceylonFileName);
 }

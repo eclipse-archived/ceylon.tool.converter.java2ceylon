@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.tree {
 	ParseTreeWalker
 }
 
-shared void convert(String? file1, String? file2) {
+shared void convert(String? file1, String? file2, Boolean transformGetters = false) {
 	File f = File(file1);
 	
 	ANTLRInputStream input = ANTLRInputStream(FileInputStream(f));
@@ -26,7 +26,7 @@ shared void convert(String? file1, String? file2) {
 	
 	BufferedWriter bw = BufferedWriter(FileWriter(File(file2)));
 	
-	JavaToCeylonConverter converter = JavaToCeylonConverter(bw);
+	JavaToCeylonConverter converter = JavaToCeylonConverter(bw, transformGetters);
 	
 	// Java8Listener listener = new Java8Listener(this);
 	
