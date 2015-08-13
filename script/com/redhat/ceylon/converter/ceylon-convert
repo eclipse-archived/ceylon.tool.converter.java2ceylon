@@ -7,8 +7,10 @@ LONG_USAGE='    ceylon convert "full/directory/of/java/file.java" "test.ceylon"
 OPTIONS
 
 --help
-    Print this help message.'
-
+    Print this help message.
+    
+--tranformGetters
+	Transform getters to properties.'
 
 . $CEYLON_HOME/bin/ceylon-sh-setup
 

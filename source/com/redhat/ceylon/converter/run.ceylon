@@ -15,7 +15,7 @@ import org.antlr.v4.runtime.tree {
 
 "Converts the given Java file to Ceylon."
 shared void convert(String? file1, String? file2, Boolean transformGetters = false) {
-
+	
 	File f = File(file1);
 	
 	ANTLRInputStream input = ANTLRInputStream(FileInputStream(f));
@@ -38,9 +38,11 @@ shared void convert(String? file1, String? file2, Boolean transformGetters = fal
 
 "Run the module `com.redhat.ceylon.converter`."
 shared void run() {
-	if (process.arguments.size != 2) {
-		print("First Argument: original java file.\nSecond Argument: destination ceylon file");
-	} else {
+	if (process.arguments.size == 2) {
 		convert(process.arguments[0], process.arguments[1]);
+	} else if (process.arguments.size==3 && process.arguments.contains("--transformGetters")) {
+		convert(process.arguments[0], process.arguments[1], true);
+	} else {
+		print("Wrong options. Try `ceylon convert --help` for help.");
 	}
 }
