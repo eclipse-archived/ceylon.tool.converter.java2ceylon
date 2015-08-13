@@ -1,17 +1,19 @@
-import java.awt{
+import java.awt {
 Frame
 }
-import java.sql{
+import java.sql {
 ...
 }
-import java.io{BufferedWriter,
+import java.io {
+BufferedWriter,
 File,
 FileInputStream,
 FileWriter,
 IOException
 }
-import java.util{
+import java.util {
 ...
 }
 shared class TestImports() {
+
 }

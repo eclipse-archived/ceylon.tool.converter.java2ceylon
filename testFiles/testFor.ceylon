@@ -1,13 +1,21 @@
 shared class TestFor() {
-shared void foo(){
-for(Integer i in (0..4)){
+
+shared void foo() {
+variable Integer i = 0;
+while(i < 5) {
 print(i);
+i++;
 }
-for(Integer i in (0..4).by(2)){
+variable Integer i = 0;
+while(i < 5) {
 print(i);
+i += 2;
 }
-for(Integer i in (5..0).by(2)) {
+variable Integer i = 5;
+while(i >= 0) {
 print(i);
+i -= 2;
 }
 }
+
 }

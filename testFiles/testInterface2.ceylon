@@ -1,4 +1,4 @@
-shared interface TestInterface2 satisfies TestInterface{
-formal shared void foo();
-formal shared void bar();
+shared interface TestInterface2 satisfies TestInterface {
+shared formal void foo();
+shared formal void bar();
 }

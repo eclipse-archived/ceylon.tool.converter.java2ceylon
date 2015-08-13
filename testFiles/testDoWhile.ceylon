@@ -1,9 +1,11 @@
 shared class TestDoWhile() {
-shared void foo(){
+
+shared void foo() {
 variable Integer a = 0;
-while(true) {
+while (true) {
 a++;
-if(a < 5) {break;}
+if (a < 5) {break;}
 }
 }
+
 }

@@ -1,5 +1,8 @@
-abstract class TestAbstract() {
+shared abstract class TestAbstract() {
+
 shared formal void foo();
-shared void bar(){
+
+shared void bar() {
 }
+
 }
