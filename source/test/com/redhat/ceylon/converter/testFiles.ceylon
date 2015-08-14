@@ -1,6 +1,6 @@
 import ceylon.test {
 	test,
-    assertEquals
+	assertEquals
 }
 import com.redhat.ceylon.converter {
 	convert
@@ -203,5 +203,13 @@ shared void testGetterSetter() {
 	String workingDir = System.getProperty("user.dir");
 	String javaFileName = workingDir + "/testFiles/TestGetterSetter";
 	String ceylonFileName = workingDir + "/testFiles/testGetterSetter";
+	testFiles(javaFileName, ceylonFileName);
+}
+
+test
+shared void testEnums() {
+	String workingDir = System.getProperty("user.dir");
+	String javaFileName = workingDir + "/testFiles/TestEnums";
+	String ceylonFileName = workingDir + "/testFiles/testEnums";
 	testFiles(javaFileName, ceylonFileName);
 }

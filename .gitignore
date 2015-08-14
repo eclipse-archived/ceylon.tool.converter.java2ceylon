@@ -1,7 +1,5 @@
 /bin/
 /target/
-/target/
-/target/
 /.exploded/
 /TestClass.ceylon
 /modules/

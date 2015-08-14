@@ -62,6 +62,9 @@ public class JavaToCeylonConverter implements Java8Listener {
 	private boolean transformGetters;
 
 	private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
+	private boolean enterEnum = false;
+	private String enumName;
+	private boolean enumConstructor;
 
 	public JavaToCeylonConverter(BufferedWriter bw) {
 		this.bw = bw;
@@ -204,13 +207,12 @@ public class JavaToCeylonConverter implements Java8Listener {
 		// modifier = "shared ";
 
 		if (ctx.classModifier() != null)
-			for (int i = 0; i < ctx.classModifier().size(); i++) {
-				String mod = ctx.classModifier(i).getText();
+			for (ClassModifierContext c : ctx.classModifier()) {
+				String mod = c.getText();
 				if (mod.equals("public"))
 					modifier = "shared ";
 				else if (mod.equals("abstract"))
 					modifier = "abstract ";
-
 			}
 
 		try {
@@ -1325,7 +1327,11 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void exitEnumConstant(EnumConstantContext ctx) {
-
+		try {
+			bw.write(" { string = \"" + ctx.getChild(0).getText() + "\";}\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitEnumBodyDeclarations(EnumBodyDeclarationsContext ctx) {
@@ -1333,7 +1339,11 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void exitEnumBody(EnumBodyContext ctx) {
-
+		try {
+			bw.write("}\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitEnhancedForStatementNoShortIf(EnhancedForStatementNoShortIfContext ctx) {
@@ -2614,14 +2624,13 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 		try {
 			if (!isInstanceOf) {
-				int a = ctx.getChildCount();
 				String str = "";
 
-				for (int i = 0; i < a; i++) {
-					if (ctx.getChild(i).getText().equals("("))
+				for (ParseTree child : ctx.children) {
+					if (child.getText().equals("("))
 						break;
 
-					str += ctx.getChild(i).getText();
+					str += child.getText();
 
 				}
 
@@ -3134,9 +3143,6 @@ public class JavaToCeylonConverter implements Java8Listener {
 					enterArrayAccessSet = false;
 				} else if (!isInstanceOf)
 					if (!enterfor) {
-						if (enterEnhancedfor) {
-							bw.write(" in ");
-						}
 						bw.write(expressionName);
 					}
 				// else {
@@ -3151,7 +3157,16 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void enterExpression(ExpressionContext ctx) {
-
+		try {
+			if (!isInstanceOf)
+				if (!enterfor) {
+					if (enterEnhancedfor) {
+						bw.write(" in ");
+					}
+				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterExplicitConstructorInvocation(ExplicitConstructorInvocationContext ctx) {
@@ -3210,6 +3225,24 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 	public void enterEnumDeclaration(EnumDeclarationContext ctx) {
 
+		String modifier = "";
+		enterEnum = true;
+		enumName = ctx.getChild(ctx.getChildCount() - 2).getText();
+
+		if (ctx.classModifier() != null)
+			for (ClassModifierContext c : ctx.classModifier()) {
+				String mod = c.getText();
+				if (mod.equals("public"))
+					modifier = "shared ";
+				else if (mod.equals("abstract"))
+					modifier = "abstract ";
+			}
+
+		try {
+			bw.write(modifier + "class " + enumName);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterEnumConstantName(EnumConstantNameContext ctx) {
@@ -3225,7 +3258,14 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void enterEnumConstant(EnumConstantContext ctx) {
-
+		try {
+			if (enumConstructor)
+				bw.write("shared new _" + ctx.getChild(0).getText() + " extends _" + enumName);
+			else
+				bw.write("shared new _" + ctx.getChild(0).getText());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterEnumBodyDeclarations(EnumBodyDeclarationsContext ctx) {
@@ -3233,7 +3273,20 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void enterEnumBody(EnumBodyContext ctx) {
+		try {
+			if (ctx.enumBodyDeclarations() != null)
+				if (ctx.enumBodyDeclarations().classBodyDeclaration() != null) {
+					for (ClassBodyDeclarationContext c : ctx.enumBodyDeclarations().classBodyDeclaration()) {
+						if (c.constructorDeclaration() != null)
+							enumConstructor = true;
+					}
+				}
 
+			bw.write(" {\n");
+			bw.write("shared actual String string;\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void enterEnhancedForStatementNoShortIf(EnhancedForStatementNoShortIfContext ctx) {
@@ -3315,7 +3368,13 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 	public void enterConstructorDeclarator(ConstructorDeclaratorContext ctx) {
 		try {
+			if (enterEnum)
+				bw.write("abstract ");
+
 			bw.write("new ");
+
+			if (enterEnum)
+				bw.write("_" + ctx.simpleTypeName().getText());
 			if (ctx.formalParameterList() == null)
 				bw.write("(");
 		} catch (IOException e) {
