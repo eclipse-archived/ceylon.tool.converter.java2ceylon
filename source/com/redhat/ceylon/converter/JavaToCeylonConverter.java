@@ -215,9 +215,18 @@ public class JavaToCeylonConverter implements Java8Listener {
 					modifier = "abstract ";
 			}
 
+		boolean constructor = false;
+
+		for (ClassBodyDeclarationContext child : ctx.classBody().classBodyDeclaration())
+			if (child.constructorDeclaration() != null)
+				constructor = true;
+
 		try {
 			if (ctx.typeParameters() == null)
-				bw.write(modifier + "class " + ctx.Identifier() + "() ");
+				if (constructor)
+					bw.write(modifier + "class " + ctx.Identifier() + " ");
+				else
+					bw.write(modifier + "class " + ctx.Identifier() + "() ");
 			else {
 				enterTypeParametersList = true;
 				bw.write(modifier + "class " + ctx.Identifier());
@@ -492,11 +501,16 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
 		try {
-			// TODO change getChild(4)
-			if (!(ctx.getParent().getChild(4) instanceof ArgumentListContext)) {
+			boolean hasArguments = false;
+
+			for (ParseTree child : ctx.getParent().children)
+				if (child instanceof ArgumentListContext) {
+					hasArguments = true;
+					break;
+				}
+
+			if (!hasArguments)
 				bw.write("()");
-			} else {
-			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
