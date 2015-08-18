@@ -10,7 +10,7 @@ The Main class requires 2 arguments - the location of the source java file and t
 
 ```bash
 git clone https://github.com/ceylon/ceylon.converter.java.git
-cd java-to-ceylon-converter
+cd ceylon.converter.java
 ant install
 ```
 
