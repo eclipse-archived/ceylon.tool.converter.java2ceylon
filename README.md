@@ -24,4 +24,4 @@ If you have the plugin installed,
 
 If you don't have the plugin installed run
 
-`ceylon run com.redhat.ceylon.converter 'full/directory/of/java/file.java' 'test.ceylon'`
+`ceylon run ceylon.converter.java 'full/directory/of/java/file.java' 'test.ceylon'`

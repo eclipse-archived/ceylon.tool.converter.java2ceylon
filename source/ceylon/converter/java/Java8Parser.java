@@ -1,5 +1,5 @@
 // Generated from com.rohit.converter/Java8.g4 by ANTLR 4.5
-package com.redhat.ceylon.converter;
+package ceylon.converter.java;
 import java.util.List;
 
 import org.antlr.v4.runtime.FailedPredicateException;

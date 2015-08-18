@@ -36,7 +36,7 @@ shared void convert(String? file1, String? file2, Boolean transformGetters = fal
 	converter.close();
 }
 
-"Run the module `com.redhat.ceylon.converter`."
+"Run the module `ceylon.converter.java`."
 shared void run() {
 	if (process.arguments.size == 2) {
 		convert(process.arguments[0], process.arguments[1]);

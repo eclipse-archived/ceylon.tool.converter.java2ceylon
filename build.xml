@@ -51,11 +51,11 @@
 	</reposet>
 
 	<moduleset id="modules.source">
-		<module name="com.redhat.ceylon.converter" />
+		<module name="ceylon.converter.java" />
 	</moduleset>
 
 	<moduleset id="modules.test">
-		<module name="test.com.redhat.ceylon.converter" />
+		<module name="test.ceylon.converter.java" />
 	</moduleset>
 
 	<target name="clean" description="Deletes the test-modules and modules directories">
@@ -101,7 +101,7 @@
 	<target name="publish" depends="compile,scripts" description="Copies the Converter modules to the user's repository">
 		<copy todir="${ceylon.repo.dir}" overwrite="true">
 			<fileset dir="${out.repo}">
-				<include name="com/redhat/ceylon/converter/**" />
+				<include name="ceylon/converter/java/**" />
 			</fileset>
 		</copy>
 	</target>
@@ -168,7 +168,7 @@
 			<foreach target="copyModuleArchiveForOSGI" param="currentFile">
 						<path>
 								<fileset dir="${osgi.dist}/tempRepo" includes="**/org.antlr.antlr4-runtime-osgi*.jar"/>
-								<fileset dir="${osgi.dist}/tempRepo" includes="**/com.redhat.ceylon.converter*.car"/>
+								<fileset dir="${osgi.dist}/tempRepo" includes="**/ceylon.converter.java*.car"/>
 						</path>
 				</foreach>
 			<delete dir="${osgi.dist}/tempRepo" failonerror="false" deleteonexit="true"/>
@@ -195,13 +195,13 @@
 	<target name="osgi-p2-quick" depends="osgi-quick">
         <mkdir dir="${osgi.dist.features}"/>
         <ant target="generateFeatures" inheritall="true">
-            <property name="feature.id" value="com.redhat.ceylon.converter.feature"/>
-            <property name="feature.version" value="${module.com.redhat.ceylon.converter.version}.${qualifier}"/>
+            <property name="feature.id" value="ceylon.converter.java.feature"/>
+            <property name="feature.version" value="${module.ceylon.converter.java.version}.${qualifier}"/>
             <property name="xslFileName" value="generatePluginFeature.xsl"/>
         </ant>
         <ant target="generateFeatures" inheritall="true">
-            <property name="feature.id" value="com.redhat.ceylon.converter.dependencies.feature"/>
-            <property name="feature.version" value="${module.com.redhat.ceylon.converter.version}.${qualifier}"/>
+            <property name="feature.id" value="ceylon.converter.java.dependencies.feature"/>
+            <property name="feature.version" value="${module.ceylon.converter.java.version}.${qualifier}"/>
             <property name="xslFileName" value="generateFixedDependenciesFeature.xsl"/>
         </ant>
 		<makeurl property="destinationRepository" file="${osgi.dist}" />
@@ -225,7 +225,7 @@
 
 	<target name="ide" depends="osgi-p2" />
 	<target name="ide-quick" depends="osgi-p2-quick">
-		<property name="archivePath" value="${out.repo}/com/redhat/ceylon/converter/${module.com.redhat.ceylon.converter.version}/com.redhat.ceylon.converter-${module.com.redhat.ceylon.converter.version}.car" />
+		<property name="archivePath" value="${out.repo}/ceylon/converter/java/${module.ceylon.converter.java.version}/ceylon.converter.java-${module.ceylon.converter.java.version}.car" />
 		<basename file="${archivePath}" property="archiveFileName" />
 		<property name="proxy-project" value="../ceylon-ide-eclipse/required-bundle-proxies/${archiveFileName}" />
 		<mkdir dir="${proxy-project}" />

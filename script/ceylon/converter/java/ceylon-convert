@@ -14,4 +14,4 @@ OPTIONS
 
 . $CEYLON_HOME/bin/ceylon-sh-setup
 
-$CEYLON run com.redhat.ceylon.converter/1.0.0 "$@"
+$CEYLON run ceylon.converter.java/1.0.0 "$@"

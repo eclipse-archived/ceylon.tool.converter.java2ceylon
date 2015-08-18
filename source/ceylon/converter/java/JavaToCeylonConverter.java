@@ -1,4 +1,4 @@
-package com.redhat.ceylon.converter;
+package ceylon.converter.java;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.redhat.ceylon.converter.Java8Parser.*;
+import ceylon.converter.java.Java8Parser.*;
 
 /**
  *
