@@ -3,7 +3,7 @@ shared interface Foo {
 formal shared void a();
 formal shared void b(variable Integer x, variable Integer y);
 }
-abstract class Bar() {
+abstract class Bar {
 shared new (variable Integer x, variable Integer y){
 }
 shared formal void a();
