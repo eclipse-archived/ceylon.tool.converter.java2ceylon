@@ -9,8 +9,8 @@ The Main class requires 2 arguments - the location of the source java file and t
 ###With `ant`
 
 ```bash
-git clone https://github.com/ceylon/ceylon.converter.java.git
-cd ceylon.converter.java
+git clone https://github.com/ceylon/ceylon.tool.converter.java2ceylon.git
+cd ceylon.tool.converter.java2ceylon
 ant install
 ```
 
@@ -24,4 +24,4 @@ If you have the plugin installed,
 
 If you don't have the plugin installed run
 
-`ceylon run ceylon.converter.java 'full/directory/of/java/file.java' 'test.ceylon'`
+`ceylon run ceylon.tool.converter.java2ceylon 'full/directory/of/java/file.java' 'test.ceylon'`
