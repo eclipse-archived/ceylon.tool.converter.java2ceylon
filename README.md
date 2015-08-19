@@ -25,3 +25,15 @@ If you have the plugin installed,
 If you don't have the plugin installed run
 
 `ceylon run ceylon.tool.converter.java2ceylon 'full/directory/of/java/file.java' 'test.ceylon'`
+
+### About AntLR
+
+We ship with a project repo in `repo/` which contains AntLR already pre-imported in a Ceylon
+repo, with its name changed to comply with the OSGi it contains, as doing otherwise would
+wreak havoc in Eclipse. We can't just import the module directly from Maven Central because
+it would use the Maven module name and not the OSGi name it declares.
+
+When a new release of AntLR comes out, we have to manually reimport it with `ceylon import`
+using the same `module.xml` file we have in `repo/`.
+
+When they fix their OSGi metadata we can change this: https://github.com/antlr/antlr4/issues/980
