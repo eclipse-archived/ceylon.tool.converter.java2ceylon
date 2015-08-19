@@ -64,13 +64,7 @@
 		<delete dir="${osgi.build}"/>
 	</target>
 
-	<target name="import">
-  <ceylon-import-jar jar="org.antlr.antlr4-runtime-osgi_4.5.1.jar"
-    module="org.antlr.antlr4-runtime-osgi/4.5.1" descriptor="module.xml" out="${basedir}/repo" force="true">
-  </ceylon-import-jar>
-</target>
-
-	<target name="compile-source" depends="import" description="Compiles the Converter modules without re-generating sources">
+	<target name="compile-source" description="Compiles the Converter modules without re-generating sources">
 		<ceylon-compile executable="${ceylon.executable}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
 			<moduleset refid="modules.source" />
 		</ceylon-compile>
