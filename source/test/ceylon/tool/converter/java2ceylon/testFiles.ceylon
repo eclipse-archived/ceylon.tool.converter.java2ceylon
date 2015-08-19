@@ -2,7 +2,7 @@ import ceylon.test {
 	test,
 	assertEquals
 }
-import ceylon.converter.java {
+import ceylon.tool.converter.java2ceylon {
 	convert
 }
 import java.io {

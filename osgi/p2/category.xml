@@ -6,10 +6,10 @@
    <category-def name="only-dependencies-bundles" label="Java to Ceylon Converter - Only Binary Dependencies">
       <description>Fixed binary dependencies of the Java to Ceylon Converter -  Only needed to compile the IDE by using the bundle proxy projects</description>
    </category-def>
-   <feature id="ceylon.converter.java.feature" version="0.0.0">
+   <feature id="ceylon.tool.converter.java2ceylon.feature" version="0.0.0">
       <category name="module-bundles"/>
    </feature>
-   <feature id="ceylon.converter.java.dependencies.feature" version="0.0.0">
+   <feature id="ceylon.tool.converter.java2ceylon.dependencies.feature" version="0.0.0">
       <category name="only-dependencies-bundles"/>
    </feature>
 </site>
