@@ -188,8 +188,8 @@ public class JavaToCeylonConverter implements Java8Listener {
 	public void enterResult(ResultContext ctx) {
 
 		try {
+			enterresult = true;
 			if (((MethodHeaderContext) ctx.getParent()).typeParameters() == null) {
-				enterresult = true;
 				if (ctx.getChild(0).toString().equals("void"))
 					bw.write(ctx.getChild(0).toString() + " ");
 			}
@@ -1258,9 +1258,9 @@ public class JavaToCeylonConverter implements Java8Listener {
 				bw.write(" else ");
 			} else if (parentContext instanceof DoStatementContext) {
 				bw.write(") {break;}\n");
-			}
+			} else if (parentContext instanceof ArrayAccessContext)
+				bw.write(", ");
 		} catch (IOException e) {
-
 			e.printStackTrace();
 		}
 
@@ -1617,6 +1617,11 @@ public class JavaToCeylonConverter implements Java8Listener {
 				bw.write(")");
 				bracketInstance.pop();
 			}
+
+			if (enterArrayAccessSet) {
+				bw.write(")");
+				enterArrayAccessSet = false;
+			}
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -1649,6 +1654,11 @@ public class JavaToCeylonConverter implements Java8Listener {
 	public void exitArrayAccess_lfno_primary(ArrayAccess_lfno_primaryContext ctx) {
 
 		enterArrayAccess_lfno_primary = false;
+		try {
+			bw.write(")");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void exitArrayAccess_lf_primary(ArrayAccess_lf_primaryContext ctx) {
@@ -1959,7 +1969,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 		}
 		String ceylonType = "";
 		try {
-			if (!variableModifier.equals("final") && !noVariable) {
+			if (!enterresult && !variableModifier.equals("final") && !noVariable) {
 				bw.write("variable ");
 				variableListType = "variable ";
 			}
@@ -2822,22 +2832,21 @@ public class JavaToCeylonConverter implements Java8Listener {
 	public void enterLiteral(LiteralContext ctx) {
 
 		if (!notEqualNull && !equalsequalsNull)
-			if (!enterArrayAccess && !enterArrayAccess_lfno_primary)
-				try {
-					if (enterArrayAccessSet) {
-						bw.write(ctx.getText() + ")");
-						enterArrayAccessSet = false;
-					} else if (!enterfor) {
-						bw.write(ctx.getText());
-					}
-					// else {
-					// forinit = ctx.getText();
-					// forlimit = forinit;
-					// }
-				} catch (IOException e) {
-
-					e.printStackTrace();
+			try {
+				if (enterArrayAccessSet) {
+					bw.write(ctx.getText() + ")");
+					enterArrayAccessSet = false;
+				} else if (!enterfor) {
+					bw.write(ctx.getText());
 				}
+				// else {
+				// forinit = ctx.getText();
+				// forlimit = forinit;
+				// }
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
 	}
 
 	public void enterLeftHandSide(LeftHandSideContext ctx) {
@@ -3037,6 +3046,17 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 		try {
 			enterForUpdate = true;
+
+			if (Character.isUpperCase(forlimit.charAt(0))) {
+				forlimit = "\\i" + forlimit;
+			}
+
+			for (String str : keywords) {
+				if (str.equals(forlimit)) {
+					forlimit = "\\i" + forlimit;
+				}
+			}
+
 			if (forConditionOperator.equals("<=") || forConditionOperator.equals(">="))
 				bw.write(".." + forlimit + ")");
 			else if (isNumeric(forlimit)) {
@@ -3110,7 +3130,19 @@ public class JavaToCeylonConverter implements Java8Listener {
 
 		if (ctx.primary().getText().equals("this"))
 			try {
-				bw.write("this." + ctx.getChild(2));
+				String text = ctx.getChild(2).getText();
+
+				if (Character.isUpperCase(text.charAt(0))) {
+					text = "\\i" + text;
+				}
+
+				for (String str : keywords) {
+					if (str.equals(text)) {
+						text = "\\i" + text;
+					}
+				}
+
+				bw.write("this." + text);
 			} catch (IOException e) {
 
 				e.printStackTrace();
@@ -3147,15 +3179,17 @@ public class JavaToCeylonConverter implements Java8Listener {
 				}
 			}
 
-			if (!enterArrayAccess && !enterArrayAccess_lfno_primary) {
+			if (!(ctx.getParent() instanceof ArrayAccessContext)
+					&& !(ctx.getParent() instanceof ArrayAccess_lfno_primaryContext)) {
 				if (equalsequalsNull) {
 					bw.write("!");
 				}
 
-				if (enterArrayAccessSet) {
-					bw.write(expressionName + ")");
-					enterArrayAccessSet = false;
-				} else if (!isInstanceOf)
+				// if (enterArrayAccessSet && !enterArrayAccess_lfno_primary) {
+				// bw.write(expressionName + ")");
+				// enterArrayAccessSet = false;
+				// }
+				if (!isInstanceOf)
 					if (!enterfor) {
 						bw.write(expressionName);
 					}
@@ -3178,6 +3212,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 						bw.write(" in ");
 					}
 				}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -3438,7 +3473,6 @@ public class JavaToCeylonConverter implements Java8Listener {
 	}
 
 	public void enterConditionalExpression(ConditionalExpressionContext ctx) {
-		// TODO add brackets if they are not present
 		if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("?")) {
 			try {
 				bw.write("if (");
@@ -3683,7 +3717,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 				bw.write("!");
 			}
 
-			bw.write(ctx.expressionName().getText() + ".get(" + ctx.expression(0).getText() + ")");
+			bw.write(ctx.expressionName().getText() + ".get(");
 		} catch (IOException e) {
 
 			e.printStackTrace();
@@ -3699,7 +3733,7 @@ public class JavaToCeylonConverter implements Java8Listener {
 		try {
 			enterArrayAccess = true;
 			if (ctx.expressionName() != null)
-				bw.write(ctx.expressionName().getText() + ".set(" + ctx.expression(0).getText() + ", ");
+				bw.write(ctx.expressionName().getText() + ".set(");
 		} catch (IOException e) {
 
 			e.printStackTrace();
