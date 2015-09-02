@@ -4,6 +4,7 @@ encoding=UTF-8
 
 [compiler]
 source=script
+source=gen
 source=source
 resource=resource
 

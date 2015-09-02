@@ -213,3 +213,11 @@ shared void testEnums() {
 	String ceylonFileName = workingDir + "/testFiles/testEnums";
 	testFiles(javaFileName, ceylonFileName);
 }
+
+test
+shared void testSingleMethod() {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/TestSingleMethod";
+    String ceylonFileName = workingDir + "/testFiles/testSingleMethod";
+    testFiles(javaFileName, ceylonFileName);
+}

@@ -1,17 +1,13 @@
-// Generated from com.rohit.converter/Java8.g4 by ANTLR 4.5
+// Generated from /Users/bastien/Dev/ceylon/ceylon.tool.converter.java2ceylon/grammar/Java8.g4 by ANTLR 4.5
 package ceylon.tool.converter.java2ceylon;
-
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.RuntimeMetaData;
-import org.antlr.v4.runtime.Vocabulary;
-import org.antlr.v4.runtime.VocabularyImpl;
-import org.antlr.v4.runtime.atn.ATN;
-import org.antlr.v4.runtime.atn.ATNDeserializer;
-import org.antlr.v4.runtime.atn.LexerATNSimulator;
-import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Java8Lexer extends Lexer {
@@ -162,9 +158,9 @@ public class Java8Lexer extends Lexer {
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
 		case 146:
-			return JavaLetter_sempred(_localctx, predIndex);
+			return JavaLetter_sempred((RuleContext)_localctx, predIndex);
 		case 147:
-			return JavaLetterOrDigit_sempred(_localctx, predIndex);
+			return JavaLetterOrDigit_sempred((RuleContext)_localctx, predIndex);
 		}
 		return true;
 	}

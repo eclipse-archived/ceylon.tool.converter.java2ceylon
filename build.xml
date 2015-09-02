@@ -64,8 +64,15 @@
 		<delete dir="${osgi.build}"/>
 	</target>
 
-	<target name="compile-source" description="Compiles the Converter modules without re-generating sources">
-		<ceylon-compile executable="${ceylon.executable}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
+    <path id="sources-path">
+        <pathelement location="gen" />
+        <pathelement location="source" />
+    </path>
+
+    <property name="sources" refid="sources-path" />
+
+    <target name="compile-source" description="Compiles the Converter modules without re-generating sources">
+		<ceylon-compile executable="${ceylon.executable}" src="${sources}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
 			<moduleset refid="modules.source" />
 		</ceylon-compile>
 	</target>
