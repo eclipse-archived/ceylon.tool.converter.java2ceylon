@@ -811,7 +811,15 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.localVariableDeclaration().unannType());
             write(" ");
-            write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+            
+            String varId = var.variableDeclaratorId().getText();
+
+			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
+				varId = "\\i" + varId;
+
+			write(varId);
+
+            
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
@@ -833,7 +841,15 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.unannType());
             write(" ");
-            write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+            
+            String varId = var.variableDeclaratorId().getText();
+
+			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
+				varId = "\\i" + varId;
+
+			write(varId);
+
+            
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
@@ -1375,7 +1391,14 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.unannType());
             write(" ");
-            write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+            
+            String varId = var.variableDeclaratorId().getText();
+
+			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
+				varId = "\\i" + varId;
+
+			write(varId);
+            
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
