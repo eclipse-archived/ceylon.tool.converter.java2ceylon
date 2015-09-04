@@ -1,4 +1,4 @@
-shared class TestConstructors() {
+shared class TestConstructors {
 
 variable Integer a;
 shared new () {

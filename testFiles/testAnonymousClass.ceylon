@@ -4,7 +4,7 @@ shared interface Foo {
 shared formal void a();
 shared formal void b(variable Integer x, variable Integer y);
 }
-shared abstract class Bar() {
+shared abstract class Bar {
 
 shared new (variable Integer x, variable Integer y) {
 }
