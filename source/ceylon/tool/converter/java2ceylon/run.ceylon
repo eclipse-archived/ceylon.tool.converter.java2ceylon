@@ -1,6 +1,5 @@
 import java.io {
 	File,
-	BufferedWriter,
 	FileWriter,
 	FileInputStream
 }
@@ -9,34 +8,30 @@ import org.antlr.v4.runtime {
 	CommonTokenStream,
 	ParserRuleContext
 }
-import org.antlr.v4.runtime.tree {
-	ParseTreeWalker
-}
 
 "Converts the given Java file to Ceylon."
-shared void convert(String? file1, String? file2, Boolean transformGetters = false) {
-	
-	File f = File(file1);
-	
+shared void convert(String? sourceFile, String? targetFile, Boolean transformGetters = false, Boolean useVariable = true) {
+
+	File f = File(sourceFile);
+
 	ANTLRInputStream input = ANTLRInputStream(FileInputStream(f));
 	Java8Lexer lexer = Java8Lexer(input);
 	CommonTokenStream tokens = CommonTokenStream(lexer);
 	Java8Parser parser = Java8Parser(tokens);
-	
+
 	ParserRuleContext tree = parser.compilationUnit();
-	// tree.inspect(parser);
-	
-	BufferedWriter bw = BufferedWriter(FileWriter(File(file2)));
-	
-	JavaToCeylonConverter converter = JavaToCeylonConverter(bw, transformGetters);
-	
-	// Java8Listener listener = new Java8Listener(this);
-	
-	ParseTreeWalker.\iDEFAULT.walk(converter, tree);
-	converter.close();
+
+	FileWriter fw = FileWriter(File(targetFile));
+
+	JavaToCeylonConverter converter = JavaToCeylonConverter(fw, transformGetters, useVariable);
+
+	tree.accept(converter);
+
+	fw.flush();
+	fw.close();
 }
 
-"Run the module `ceylon.tool.converter.java2ceylon`."
+"Run the module `com.redhat.ceylon.converter`."
 shared void run() {
 	if (process.arguments.size == 2) {
 		convert(process.arguments[0], process.arguments[1]);

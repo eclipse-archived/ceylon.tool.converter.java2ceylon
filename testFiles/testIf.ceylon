@@ -10,7 +10,7 @@ a = b;
 else {
 a = b + 1;
 }
-if (a % b === 0) {
+if (a % b == 0) {
 a = b;
 }
 variable String c = if (a > b) then "gt" else "lt";

@@ -221,3 +221,27 @@ shared void testSingleMethod() {
     String ceylonFileName = workingDir + "/testFiles/testSingleMethod";
     testFiles(javaFileName, ceylonFileName);
 }
+
+test
+shared void testTryCatch() {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/TestTryCatch";
+    String ceylonFileName = workingDir + "/testFiles/testTryCatch";
+    testFiles(javaFileName, ceylonFileName);
+}
+
+test
+shared void testWhile() {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/TestWhile";
+    String ceylonFileName = workingDir + "/testFiles/testWhile";
+    testFiles(javaFileName, ceylonFileName);
+}
+
+test
+shared void testExists() {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/TestExists";
+    String ceylonFileName = workingDir + "/testFiles/testExists";
+    testFiles(javaFileName, ceylonFileName);
+}

@@ -1,3821 +1,1704 @@
 package ceylon.tool.converter.java2ceylon;
 
-import java.io.BufferedWriter;
+import ceylon.tool.converter.java2ceylon.Java8Parser.*;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import java.io.IOException;
-import java.util.Stack;
+import java.io.Writer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
-import ceylon.tool.converter.java2ceylon.Java8Parser.*;
-
-/**
- *
- * Converts Java code to Ceylon. It generates an AST using Antlr and uses a
- * listener to convert the code to Ceylon.
- * 
- * @author rohitmohan96
- *
- */
-public class JavaToCeylonConverter implements Java8Listener {
-	String lastFormalParameter = "", forinit = "", forlimit = "", forConditionOperator = "", forCounterDatatype = "",
-			lastActualParameter = "", lastTypeParameter = "", variableModifier = "", variableListType = "",
-			forByValue = "1", packageName = "", lastInterface = "", firstVariableInList = "";
-	boolean enterfor = false;
-	boolean enterresult = false;
-	boolean isInstanceOf = false;
-
-	String[] keywords = { "assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
+	private boolean transformGetters;
+	private boolean useVariable;
+	private Writer writer;
+	private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
+	private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
+			"assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
 			"continue", "dynamic", "else", "exists", "extends", "finally", "for", "function", "given", "if", "import",
 			"in", "interface", "is", "module", "nonempty", "object", "of", "out", "outer", "package", "return",
-			"satisfies", "super", "switch", "then", "this", "throw", "try", "value", "void", "while" };
+			"satisfies", "super", "switch", "then", "this", "throw", "try", "value", "void", "while"
+	);
 
-	boolean multipleVariables = false;
-
-	Stack<String> operators = new Stack<String>();
-	Stack<Boolean> enterArgumentList = new Stack<Boolean>();
-	Stack<Object> bracketInstance = new Stack<Object>();
-
-	boolean enterTypeArgumentsList = false;
-	boolean enterTypeParametersList = false;
-	boolean enterForUpdate = false;
-	boolean firstImport = true;
-	boolean enterArray = false;
-	boolean enterArrayAccessSet = false;
-	boolean enterArrayAccess = false;
-	boolean enterArrayAccess_lfno_primary = false;
-	boolean enterInterfaceDeclaration = false;
-	boolean openParenthesis = false;
-	boolean enterEnhancedfor = false;
-	boolean notEqualNull = false; // to convert !=null to exists
-	boolean noVariable = false; // to check if value has to be a variable or not
-	boolean isinstanceofForCast = false; // check if cast is after instanceofF
-	boolean inExpression = false; // to check if != is in expression
-	boolean equalsequalsNull = false; // x == null
-	boolean typeConstraints = false;
-
-	BufferedWriter bw;
-	private boolean transformGetters;
-
-	private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
-	private boolean enterEnum = false;
-	private String enumName;
-	private boolean enumConstructor;
-
-	public JavaToCeylonConverter(BufferedWriter bw) {
-		this.bw = bw;
-	}
-
-	public JavaToCeylonConverter(BufferedWriter bw, boolean transformGetters) {
-		this.bw = bw;
+	public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useVariable) {
+		writer = out;
 		this.transformGetters = transformGetters;
+		this.useVariable = useVariable;
 	}
 
-	public void close() throws IOException {
-		bw.flush();
-		bw.close();
-	}
-
-	public static boolean isNumeric(String str) {
-		return str.matches("-?\\d+(\\.\\d+)?");
-	}
-
-	public void exitVariableInitializer(VariableInitializerContext ctx) {
-
-	}
-
-	public void exitVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
-
-	}
-
-	public void exitLocalVariableDeclarationStatement(LocalVariableDeclarationStatementContext ctx) {
+	private void write(String str) {
 		try {
-			if (!enterfor)
-				bw.write(";\n");
+			writer.write(str);
 		} catch (IOException e) {
-
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 
-	public void exitFieldDeclaration(FieldDeclarationContext ctx) {
-		try {
-			bw.write(";\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitExpressionStatement(ExpressionStatementContext ctx) {
-		try {
-			bw.write(ctx.getChild(ctx.getChildCount() - 1) + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitClassBody(ClassBodyContext ctx) {
-		int count = ctx.getChildCount();
-
-		try {
-			bw.write(ctx.getChild(count - 1).toString() + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitBlock(BlockContext ctx) {
-		int count = ctx.getChildCount();
-		try {
-
-			if (!(ctx.getParent().getParent().getParent() instanceof DoStatementContext)) {
-				bw.write(ctx.getChild(count - 1).toString());
-				bw.write("\n");
-			} else {
-				bw.write("if(");
+	private boolean hasModifier(List<? extends ParserRuleContext> modifiers, String modifier) {
+		for (ParserRuleContext m : modifiers) {
+			if (m.getText().equals(modifier)) {
+				return true;
 			}
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
 		}
+
+		return false;
 	}
 
-	public void enterUnannPrimitiveType(UnannPrimitiveTypeContext ctx) {
+	private void addImport(Map<String, List<String>> importsByPackage, String pack, String type) {
+		List<String> imports;
 
+		if (importsByPackage.containsKey(pack)) {
+			imports = importsByPackage.get(pack);
+		} else {
+			imports = new ArrayList<>();
+			importsByPackage.put(pack, imports);
+		}
+
+		// import on demand wins over single imports
+		if (type.equals("...") && !imports.isEmpty()) {
+			imports.clear();
+		}
+
+		if (imports.size() == 1 && imports.get(0).equals("...")) {
+			return; // No need to add a single import if there's already a wildcard
+		}
+
+		imports.add(type);
+	}
+
+	@Override
+	public Void visitCompilationUnit(CompilationUnitContext ctx) {
+		Map<String, List<String>> importsByPackage = new LinkedHashMap<>();
+
+		for (ImportDeclarationContext decl : ctx.importDeclaration()) {
+			if (decl.singleTypeImportDeclaration() != null) {
+				TypeNameContext typeName = decl.singleTypeImportDeclaration().typeName();
+				addImport(importsByPackage, typeName.packageOrTypeName().getText(), typeName.Identifier().getText());
+			}
+			if (decl.typeImportOnDemandDeclaration() != null) {
+				String pkgName = decl.typeImportOnDemandDeclaration().packageOrTypeName().getText();
+				addImport(importsByPackage, pkgName, "...");
+			}
+		}
+
+		for (Map.Entry<String, List<String>> entry : importsByPackage.entrySet()) {
+			write("import ");
+			write(entry.getKey());
+			write(" {\n");
+
+			for (int i = 0; i < entry.getValue().size(); i++) {
+				if (i > 0) {
+					write(",\n");
+				}
+				write(entry.getValue().get(i));
+			}
+			write("\n}\n");
+		}
+
+		return super.visitCompilationUnit(ctx);
+	}
+
+	@Override
+	public Void visitNormalClassDeclaration(NormalClassDeclarationContext ctx) {
+		if (hasModifier(ctx.classModifier(), "public")) {
+			write("shared ");
+		}
+		if (hasModifier(ctx.classModifier(), "abstract")) {
+			write("abstract ");
+		}
+		write("class ");
+		write(ctx.Identifier().getText()); // TODO uppercase first letter
+		if (ctx.typeParameters() != null) {
+			visitTypeParameters(ctx.typeParameters());
+		}
+		write("()");
+		if (ctx.superclass() != null) {
+			visitSuperclass(ctx.superclass());
+		}
+		if (ctx.superinterfaces() != null) {
+			visitSuperinterfaces(ctx.superinterfaces());
+		}
+		visitClassBody(ctx.classBody());
+
+		return null;
+	}
+
+	@Override
+	public Void visitTypeParameters(TypeParametersContext ctx) {
+		write("<");
+		visitTypeParameterList(ctx.typeParameterList());
+		write(">");
+		return null;
+	}
+
+	@Override
+	public Void visitTypeParameterList(TypeParameterListContext ctx) {
+		boolean isFirst = true;
+
+		for (TypeParameterContext param : ctx.typeParameter()) {
+			if (!isFirst) {
+				write(", ");
+			}
+			visitTypeParameter(param);
+			isFirst = false;
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitTypeParameter(TypeParameterContext ctx) {
+		write(ctx.Identifier().getText());
+		if (ctx.typeBound() != null) {
+			visitTypeBound(ctx.typeBound());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitWildcard(WildcardContext ctx) {
+		WildcardBoundsContext bounds = ctx.wildcardBounds();
+		if (bounds != null) {
+			if (bounds.getChild(0).getText().equals("extends")) {
+				write("out ");
+			} else {
+				write("in ");
+			}
+			visitReferenceType((ReferenceTypeContext) bounds.getChild(1));
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitTypeBound(TypeBoundContext ctx) {
+		return super.visitTypeBound(ctx);
+	}
+
+	@Override
+	public Void visitSuperclass(SuperclassContext ctx) {
+		write(" extends ");
+		super.visitSuperclass(ctx);
+		write("()");
+		return null;
+	}
+
+	@Override
+	public Void visitSuperinterfaces(SuperinterfacesContext ctx) {
+		write(" satisfies ");
+		return super.visitSuperinterfaces(ctx);
+	}
+
+	@Override
+	public Void visitClassType(ClassTypeContext ctx) {
+		if (ctx.getChild(0) instanceof ClassOrInterfaceTypeContext) {
+			visitClassOrInterfaceType((ClassOrInterfaceTypeContext) ctx.getChild(0));
+			write(".");
+		}
+		// TODO? annotations*
+		write(ctx.Identifier().getText());
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitInterfaceTypeList(InterfaceTypeListContext ctx) {
+		boolean isFirst = true;
+		for (InterfaceTypeContext type : ctx.interfaceType()) {
+			if (!isFirst) {
+				write(" & ");
+			}
+			visitInterfaceType(type);
+			isFirst = false;
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitClassBody(ClassBodyContext ctx) {
+		write(" {\n\n");
+		Void result = super.visitClassBody(ctx);
+		write("}\n");
+
+		return result;
+	}
+
+	@Override
+	public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
+		if (hasModifier(ctx.methodModifier(), "public")) {
+			write("shared ");
+		}
+		if (hasModifier(ctx.methodModifier(), "@Override")) {
+			write("actual ");
+		}
+		if (hasModifier(ctx.methodModifier(), "abstract")) {
+			write("formal ");
+		}
+
+		visitMethodHeader(ctx.methodHeader());
+		visitMethodBody(ctx.methodBody());
+		write("\n");
+
+		return null;
+	}
+
+	@Override
+	public Void visitMethodHeader(MethodHeaderContext ctx) {
+		if (ctx.result().getText().equals("void")) {
+			write("void ");
+		} else {
+			visitUnannType(ctx.result().unannType());
+			write(" ");
+		}
+		visitMethodDeclarator(ctx.methodDeclarator());
+		return null;
+	}
+
+	@Override
+	public Void visitMethodDeclarator(MethodDeclaratorContext ctx) {
+		write(ctx.Identifier().getText());
+
+		write("(");
+		if (ctx.formalParameterList() != null) {
+			visitFormalParameterList(ctx.formalParameterList());
+		}
+		write(")");
+		return null;
+	}
+
+	@Override
+	public Void visitMethodBody(MethodBodyContext ctx) {
+		if (ctx.block() == null) {
+			write(";\n");
+		} else {
+			write(" ");
+			return super.visitMethodBody(ctx);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitFormalParameterList(FormalParameterListContext ctx) {
+		if (ctx.formalParameters() != null) {
+			for (FormalParameterContext param : ctx.formalParameters().formalParameter()) {
+				visitFormalParameter(param);
+				write(", ");
+			}
+		}
+		if (ctx.lastFormalParameter().formalParameter() != null) {
+			visitFormalParameter(ctx.lastFormalParameter().formalParameter());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitFormalParameter(FormalParameterContext param) {
+		if (useVariable) {
+			write("variable ");
+		}
+		visitUnannType(param.unannType());
+		write(" ");
+		write(param.variableDeclaratorId().getText());
+		return null;
+	}
+
+	@Override
+	public Void visitUnannPrimitiveType(UnannPrimitiveTypeContext ctx) {
 		String type = ctx.getText();
-		String ceylonType = "";
-		if (!enterArray) {
-			try {
-				if (!enterfor && !enterresult && !noVariable) {
-					if (!variableModifier.equals("final")) {
-						bw.write("variable ");
-						variableListType = "variable ";
-					}
-				}
-				variableModifier = "";
 
-				if (type.equals("int") || type.equals("short") || type.equals("long")) {
-					ceylonType = "Integer ";
-				} else if (type.equals("byte")) {
-					ceylonType = "Byte ";
-				} else if (type.equals("char")) {
-					ceylonType = "Character ";
-				} else if (type.equals("float") || type.equals("double")) {
-					ceylonType = "Float ";
-				} else if (type.equals("boolean")) {
-					ceylonType = "Boolean ";
-				} else {
-					ceylonType = type + " ";
-				}
+		switch (type) {
+			case "int":
+			case "long":
+			case "short":
+				write("Integer");
+				break;
+			case "float":
+			case "double":
+				write("Float");
+				break;
+			case "boolean":
+				write("Boolean");
+				break;
+			case "byte":
+				write("Byte");
+				break;
+			case "char":
+				write("Character");
+			default:
+				write(type);
+		}
 
-				variableListType += ceylonType;
+		return null;
+	}
 
-				bw.write(ceylonType);
-			} catch (IOException e) {
+	@Override
+	public Void visitUnannTypeVariable(UnannTypeVariableContext ctx) {
+		write(ctx.Identifier().getText());
+		return null;
+	}
 
-				e.printStackTrace();
+	@Override
+	public Void visitUnannClassType_lfno_unannClassOrInterfaceType(UnannClassType_lfno_unannClassOrInterfaceTypeContext ctx) {
+		write(ctx.Identifier().getText());
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitUnannClassType_lf_unannClassOrInterfaceType(UnannClassType_lf_unannClassOrInterfaceTypeContext ctx) {
+		write(".");
+		write(ctx.Identifier().getText());
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitTypeArguments(TypeArgumentsContext ctx) {
+		write("<");
+		visitTypeArgumentList(ctx.typeArgumentList());
+		write(">");
+		return null;
+	}
+
+	@Override
+	public Void visitTypeArgumentList(TypeArgumentListContext ctx) {
+		boolean isFirst = true;
+
+		for (TypeArgumentContext param : ctx.typeArgument()) {
+			if (!isFirst) {
+				write(", ");
 			}
+			visitTypeArgument(param);
+			isFirst = false;
 		}
+		return null;
 	}
 
-	public void enterResult(ResultContext ctx) {
-
-		try {
-			enterresult = true;
-			if (((MethodHeaderContext) ctx.getParent()).typeParameters() == null) {
-				if (ctx.getChild(0).toString().equals("void"))
-					bw.write(ctx.getChild(0).toString() + " ");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterNormalClassDeclaration(NormalClassDeclarationContext ctx) {
-
-		String modifier = " ";
-		// if (ctx.classModifier() != null)
-		// if (ctx.classModifier(0).getText().equals("public"))
-		// modifier = "shared ";
-
-		if (ctx.classModifier() != null)
-			for (ClassModifierContext c : ctx.classModifier()) {
-				String mod = c.getText();
-				if (mod.equals("public"))
-					modifier = "shared ";
-				else if (mod.equals("abstract"))
-					modifier = "abstract ";
-			}
-
-		boolean constructor = false;
-
-		for (ClassBodyDeclarationContext child : ctx.classBody().classBodyDeclaration())
-			if (child.constructorDeclaration() != null)
-				constructor = true;
-
-		try {
-			if (ctx.typeParameters() == null)
-				if (constructor)
-					bw.write(modifier + "class " + ctx.Identifier() + " ");
-				else
-					bw.write(modifier + "class " + ctx.Identifier() + "() ");
-			else {
-				enterTypeParametersList = true;
-				bw.write(modifier + "class " + ctx.Identifier());
-			}
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterMethodModifier(MethodModifierContext ctx) {
-
-		try {
-			if (ctx.getText().equals("public"))
-				bw.write("shared ");
-			else if (ctx.getText().equals("abstract"))
-				bw.write("formal ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void enterMethodDeclarator(MethodDeclaratorContext ctx) {
-
-		try {
-			if (((MethodHeaderContext) ctx.getParent()).typeParameters() == null) {
-				String methodDeclarator = ctx.Identifier().getText();
-
-				for (String str : keywords) {
-					if (str.equals(methodDeclarator)) {
-						methodDeclarator = "\\i" + methodDeclarator;
-					}
-				}
-
-				bw.write(methodDeclarator);
-				if (ctx.formalParameterList() == null) {
-					bw.write("()");
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterClassBody(ClassBodyContext ctx) {
-
-		try {
-			if (typeConstraints) {
-				bw.write(" given "
-						+ ((NormalClassDeclarationContext) ctx.getParent()).typeParameters().typeParameterList()
-								.typeParameter(0).getChild(0).getText()
-						+ " satisfies " + ((NormalClassDeclarationContext) ctx.getParent()).typeParameters()
-								.typeParameterList().typeParameter(0).typeBound().typeVariable().getText());
-			}
-			typeConstraints = false;
-			bw.write(ctx.getChild(0).toString() + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-
-	}
-
-	public void enterBlock(BlockContext ctx) {
-
-		try {
-			bw.write(ctx.getChild(0) + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterAssignment(AssignmentContext ctx) {
-
-		if (enterForUpdate) {
-			forByValue = ctx.expression().getText();
-		} else if (ctx.getChildCount() > 1 && openParenthesis) {
-			bracketInstance.push(ctx);
-			try {
-				bw.write("(");
-				openParenthesis = false;
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-
-		}
-	}
-
-	public void visitTerminal(TerminalNode node) {
-
-	}
-
-	public void visitErrorNode(ErrorNode node) {
-
-	}
-
-	public void exitEveryRule(ParserRuleContext ctx) {
-
-	}
-
-	public void enterEveryRule(ParserRuleContext ctx) {
-
-	}
-
-	public void exitWildcardBounds(WildcardBoundsContext ctx) {
-
-	}
-
-	public void exitWildcard(WildcardContext ctx) {
-
-	}
-
-	public void exitWhileStatementNoShortIf(WhileStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitWhileStatement(WhileStatementContext ctx) {
-
-	}
-
-	public void exitVariableModifier(VariableModifierContext ctx) {
-
-	}
-
-	public void exitVariableInitializerList(VariableInitializerListContext ctx) {
-
-	}
-
-	public void exitVariableDeclaratorList(VariableDeclaratorListContext ctx) {
-
-		multipleVariables = false;
-	}
-
-	public void exitVariableDeclarator(VariableDeclaratorContext ctx) {
-		inExpression = false;
-		if (multipleVariables && ctx != ctx.getParent().getChild(ctx.getParent().getChildCount() - 1)) {
-			try {
-				bw.write(";\n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void exitUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
-
-	}
-
-	public void exitUnaryExpression(UnaryExpressionContext ctx) {
-
-		// try {
-		// if (ctx.preIncrementExpression() == null
-		// && ctx.preDecrementExpression() == null)
-		// if (!operators.isEmpty()) {
-		// bw.write(" " + operators.lastElement() + " ");
-		// operators.pop();
-		// }
-		// } catch (IOException e) {
-		//
-		// e.printStackTrace();
-		// }
-	}
-
-	public void exitUnannTypeVariable(UnannTypeVariableContext ctx) {
-
-	}
-
-	public void exitUnannType(UnannTypeContext ctx) {
-		try {
-			if (ctx.getParent().getChild(1) != null && ctx.getParent().getChild(1).getText().equals("...")) {
-				bw.write("* ");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitUnannReferenceType(UnannReferenceTypeContext ctx) {
-
-	}
-
-	public void exitUnannPrimitiveType(UnannPrimitiveTypeContext ctx) {
-
-	}
-
-	public void exitUnannInterfaceType_lfno_unannClassOrInterfaceType(
-			UnannInterfaceType_lfno_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannInterfaceType_lf_unannClassOrInterfaceType(
-			UnannInterfaceType_lf_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannInterfaceType(UnannInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannClassType_lfno_unannClassOrInterfaceType(
-			UnannClassType_lfno_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannClassType_lf_unannClassOrInterfaceType(
-			UnannClassType_lf_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannClassType(UnannClassTypeContext ctx) {
-
-	}
-
-	public void exitUnannClassOrInterfaceType(UnannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitUnannArrayType(UnannArrayTypeContext ctx) {
-
-		enterArray = false;
-	}
-
-	public void exitTypeVariable(TypeVariableContext ctx) {
-
-	}
-
-	public void exitTypeParameters(TypeParametersContext ctx) {
-
-		try {
-			bw.write("> ");
-			if (ctx.getParent() instanceof NormalClassDeclarationContext)
-				bw.write("() ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitTypeParameterModifier(TypeParameterModifierContext ctx) {
-
-	}
-
-	public void exitTypeParameterList(TypeParameterListContext ctx) {
-
-	}
-
-	public void exitTypeParameter(TypeParameterContext ctx) {
-
-	}
-
-	public void exitTypeName(TypeNameContext ctx) {
-
-	}
-
-	public void exitTypeImportOnDemandDeclaration(TypeImportOnDemandDeclarationContext ctx) {
-
-	}
-
-	public void exitTypeDeclaration(TypeDeclarationContext ctx) {
-
-	}
-
-	public void exitTypeBound(TypeBoundContext ctx) {
-
-	}
-
-	public void exitTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
-		try {
-			boolean hasArguments = false;
-
-			for (ParseTree child : ctx.getParent().children)
-				if (child instanceof ArgumentListContext) {
-					hasArguments = true;
-					break;
-				}
-
-			if (!hasArguments)
-				bw.write("()");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitTypeArguments(TypeArgumentsContext ctx) {
-
-	}
-
-	public void exitTypeArgumentList(TypeArgumentListContext ctx) {
-
-		try {
-			enterTypeArgumentsList = false;
-			if (!typeConstraints)
-				bw.write("> ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitTypeArgument(TypeArgumentContext ctx) {
-
-		try {
-			ParserRuleContext parentContext = ctx.getParent();
-			if (ctx != parentContext.getChild(parentContext.getChildCount() - 1)) {
-				bw.write(", ");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitType(TypeContext ctx) {
-
-	}
-
-	public void exitTryWithResourcesStatement(TryWithResourcesStatementContext ctx) {
-
-	}
-
-	public void exitTryStatement(TryStatementContext ctx) {
-
-	}
-
-	public void exitThrows_(Throws_Context ctx) {
-
-	}
-
-	public void exitThrowStatement(ThrowStatementContext ctx) {
-		try {
-			bw.write(";\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSynchronizedStatement(SynchronizedStatementContext ctx) {
-
-	}
-
-	public void exitSwitchStatement(SwitchStatementContext ctx) {
-
-	}
-
-	public void exitSwitchLabels(SwitchLabelsContext ctx) {
-
-	}
-
-	public void exitSwitchLabel(SwitchLabelContext ctx) {
-
-		try {
-			if (ctx.getChild(0).toString().equals("case"))
-				bw.write(") {\n");
-			else
-				bw.write("{\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSwitchBlockStatementGroup(SwitchBlockStatementGroupContext ctx) {
-
-		try {
-			bw.write("}\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSwitchBlock(SwitchBlockContext ctx) {
-
-		try {
-			bw.write("\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSuperinterfaces(SuperinterfacesContext ctx) {
-
-	}
-
-	public void exitSuperclass(SuperclassContext ctx) {
-		try {
-			bw.write("() ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitStaticInitializer(StaticInitializerContext ctx) {
-
-	}
-
-	public void exitStaticImportOnDemandDeclaration(StaticImportOnDemandDeclarationContext ctx) {
-
-	}
-
-	public void exitStatementWithoutTrailingSubstatement(StatementWithoutTrailingSubstatementContext ctx) {
-
-		if (ctx.block() == null && !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
-			try {
-				bw.write("}\n");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void exitStatementNoShortIf(StatementNoShortIfContext ctx) {
-
-		if (ctx.getParent() instanceof IfThenElseStatementContext) {
-			try {
-				bw.write(" else ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void exitStatementExpressionList(StatementExpressionListContext ctx) {
-
-	}
-
-	public void exitStatementExpression(StatementExpressionContext ctx) {
-		inExpression = false;
-	}
-
-	public void exitStatement(StatementContext ctx) {
-		try {
-			if (ctx.getParent() instanceof BasicForStatementContext
-					&& ctx.statementWithoutTrailingSubstatement() == null) {
-				bw.write("}\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSingleTypeImportDeclaration(SingleTypeImportDeclarationContext ctx) {
-
-	}
-
-	public void exitSingleStaticImportDeclaration(SingleStaticImportDeclarationContext ctx) {
-
-	}
-
-	public void exitSingleElementAnnotation(SingleElementAnnotationContext ctx) {
-		try {
-			bw.write(") ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitSimpleTypeName(SimpleTypeNameContext ctx) {
-
-	}
-
-	public void exitShiftExpression(ShiftExpressionContext ctx) {
-
-	}
-
-	public void exitReturnStatement(ReturnStatementContext ctx) {
-
-		try {
-			bw.write(";\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitResult(ResultContext ctx) {
-
-		enterresult = false;
-	}
-
-	public void exitResourceSpecification(ResourceSpecificationContext ctx) {
-		try {
-			bw.write(") ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitResourceList(ResourceListContext ctx) {
-
-	}
-
-	public void exitResource(ResourceContext ctx) {
-
-	}
-
-	public void exitRelationalExpression(RelationalExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof RelationalExpressionContext) {
-				if (!operators.isEmpty() && !isInstanceOf) {
-					bw.write(" " + operators.lastElement() + " ");
-					operators.pop();
-				}
-			}
-
-			if (!(ctx.getParent() instanceof RelationalExpressionContext))
-				isInstanceOf = false;
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitReferenceType(ReferenceTypeContext ctx) {
-
-	}
-
-	public void exitReceiverParameter(ReceiverParameterContext ctx) {
-
-	}
-
-	public void exitPrimitiveType(PrimitiveTypeContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary(
-			PrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary(
-			PrimaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lfno_arrayAccess(PrimaryNoNewArray_lfno_arrayAccessContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary(
-			PrimaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary(
-			PrimaryNoNewArray_lf_primary_lf_arrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lf_primary(PrimaryNoNewArray_lf_primaryContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray_lf_arrayAccess(PrimaryNoNewArray_lf_arrayAccessContext ctx) {
-
-	}
-
-	public void exitPrimaryNoNewArray(PrimaryNoNewArrayContext ctx) {
-
-	}
-
-	public void exitPrimary(PrimaryContext ctx) {
-
-	}
-
-	public void exitPreIncrementExpression(PreIncrementExpressionContext ctx) {
-
-	}
-
-	public void exitPreDecrementExpression(PreDecrementExpressionContext ctx) {
-
-	}
-
-	public void exitPostfixExpression(PostfixExpressionContext ctx) {
-
-	}
-
-	public void exitPostIncrementExpression_lf_postfixExpression(
-			PostIncrementExpression_lf_postfixExpressionContext ctx) {
-
-	}
-
-	public void exitPostIncrementExpression(PostIncrementExpressionContext ctx) {
-		try {
-			if (!enterfor)
-				bw.write("++");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitPostDecrementExpression_lf_postfixExpression(
-			PostDecrementExpression_lf_postfixExpressionContext ctx) {
-
-	}
-
-	public void exitPostDecrementExpression(PostDecrementExpressionContext ctx) {
-		try {
-			if (!enterfor)
-				bw.write("--");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitPackageOrTypeName(PackageOrTypeNameContext ctx) {
-
-	}
-
-	public void exitPackageName(PackageNameContext ctx) {
-
-	}
-
-	public void exitPackageModifier(PackageModifierContext ctx) {
-
-	}
-
-	public void exitPackageDeclaration(PackageDeclarationContext ctx) {
-
-	}
-
-	public void exitNumericType(NumericTypeContext ctx) {
-
-	}
-
-	public void exitNormalInterfaceDeclaration(NormalInterfaceDeclarationContext ctx) {
-
-	}
-
-	public void exitNormalClassDeclaration(NormalClassDeclarationContext ctx) {
-
-	}
-
-	public void exitNormalAnnotation(NormalAnnotationContext ctx) {
-
-	}
-
-	public void exitMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-
-			if (ctx.getParent() instanceof MultiplicativeExpressionContext)
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-
-				}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitMethodReference_lfno_primary(MethodReference_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitMethodReference_lf_primary(MethodReference_lf_primaryContext ctx) {
-
-	}
-
-	public void exitMethodReference(MethodReferenceContext ctx) {
-
-	}
-
-	public void exitMethodName(MethodNameContext ctx) {
-
-	}
-
-	public void exitMethodModifier(MethodModifierContext ctx) {
-
-	}
-
-	public void exitMethodInvocation_lfno_primary(MethodInvocation_lfno_primaryContext ctx) {
-		if (!isInstanceOf) {
-			if (enterfor)
-				forlimit += ")";
-		}
-	}
-
-	public void exitMethodInvocation_lf_primary(MethodInvocation_lf_primaryContext ctx) {
-
-	}
-
-	public void exitMethodInvocation(MethodInvocationContext ctx) {
-
-	}
-
-	public void exitMethodHeader(MethodHeaderContext ctx) {
-
-	}
-
-	public void exitMethodDeclarator(MethodDeclaratorContext ctx) {
-
-	}
-
-	public void exitMethodDeclaration(MethodDeclarationContext ctx) {
-
-	}
-
-	public void exitMethodBody(MethodBodyContext ctx) {
-
-	}
-
-	public void exitMarkerAnnotation(MarkerAnnotationContext ctx) {
-
-	}
-
-	public void exitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer() != null)
-			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
-					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
-					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
-					.relationalExpression().shiftExpression() != null)
-				if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
-						.assignmentExpression().conditionalExpression().conditionalOrExpression()
-						.conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression()
-						.equalityExpression().relationalExpression().shiftExpression().additiveExpression()
-						.multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
-						.castExpression() != null && !isinstanceofForCast) {
-					try {
-						bw.write(")");
-						noVariable = false;
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-	}
-
-	public void exitLiteral(LiteralContext ctx) {
-
-	}
-
-	public void exitLeftHandSide(LeftHandSideContext ctx) {
-
-	}
-
-	public void exitLastFormalParameter(LastFormalParameterContext ctx) {
-
-	}
-
-	public void exitLambdaParameters(LambdaParametersContext ctx) {
-
-	}
-
-	public void exitLambdaExpression(LambdaExpressionContext ctx) {
-
-	}
-
-	public void exitLambdaBody(LambdaBodyContext ctx) {
-
-	}
-
-	public void exitLabeledStatementNoShortIf(LabeledStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitLabeledStatement(LabeledStatementContext ctx) {
-
-	}
-
-	public void exitInterfaceType_lfno_classOrInterfaceType(InterfaceType_lfno_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitInterfaceType_lf_classOrInterfaceType(InterfaceType_lf_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitInterfaceTypeList(InterfaceTypeListContext ctx) {
-
-	}
-
-	public void exitInterfaceType(InterfaceTypeContext ctx) {
-
-		if (!ctx.getText().equals(lastInterface)) {
-			try {
-				bw.write(" & ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	public void exitInterfaceModifier(InterfaceModifierContext ctx) {
-
-	}
-
-	public void exitInterfaceMethodModifier(InterfaceMethodModifierContext ctx) {
-
-	}
-
-	public void exitInterfaceMethodDeclaration(InterfaceMethodDeclarationContext ctx) {
-
-	}
-
-	public void exitInterfaceMemberDeclaration(InterfaceMemberDeclarationContext ctx) {
-
-	}
-
-	public void exitInterfaceDeclaration(InterfaceDeclarationContext ctx) {
-
-	}
-
-	public void exitInterfaceBody(InterfaceBodyContext ctx) {
-
-		int count = ctx.getChildCount();
-
-		try {
-			bw.write(ctx.getChild(count - 1).toString() + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitIntegralType(IntegralTypeContext ctx) {
-
-	}
-
-	public void exitInstanceInitializer(InstanceInitializerContext ctx) {
-
-	}
-
-	public void exitInferredFormalParameterList(InferredFormalParameterListContext ctx) {
-
-	}
-
-	public void exitInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof InclusiveOrExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitImportDeclaration(ImportDeclarationContext ctx) {
-
-	}
-
-	public void exitIfThenStatement(IfThenStatementContext ctx) {
-		isinstanceofForCast = false;
-	}
-
-	public void exitIfThenElseStatementNoShortIf(IfThenElseStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitIfThenElseStatement(IfThenElseStatementContext ctx) {
-
-	}
-
-	public void exitFormalParameters(FormalParametersContext ctx) {
-
-	}
-
-	public void exitFormalParameterList(FormalParameterListContext ctx) {
-
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		lastFormalParameter = "";
-	}
-
-	public void exitFormalParameter(FormalParameterContext ctx) {
-
-		try {
-			if (!ctx.variableDeclaratorId().getText().equals(lastFormalParameter))
-				bw.write(", ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitForUpdate(ForUpdateContext ctx) {
-		enterForUpdate = false;
-		try {
-			if (!forByValue.equals("1"))
-				bw.write(".by(" + forByValue + ")");
-
-			bw.write(")");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-		enterfor = false;
-	}
-
-	public void exitForStatementNoShortIf(ForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitForStatement(ForStatementContext ctx) {
-
-	}
-
-	public void exitForInit(ForInitContext ctx) {
-
-		try {
-			forCounterDatatype = ctx.getChild(0).getChild(0).getText();
-			bw.write(" in (" + forinit);
-		} catch (IOException e) {
-			e.getStackTrace();
-		}
-	}
-
-	public void exitFloatingPointType(FloatingPointTypeContext ctx) {
-
-	}
-
-	public void exitFinally_(Finally_Context ctx) {
-
-	}
-
-	public void exitFieldModifier(FieldModifierContext ctx) {
-
-	}
-
-	public void exitFieldAccess_lfno_primary(FieldAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitFieldAccess_lf_primary(FieldAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void exitFieldAccess(FieldAccessContext ctx) {
-
-	}
-
-	public void exitExtendsInterfaces(ExtendsInterfacesContext ctx) {
-
-	}
-
-	public void exitExpressionName(ExpressionNameContext ctx) {
-
-		// try {
-		// if (!(ctx.getParent() instanceof PostfixExpressionContext && ctx
-		// .getParent().getChildCount() > 1))
-		// if (!operators.isEmpty()) {
-		//
-		// if (operators.lastElement().equals(")") && !openParenthesis) {
-		// bw.write(" " + operators.lastElement());
-		// operators.pop();
-		// }
-		//
-		// if (!operators.isEmpty()) {
-		// bw.write(" " + operators.lastElement() + " ");
-		// operators.pop();
-		// }
-		//
-		// openParenthesis = false;
-		// }
-		// } catch (IOException e) {
-		//
-		// e.printStackTrace();
-		// }
-
-		if (inExpression && (notEqualNull || equalsequalsNull)) {
-			try {
-				bw.write(" exists");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void exitExpression(ExpressionContext ctx) {
-
-		try {
-			ParserRuleContext parentContext = ctx.getParent();
-			if (parentContext instanceof IfThenElseStatementContext || parentContext instanceof IfThenStatementContext
-					|| parentContext instanceof WhileStatementContext
-					|| parentContext instanceof WhileStatementNoShortIfContext
-					|| parentContext instanceof SwitchStatementContext
-					|| parentContext instanceof EnhancedForStatementContext) {
-				bw.write(")");
-				enterEnhancedfor = false;
-			} else if (!enterArgumentList.isEmpty() && !enterArrayAccess_lfno_primary
-					&& !(parentContext instanceof ReturnStatementContext)) {
-				ParseTree lastExpression = parentContext.getChild(parentContext.getChildCount() - 1);
-				if (lastExpression instanceof ExpressionContext && ctx != lastExpression) {
-					bw.write(", ");
-				}
-			} else if (parentContext instanceof ConditionalExpressionContext && parentContext.getChildCount() > 1) {
-				bw.write(" else ");
-			} else if (parentContext instanceof DoStatementContext) {
-				bw.write(") {break;}\n");
-			} else if (parentContext instanceof ArrayAccessContext)
-				bw.write(", ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void exitExplicitConstructorInvocation(ExplicitConstructorInvocationContext ctx) {
-
-	}
-
-	public void exitExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof ExclusiveOrExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitExceptionTypeList(ExceptionTypeListContext ctx) {
-
-	}
-
-	public void exitExceptionType(ExceptionTypeContext ctx) {
-
-	}
-
-	public void exitEqualityExpression(EqualityExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof EqualityExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			} else if (ctx.getChildCount() > 1) {
-				notEqualNull = false;
-				equalsequalsNull = false;
-			}
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitEnumDeclaration(EnumDeclarationContext ctx) {
-
-	}
-
-	public void exitEnumConstantName(EnumConstantNameContext ctx) {
-
-	}
-
-	public void exitEnumConstantModifier(EnumConstantModifierContext ctx) {
-
-	}
-
-	public void exitEnumConstantList(EnumConstantListContext ctx) {
-
-	}
-
-	public void exitEnumConstant(EnumConstantContext ctx) {
-		try {
-			bw.write(" { string = \"" + ctx.getChild(0).getText() + "\";}\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitEnumBodyDeclarations(EnumBodyDeclarationsContext ctx) {
-
-	}
-
-	public void exitEnumBody(EnumBodyContext ctx) {
-		try {
-			bw.write("}\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitEnhancedForStatementNoShortIf(EnhancedForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitEnhancedForStatement(EnhancedForStatementContext ctx) {
-
-	}
-
-	public void exitEmptyStatement(EmptyStatementContext ctx) {
-
-	}
-
-	public void exitElementValuePairList(ElementValuePairListContext ctx) {
-
-	}
-
-	public void exitElementValuePair(ElementValuePairContext ctx) {
-
-	}
-
-	public void exitElementValueList(ElementValueListContext ctx) {
-
-	}
-
-	public void exitElementValueArrayInitializer(ElementValueArrayInitializerContext ctx) {
-
-	}
-
-	public void exitElementValue(ElementValueContext ctx) {
-
-	}
-
-	public void exitDoStatement(DoStatementContext ctx) {
-		try {
-			bw.write("}\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitDims(DimsContext ctx) {
-
-	}
-
-	public void exitDimExprs(DimExprsContext ctx) {
-
-	}
-
-	public void exitDimExpr(DimExprContext ctx) {
-
-	}
-
-	public void exitDefaultValue(DefaultValueContext ctx) {
-
-	}
-
-	public void exitContinueStatement(ContinueStatementContext ctx) {
-
-	}
-
-	public void exitConstructorModifier(ConstructorModifierContext ctx) {
-
-	}
-
-	public void exitConstructorDeclarator(ConstructorDeclaratorContext ctx) {
-		try {
-			if (ctx.formalParameterList() == null)
-				bw.write(") ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitConstructorDeclaration(ConstructorDeclarationContext ctx) {
-
-	}
-
-	public void exitConstructorBody(ConstructorBodyContext ctx) {
-		try {
-			bw.write("}\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitConstantModifier(ConstantModifierContext ctx) {
-
-	}
-
-	public void exitConstantExpression(ConstantExpressionContext ctx) {
-
-	}
-
-	public void exitConstantDeclaration(ConstantDeclarationContext ctx) {
-
-	}
-
-	public void exitConditionalOrExpression(ConditionalOrExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof ConditionalOrExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-
-			if (ctx.getParent() instanceof ConditionalExpressionContext && ctx.getParent().getChildCount() > 1) {
-				bw.write(") then ");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitConditionalExpression(ConditionalExpressionContext ctx) {
-
-	}
-
-	public void exitConditionalAndExpression(ConditionalAndExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof ConditionalAndExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitCompilationUnit(CompilationUnitContext ctx) {
-
-	}
-
-	public void exitClassType_lfno_classOrInterfaceType(ClassType_lfno_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitClassType_lf_classOrInterfaceType(ClassType_lf_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitClassType(ClassTypeContext ctx) {
-
-	}
-
-	public void exitClassOrInterfaceType(ClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void exitClassModifier(ClassModifierContext ctx) {
-
-	}
-
-	public void exitClassMemberDeclaration(ClassMemberDeclarationContext ctx) {
-
-	}
-
-	public void exitClassInstanceCreationExpression_lfno_primary(
-			ClassInstanceCreationExpression_lfno_primaryContext ctx) {
-
-	}
-
-	public void exitClassInstanceCreationExpression_lf_primary(ClassInstanceCreationExpression_lf_primaryContext ctx) {
-
-	}
-
-	public void exitClassInstanceCreationExpression(ClassInstanceCreationExpressionContext ctx) {
-
-	}
-
-	public void exitClassDeclaration(ClassDeclarationContext ctx) {
-
-	}
-
-	public void exitClassBodyDeclaration(ClassBodyDeclarationContext ctx) {
-
-	}
-
-	public void exitCatches(CatchesContext ctx) {
-
-	}
-
-	public void exitCatchType(CatchTypeContext ctx) {
-
-	}
-
-	public void exitCatchFormalParameter(CatchFormalParameterContext ctx) {
-
-		try {
-			bw.write(") ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitCatchClause(CatchClauseContext ctx) {
-
-	}
-
-	public void exitCastExpression(CastExpressionContext ctx) {
-
-	}
-
-	public void exitBreakStatement(BreakStatementContext ctx) {
-
-	}
-
-	public void exitBlockStatements(BlockStatementsContext ctx) {
-
-	}
-
-	public void exitBlockStatement(BlockStatementContext ctx) {
-
-	}
-
-	public void exitBasicForStatementNoShortIf(BasicForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void exitBasicForStatement(BasicForStatementContext ctx) {
-
-	}
-
-	public void exitAssignmentOperator(AssignmentOperatorContext ctx) {
-
-	}
-
-	public void exitAssignmentExpression(AssignmentExpressionContext ctx) {
-
-	}
-
-	public void exitAssignment(AssignmentContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-
-			if (enterArrayAccessSet) {
-				bw.write(")");
-				enterArrayAccessSet = false;
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitAssertStatement(AssertStatementContext ctx) {
-
-	}
-
-	public void exitArrayType(ArrayTypeContext ctx) {
-
+	@Override
+	public Void visitTypeVariable(TypeVariableContext ctx) {
+		write(ctx.Identifier().getText());
+		return null;
 	}
 
-	public void exitArrayInitializer(ArrayInitializerContext ctx) {
-
-	}
-
-	public void exitArrayCreationExpression(ArrayCreationExpressionContext ctx) {
-
-		enterArray = false;
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitArrayAccess_lfno_primary(ArrayAccess_lfno_primaryContext ctx) {
-
-		enterArrayAccess_lfno_primary = false;
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitArrayAccess_lf_primary(ArrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void exitArrayAccess(ArrayAccessContext ctx) {
-
-		enterArrayAccessSet = true;
-		enterArrayAccess = false;
-	}
-
-	public void exitArgumentList(ArgumentListContext ctx) {
-		enterArgumentList.pop();
-		try {
-			bw.write(")");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void exitAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclarationContext ctx) {
-
-	}
-
-	public void exitAnnotationTypeElementModifier(AnnotationTypeElementModifierContext ctx) {
-
-	}
-
-	public void exitAnnotationTypeElementDeclaration(AnnotationTypeElementDeclarationContext ctx) {
-
-	}
-
-	public void exitAnnotationTypeDeclaration(AnnotationTypeDeclarationContext ctx) {
-
-	}
-
-	public void exitAnnotationTypeBody(AnnotationTypeBodyContext ctx) {
-
-	}
-
-	public void exitAnnotation(AnnotationContext ctx) {
-
-	}
-
-	public void exitAndExpression(AndExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof AndExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitAmbiguousName(AmbiguousNameContext ctx) {
-
-	}
-
-	public void exitAdditiveExpression(AdditiveExpressionContext ctx) {
-
-		try {
-			if (!bracketInstance.isEmpty() && bracketInstance.lastElement() == ctx) {
-				bw.write(")");
-				bracketInstance.pop();
-			}
-			if (ctx.getParent() instanceof AdditiveExpressionContext) {
-				if (!operators.isEmpty()) {
-					if (!operators.isEmpty()) {
-						bw.write(" " + operators.lastElement() + " ");
-						operators.pop();
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void exitAdditionalBound(AdditionalBoundContext ctx) {
-
-	}
-
-	public void enterWildcardBounds(WildcardBoundsContext ctx) {
-
-	}
-
-	public void enterWildcard(WildcardContext ctx) {
-
-		try {
-			if (ctx.wildcardBounds() != null)
-				if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?extends"))
-					bw.write("out ");
-				else if ((ctx.getChild(0).getText() + ctx.wildcardBounds().getChild(0)).equals("?super"))
-					bw.write("in ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterWhileStatementNoShortIf(WhileStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterWhileStatement(WhileStatementContext ctx) {
-
-		try {
-			bw.write("while(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterVariableModifier(VariableModifierContext ctx) {
-
-		variableModifier = ctx.getText();
-	}
-
-	public void enterVariableInitializerList(VariableInitializerListContext ctx) {
-
-	}
-
-	public void enterVariableInitializer(VariableInitializerContext ctx) {
-		try {
-			if (!enterfor && !(ctx.getParent() instanceof VariableInitializerListContext))
-				bw.write(" = ");
-			else {
-
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterVariableDeclaratorList(VariableDeclaratorListContext ctx) {
-
-		firstVariableInList = ctx.getChild(0).getText();
-
-		if (ctx.getChildCount() > 1) {
-			multipleVariables = true;
-		}
-	}
-
-	public void enterVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
-
-		try {
-			String expressionName = "";
-			if (Character.isUpperCase(ctx.getText().charAt(0))) {
-				expressionName = "\\i" + ctx.getText();
-			} else {
-				expressionName = ctx.getText();
-			}
-
-			for (String str : keywords) {
-				if (str.equals(ctx.getText())) {
-					expressionName = "\\i" + ctx.getText();
-				}
-			}
-
-			bw.write(expressionName);
-			// bw.write(ctx.getChild(0).getText());
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterVariableDeclarator(VariableDeclaratorContext ctx) {
-
-		inExpression = true;
-
-		try {
-			if (enterfor) {
-				if (ctx.variableInitializer() != null)
-					forinit = ctx.variableInitializer().getText();
-			}
-
-			if (multipleVariables && !ctx.getText().equals(firstVariableInList)) {
-				bw.write(variableListType);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
-
-		try {
-			if (ctx.getChild(0).getText().equals("!"))
-				bw.write("!");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterUnaryExpression(UnaryExpressionContext ctx) {
-		try {
-			if (ctx.getChild(0).getText().equals("-"))
-				bw.write("-");
-			else if (ctx.getChild(0).getText().equals("+"))
-				bw.write("+");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterUnannTypeVariable(UnannTypeVariableContext ctx) {
-
-	}
-
-	public void enterUnannType(UnannTypeContext ctx) {
-
-	}
-
-	public void enterUnannReferenceType(UnannReferenceTypeContext ctx) {
-
-	}
-
-	public void enterUnannInterfaceType_lfno_unannClassOrInterfaceType(
-			UnannInterfaceType_lfno_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterUnannInterfaceType_lf_unannClassOrInterfaceType(
-			UnannInterfaceType_lf_unannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterUnannInterfaceType(UnannInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterUnannClassType_lfno_unannClassOrInterfaceType(
-			UnannClassType_lfno_unannClassOrInterfaceTypeContext ctx) {
-
-		String type = ctx.getChild(0).getText();
-		String ceylonType = "";
-
-		if (!(ctx.getParent().getParent() instanceof UnannArrayTypeContext)) {
-			try {
-				if (!enterEnhancedfor && !enterfor && !enterresult && !noVariable) {
-					if (!variableModifier.equals("final")) {
-						bw.write("variable ");
-						variableListType = "variable ";
-					}
-				}
-				variableModifier = "";
-
-				ceylonType = type + " ";
-
-				variableListType += ceylonType;
-
-				bw.write(ceylonType);
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	public void enterUnannClassType_lf_unannClassOrInterfaceType(
-			UnannClassType_lf_unannClassOrInterfaceTypeContext ctx) {
-		try {
-			bw.write(ctx.getText());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterUnannClassType(UnannClassTypeContext ctx) {
-
-		try {
-			bw.write(ctx.getText() + " ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterUnannClassOrInterfaceType(UnannClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterUnannArrayType(UnannArrayTypeContext ctx) {
-
-		enterArray = true;
-
-		String type = "";
-		if (ctx.unannPrimitiveType() != null) {
-			type = ctx.unannPrimitiveType().getText();
-		} else if (ctx.unannClassOrInterfaceType() != null) {
-			type = ctx.unannClassOrInterfaceType().getText();
-		}
-		String ceylonType = "";
-		try {
-			if (!enterresult && !variableModifier.equals("final") && !noVariable) {
-				bw.write("variable ");
-				variableListType = "variable ";
-			}
-			variableModifier = "";
-
-			if (type.equals("int")) {
-				ceylonType = "IntArray ";
-			} else if (type.equals("short")) {
-				ceylonType = "ShortArray ";
-			} else if (type.equals("boolean")) {
-				ceylonType = "BooleanArray ";
-			} else if (type.equals("byte")) {
-				ceylonType = "ByteArray ";
-			} else if (type.equals("long")) {
-				ceylonType = "LongArray ";
-			} else if (type.equals("float")) {
-				ceylonType = "FloatArray ";
-			} else if (type.equals("double")) {
-				ceylonType = "DoubleArray ";
-			} else if (type.equals("char")) {
-				ceylonType = "CharArray ";
-			} else {
-				ceylonType = "ObjectArray<" + type + "> ";
-			}
-
-			variableListType += ceylonType;
-
-			bw.write(ceylonType);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterTypeVariable(TypeVariableContext ctx) {
-
-	}
-
-	public void enterTypeParameters(TypeParametersContext ctx) {
-
-		try {
-			bw.write("<");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+	@Override
+	public Void visitClassType_lfno_classOrInterfaceType(ClassType_lfno_classOrInterfaceTypeContext ctx) {
+		write(ctx.Identifier().getText());
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
 		}
-	}
-
-	public void enterTypeParameterModifier(TypeParameterModifierContext ctx) {
-
-	}
-
-	public void enterTypeParameterList(TypeParameterListContext ctx) {
-
-		lastTypeParameter = ctx.getChild(ctx.getChildCount() - 1).getText();
-	}
-
-	public void enterTypeParameter(TypeParameterContext ctx) {
-
-		try {
-			if (ctx.typeBound() != null) {
-				if (!ctx.getChild(0).getText().equals("?")) {
-					typeConstraints = true;
-				}
-				bw.write(ctx.getChild(0).getText());
-			} else if (!typeConstraints) {
-				bw.write(ctx.getText());
-			}
-
-			if (!ctx.getText().equals(lastTypeParameter))
-				bw.write(", ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterTypeName(TypeNameContext ctx) {
-
-	}
-
-	public void enterTypeImportOnDemandDeclaration(TypeImportOnDemandDeclarationContext ctx) {
-
-		try {
-			if (!firstImport) {
-				bw.write("\n}\n");
-			}
-			bw.write("import " + ctx.packageOrTypeName().getText() + "{\n...");
-			firstImport = false;
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterTypeDeclaration(TypeDeclarationContext ctx) {
-
-		if (!firstImport) {
-			try {
-				bw.write("\n}\n");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-
-		firstImport = true;
-	}
-
-	public void enterTypeBound(TypeBoundContext ctx) {
-
-	}
-
-	public void enterTypeArgumentsOrDiamond(TypeArgumentsOrDiamondContext ctx) {
-
+		return null;
 	}
 
-	public void enterTypeArguments(TypeArgumentsContext ctx) {
-
-	}
-
-	public void enterTypeArgumentList(TypeArgumentListContext ctx) {
-
-		try {
-			enterTypeArgumentsList = true;
-			if (!typeConstraints)
-				bw.write("<");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+	@Override
+	public Void visitClassType_lf_classOrInterfaceType(ClassType_lf_classOrInterfaceTypeContext ctx) {
+		write(".");
+		write(ctx.Identifier().getText());
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
 		}
-	}
-
-	public void enterTypeArgument(TypeArgumentContext ctx) {
-
+		return null;
 	}
-
-	public void enterType(TypeContext ctx) {
-
-	}
-
-	public void enterTryWithResourcesStatement(TryWithResourcesStatementContext ctx) {
-
-	}
-
-	public void enterTryStatement(TryStatementContext ctx) {
-
-		try {
-			bw.write("try ");
-		} catch (IOException e) {
 
-			e.printStackTrace();
+	@Override
+	public Void visitNormalInterfaceDeclaration(NormalInterfaceDeclarationContext ctx) {
+		if (hasModifier(ctx.interfaceModifier(), "public")) {
+			write("shared ");
 		}
-	}
-
-	public void enterThrows_(Throws_Context ctx) {
-
-	}
 
-	public void enterThrowStatement(ThrowStatementContext ctx) {
-		try {
-			bw.write("throw ");
-		} catch (IOException e) {
-			e.printStackTrace();
+		write("interface ");
+		write(ctx.Identifier().getText()); // TODO uppercase first letter
+		if (ctx.typeParameters() != null) {
+			visitTypeParameters(ctx.typeParameters());
 		}
-	}
-
-	public void enterSynchronizedStatement(SynchronizedStatementContext ctx) {
-
-	}
-
-	public void enterSwitchStatement(SwitchStatementContext ctx) {
-
-		try {
-			bw.write("switch(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		if (ctx.extendsInterfaces() != null) {
+			visitExtendsInterfaces(ctx.extendsInterfaces());
 		}
-	}
+		visitInterfaceBody(ctx.interfaceBody());
 
-	public void enterSwitchLabels(SwitchLabelsContext ctx) {
-
+		return null;
 	}
-
-	public void enterSwitchLabel(SwitchLabelContext ctx) {
 
-		try {
-			if (ctx.getChild(0).toString().equals("case"))
-				bw.write(ctx.getChild(0) + "(");
-			else
-				bw.write("else ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+	@Override
+	public Void visitInterfaceMethodDeclaration(InterfaceMethodDeclarationContext ctx) {
+		if (hasModifier(ctx.interfaceMethodModifier(), "public")) {
+			write("shared ");
 		}
-	}
-
-	public void enterSwitchBlockStatementGroup(SwitchBlockStatementGroupContext ctx) {
-
-	}
-
-	public void enterSwitchBlock(SwitchBlockContext ctx) {
-
-		try {
-			bw.write("\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		if (hasModifier(ctx.interfaceMethodModifier(), "default")) {
+			write("default ");
+		} else {
+			write("formal ");
 		}
-	}
-
-	public void enterSuperinterfaces(SuperinterfacesContext ctx) {
 
-		try {
-			bw.write("satisfies ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
+		visitMethodHeader(ctx.methodHeader());
+		visitMethodBody(ctx.methodBody());
+		return null;
 	}
-
-	public void enterSuperclass(SuperclassContext ctx) {
-
-		try {
-			bw.write(ctx.getChild(0).getText() + " " + ctx.classType().getChild(0).getText());
-		} catch (IOException e) {
 
-			e.printStackTrace();
+	@Override
+	public Void visitInterfaceBody(InterfaceBodyContext ctx) {
+		write(" {\n");
+		for (InterfaceMemberDeclarationContext decl : ctx.interfaceMemberDeclaration()) {
+			visitInterfaceMemberDeclaration(decl);
 		}
+		write("}\n");
+		return null;
 	}
-
-	public void enterStaticInitializer(StaticInitializerContext ctx) {
-
-	}
-
-	public void enterStaticImportOnDemandDeclaration(StaticImportOnDemandDeclarationContext ctx) {
 
+	@Override
+	public Void visitExtendsInterfaces(ExtendsInterfacesContext ctx) {
+		write(" satisfies ");
+		return super.visitExtendsInterfaces(ctx);
 	}
 
-	public void enterStatementWithoutTrailingSubstatement(StatementWithoutTrailingSubstatementContext ctx) {
-
-		if (ctx.block() == null && !(ctx.getParent().getParent() instanceof BlockStatementContext)) {
-			try {
-				bw.write(" {\n");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
+	@Override
+	public Void visitConstructorDeclaration(ConstructorDeclarationContext ctx) {
+		if (hasModifier(ctx.constructorModifier(), "public")) {
+			write("shared ");
 		}
-	}
-
-	public void enterStatementNoShortIf(StatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterStatementExpressionList(StatementExpressionListContext ctx) {
-
+		visitConstructorDeclarator(ctx.constructorDeclarator());
+		visitConstructorBody(ctx.constructorBody());
+		return null;
 	}
 
-	public void enterStatementExpression(StatementExpressionContext ctx) {
-		inExpression = true;
-	}
-
-	public void enterStatement(StatementContext ctx) {
-		try {
-			if (ctx.getParent() instanceof BasicForStatementContext
-					&& ctx.statementWithoutTrailingSubstatement() == null) {
-				bw.write("{\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+	@Override
+	public Void visitConstructorDeclarator(ConstructorDeclaratorContext ctx) {
+		write("new ");
+		// TODO? name constructor
+		write("(");
+		if (ctx.formalParameterList() != null) {
+			visitFormalParameterList(ctx.formalParameterList());
 		}
+		write(")");
+		return null;
 	}
-
-	public void enterSingleTypeImportDeclaration(SingleTypeImportDeclarationContext ctx) {
-
-		try {
-			// bw.write("import "
-			// + ctx.typeName().getChild(0).getText() + " {"
-			// + ctx.typeName().getChild(2).getText() + "}\n");
 
-			if (firstImport) {
-				packageName = ctx.typeName().packageOrTypeName().getText();
-				firstImport = false;
-				bw.write("import " + packageName + "{\n" + ctx.typeName().getChild(2).getText());
-			} else {
-				if (packageName.equals(ctx.typeName().packageOrTypeName().getText())) {
-					bw.write(",\n" + ctx.typeName().getChild(2).getText());
-				} else {
-					bw.write("\n}\n");
-					packageName = ctx.typeName().packageOrTypeName().getText();
-					bw.write("import " + packageName + "{" + ctx.typeName().getChild(2).getText());
-				}
-
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
+	@Override
+	public Void visitConstructorBody(ConstructorBodyContext ctx) {
+		write(" {\n");
+		super.visitConstructorBody(ctx);
+		write("}\n\n");
+		return null;
 	}
 
-	public void enterSingleStaticImportDeclaration(SingleStaticImportDeclarationContext ctx) {
-
-	}
+	@Override
+	public Void visitMethodInvocation(MethodInvocationContext ctx) {
+		String name = null;
 
-	public void enterSingleElementAnnotation(SingleElementAnnotationContext ctx) {
-		try {
+		if (ctx.methodName() != null) {
+			write(ctx.methodName().getText());
+		} else if (ctx.typeName() != null) {
 			String text = ctx.typeName().getText();
-			text = Character.toLowerCase(text.charAt(0)) + text.substring(1);
-			bw.write(text + "(");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterSimpleTypeName(SimpleTypeNameContext ctx) {
-
-	}
-
-	public void enterShiftExpression(ShiftExpressionContext ctx) {
-
-	}
-
-	public void enterReturnStatement(ReturnStatementContext ctx) {
-
-		try {
-			bw.write("return ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterResourceSpecification(ResourceSpecificationContext ctx) {
-		try {
-			bw.write("(");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterResourceList(ResourceListContext ctx) {
-
-	}
-
-	public void enterResource(ResourceContext ctx) {
-
-	}
-
-	public void enterRelationalExpression(RelationalExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1) {
-			if (ctx.getChild(1).getText().equals("instanceof")) {
-				try {
-					isInstanceOf = true;
-					isinstanceofForCast = true;
-					if (openParenthesis) {
-						bracketInstance.push(ctx);
-						bw.write("(");
-						openParenthesis = false;
-					}
-
-					if (inExpression)
-						bw.write(ctx.getChild(0).getText() + " is " + ctx.getChild(2).getText());
-					else
-						bw.write("is " + ctx.getChild(2).getText() + " " + ctx.getChild(0).getText());
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			} else if (!enterfor) {
-				operators.push(ctx.getChild(1).getText());
-				if (openParenthesis) {
-					bracketInstance.push(ctx);
-					try {
-						bw.write("(");
-						openParenthesis = false;
-					} catch (IOException e) {
-
-						e.printStackTrace();
-					}
-				}
-
+			if (text.equals("System.out") && ctx.Identifier().getText().equals("println")) {
+				name = "System.out.println";
 			} else {
-				forConditionOperator = ctx.getChild(1).getText();
-				forlimit = ctx.getChild(2).getText();
+				write(text);
+				write(".");
 			}
-		}
-	}
-
-	public void enterReferenceType(ReferenceTypeContext ctx) {
-
-	}
-
-	public void enterReceiverParameter(ReceiverParameterContext ctx) {
-
-	}
-
-	public void enterPrimitiveType(PrimitiveTypeContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary(
-			PrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primary(
-			PrimaryNoNewArray_lfno_primary_lf_arrayAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
-
-		try {
-			if (!isInstanceOf) {
-				if (ctx.typeName() != null) {
-					bw.write(ctx.typeName().getText() + ctx.getChild(1).getText() + ctx.getChild(2).getText());
-				}
-
-				if (ctx.expression() != null) {
-					openParenthesis = true;
-				}
-				if (!(ctx.getParent().getParent() instanceof FieldAccessContext)) {
-					if (ctx.getText().equals("this")) {
-						bw.write("this");
-					}
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		} else if (ctx.expressionName() != null) {
+			name = ctx.expressionName().getText() + "." + ctx.Identifier().getText();
+		} else if (ctx.primary() != null) {
+			visitPrimary(ctx.primary());
+			write(".");
+		} else if (ctx.typeName() != null) {
+			visitTypeName(ctx.typeName());
+			write(".super.");
+		} else {
+			write("super.");
 		}
 
-	}
-
-	public void enterPrimaryNoNewArray_lfno_arrayAccess(PrimaryNoNewArray_lfno_arrayAccessContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primary(
-			PrimaryNoNewArray_lf_primary_lfno_arrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lf_primary_lf_arrayAccess_lf_primary(
-			PrimaryNoNewArray_lf_primary_lf_arrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lf_primary(PrimaryNoNewArray_lf_primaryContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray_lf_arrayAccess(PrimaryNoNewArray_lf_arrayAccessContext ctx) {
-
-	}
-
-	public void enterPrimaryNoNewArray(PrimaryNoNewArrayContext ctx) {
-
-	}
-
-	public void enterPrimary(PrimaryContext ctx) {
-
-	}
-
-	public void enterPreIncrementExpression(PreIncrementExpressionContext ctx) {
-
-		try {
-			if (!enterfor)
-				bw.write(ctx.getChild(0).getText());
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterPreDecrementExpression(PreDecrementExpressionContext ctx) {
-
-		try {
-			if (!enterfor)
-				bw.write("--");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterPostfixExpression(PostfixExpressionContext ctx) {
-
-	}
-
-	public void enterPostIncrementExpression_lf_postfixExpression(
-			PostIncrementExpression_lf_postfixExpressionContext ctx) {
-
-		try {
-			bw.write("++");
-			if (!operators.isEmpty()) {
-				bw.write(" " + operators.lastElement() + " ");
-				operators.pop();
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterPostIncrementExpression(PostIncrementExpressionContext ctx) {
-
-	}
-
-	public void enterPostDecrementExpression_lf_postfixExpression(
-			PostDecrementExpression_lf_postfixExpressionContext ctx) {
-
-		try {
-			bw.write("--");
-			if (!operators.isEmpty()) {
-				bw.write(" " + operators.lastElement() + " ");
-				operators.pop();
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterPostDecrementExpression(PostDecrementExpressionContext ctx) {
-
-	}
-
-	public void enterPackageOrTypeName(PackageOrTypeNameContext ctx) {
-
-	}
-
-	public void enterPackageName(PackageNameContext ctx) {
-
-	}
-
-	public void enterPackageModifier(PackageModifierContext ctx) {
-
-	}
-
-	public void enterPackageDeclaration(PackageDeclarationContext ctx) {
-
-	}
-
-	public void enterNumericType(NumericTypeContext ctx) {
-
-	}
-
-	public void enterNormalInterfaceDeclaration(NormalInterfaceDeclarationContext ctx) {
-
-		enterInterfaceDeclaration = true;
-
-		String modifier = " ";
-		if (ctx.interfaceModifier(0) != null)
-			if (ctx.interfaceModifier(0).getText().equals("public"))
-				modifier = "shared ";
-
-		try {
-			bw.write(modifier + "interface " + ctx.Identifier() + " ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterNormalAnnotation(NormalAnnotationContext ctx) {
-
-	}
-
-	public void enterMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
-		if (ctx.getChildCount() > 1 && !enterfor) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	public void enterMethodReference_lfno_primary(MethodReference_lfno_primaryContext ctx) {
-
-	}
-
-	public void enterMethodReference_lf_primary(MethodReference_lf_primaryContext ctx) {
-
-	}
-
-	public void enterMethodReference(MethodReferenceContext ctx) {
-
-	}
-
-	public void enterMethodName(MethodNameContext ctx) {
-
-	}
-
-	public void enterMethodInvocation_lfno_primary(MethodInvocation_lfno_primaryContext ctx) {
-
-		try {
-			if (!isInstanceOf) {
-				String str = "";
-				boolean isGetter = false;
-
-				for (ParseTree child : ctx.children) {
-					if (child.getText().equals("(")) {
-						break;
-					}
-
-					Matcher matcher = GETTER_PATTERN.matcher(child.getText());
-
-					if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
-						isGetter = true;
-						String property = matcher.group(2);
-						if (property.length() > 1) {
-							property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
-						} else {
-							property = property.toLowerCase();
-						}
-						str += property;
-					} else {
-						str += child.getText();
-					}
-				}
-
-				String str2 = str;
-				String typeName = "";
-
-				if (ctx.typeName() != null) {
-					typeName = ctx.typeName().getText();
-					str2 = str.replace(typeName + ".", "");
-
-					for (String str1 : keywords) {
-						if (str1.equals(typeName)) {
-							typeName = "\\i" + ctx.typeName().getText();
-							str = typeName + "." + str2;
-						}
-						if (str1.equals(str2)) {
-							str = typeName + "." + "\\i" + str2;
-						}
-					}
-				}
-
-				if (!enterfor) {
-					if (str.equals("System.out.println")) {
-						bw.write("print");
-						if (ctx.argumentList() == null)
-							bw.write("(\"\")");
-					} else if (str.equals("System.out.print")) {
-						bw.write("process.write");
-					} else {
-						bw.write(str);
-						if (ctx.argumentList() == null && !isGetter) {
-							bw.write("()");
-						}
-					}
-				} else {
-					forlimit = str + "(";
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-
-	}
-
-	public void enterMethodInvocation_lf_primary(MethodInvocation_lf_primaryContext ctx) {
-
-		try {
-			if (!isInstanceOf) {
-				String str = "";
-
-				for (ParseTree child : ctx.children) {
-					if (child.getText().equals("("))
-						break;
-
-					str += child.getText();
-
-				}
-
-				if (str.equals("System.out.println")) {
-					bw.write("print");
-					if (ctx.argumentList() == null)
-						bw.write("(\"\")");
-				} else if (str.equals("System.out.print")) {
-					bw.write("process.write");
-				} else {
-					bw.write(str);
-					if (ctx.argumentList() == null)
-						bw.write("()");
-				}
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterMethodInvocation(MethodInvocationContext ctx) {
-
-		try {
-			String str = "";
-			boolean isGetter = false;
-
-			for (ParseTree child : ctx.children) {
-				if (child.getText().equals("(")) {
+		if (name != null) {
+			switch (name) {
+				case "System.out.println":
+					name = "print";
 					break;
-				}
+			}
 
-				Matcher matcher = GETTER_PATTERN.matcher(child.getText());
-
-				if (matcher.matches() && ctx.argumentList() == null) {
-					isGetter = true;
+			write(name);
+		} else {
+			if (ctx.typeArguments() != null) {
+				visitTypeArguments(ctx.typeArguments());
+			}
+			if (ctx.Identifier() != null) {
+				Matcher matcher = GETTER_PATTERN.matcher(ctx.Identifier().getText());
+				if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
 					String property = matcher.group(2);
 					if (property.length() > 1) {
 						property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
 					} else {
 						property = property.toLowerCase();
 					}
-					str += property;
+					write(property);
+					return null;
 				} else {
-					str += child.getText();
+					write(ctx.Identifier().getText());
 				}
-			}
-
-			String str2 = str;
-			String typeName = "";
-
-			if (ctx.typeName() != null) {
-				typeName = ctx.typeName().getText();
-				str2 = str.replace(typeName + ".", "");
-
-				for (String str1 : keywords) {
-					if (str1.equals(ctx.typeName().getText())) {
-						typeName = "\\i" + ctx.typeName().getText();
-					}
-					if (str1.equals(str2)) {
-						str = typeName + "." + "\\i" + str2;
-					}
-				}
-			}
-
-			if (str.equals("System.out.println")) {
-				bw.write("print");
-				if (ctx.argumentList() == null)
-					bw.write("(\"\")");
-			} else if (str.equals("System.out.print")) {
-				bw.write("process.write");
-			} else {
-				bw.write(str);
-				if (ctx.argumentList() == null && !isGetter) {
-					bw.write("()");
-				}
-			}
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterMethodHeader(MethodHeaderContext ctx) {
-		try {
-			if (ctx.typeParameters() != null) {
-				String methodDeclarator = ctx.methodDeclarator().getChild(0).getText();
-
-				for (String str : keywords) {
-					if (str.equals(methodDeclarator)) {
-						methodDeclarator = "\\i" + ctx.methodDeclarator().getChild(0).getText();
-					}
-				}
-
-				bw.write(ctx.result().getText() + " " + methodDeclarator);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterMethodDeclaration(MethodDeclarationContext ctx) {
-
-	}
-
-	public void enterMethodBody(MethodBodyContext ctx) {
-
-		if (typeConstraints) {
-			try {
-				bw.write(" given "
-						+ ((MethodDeclarationContext) ctx.getParent()).methodHeader().typeParameters()
-								.typeParameterList().typeParameter(0).getChild(0).getText()
-						+ " satisfies " + ((MethodDeclarationContext) ctx.getParent()).methodHeader().typeParameters()
-								.typeParameterList().typeParameter(0).typeBound().typeVariable().getText());
-				typeConstraints = false;
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 
-		if (ctx.getText().equals(";"))
-			try {
-				bw.write(";\n");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterMarkerAnnotation(MarkerAnnotationContext ctx) {
-
-		try {
-			if (ctx.typeName().getText().equals("Override")) {
-				bw.write("actual ");
-			} else {
-				String typeName = ctx.typeName().getText();
-				typeName = Character.toLowerCase(typeName.charAt(0))
-						+ (typeName.length() > 1 ? typeName.substring(1) : "");
-				bw.write(typeName + " ");
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		write("(");
+		if (ctx.argumentList() != null) {
+			visitArgumentList(ctx.argumentList());
 		}
+		write(")");
+
+		return null;
 	}
 
-	public void enterLocalVariableDeclarationStatement(LocalVariableDeclarationStatementContext ctx) {
+	@Override
+	public Void visitMethodInvocation_lfno_primary(MethodInvocation_lfno_primaryContext ctx) {
+		String prefix = "";
+		String methodName = "";
 
-	}
+		if (ctx.Identifier() != null) {
+			methodName = ctx.Identifier().getText();
+		}
 
-	public void enterLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
-
-		// TODO do this in a much more elegant way
-		if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer() != null)
-			if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
-					.assignmentExpression().conditionalExpression().conditionalOrExpression().conditionalAndExpression()
-					.inclusiveOrExpression().exclusiveOrExpression().andExpression().equalityExpression()
-					.relationalExpression().shiftExpression() != null)
-				if (ctx.variableDeclaratorList().variableDeclarator(0).variableInitializer().expression()
-						.assignmentExpression().conditionalExpression().conditionalOrExpression()
-						.conditionalAndExpression().inclusiveOrExpression().exclusiveOrExpression().andExpression()
-						.equalityExpression().relationalExpression().shiftExpression().additiveExpression()
-						.multiplicativeExpression().unaryExpression().unaryExpressionNotPlusMinus()
-						.castExpression() != null && !isinstanceofForCast) {
-					try {
-						noVariable = true;
-						bw.write("assert(is ");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-	}
-
-	public void enterLiteral(LiteralContext ctx) {
-
-		if (!notEqualNull && !equalsequalsNull)
-			try {
-				if (enterArrayAccessSet) {
-					bw.write(ctx.getText() + ")");
-					enterArrayAccessSet = false;
-				} else if (!enterfor) {
-					bw.write(ctx.getText());
-				}
-				// else {
-				// forinit = ctx.getText();
-				// forlimit = forinit;
-				// }
-			} catch (IOException e) {
-
-				e.printStackTrace();
+		if (ctx.methodName() != null) {
+			methodName = ctx.methodName().getText();
+		} else if (ctx.typeName() != null) {
+			prefix = ctx.typeName().getText() + ".";
+			if (ctx.getChild(2).getText().equals("super")) {
+				prefix += "super.";
 			}
-	}
-
-	public void enterLeftHandSide(LeftHandSideContext ctx) {
-
-		if (enterfor && !enterForUpdate && ctx.arrayAccess() == null)
-			try {
-				bw.write(ctx.getText());
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterLastFormalParameter(LastFormalParameterContext ctx) {
-
-		if (ctx.formalParameter() != null) {
-			lastFormalParameter = ctx.formalParameter().variableDeclaratorId().getText();
+		} else if (ctx.expressionName() != null) {
+			prefix = ctx.expressionName().getText();
 		} else {
-			lastFormalParameter = ctx.variableDeclaratorId().getText();
+			prefix = "super.";
 		}
-	}
 
-	public void enterLambdaParameters(LambdaParametersContext ctx) {
-
-	}
-
-	public void enterLambdaExpression(LambdaExpressionContext ctx) {
-
-	}
-
-	public void enterLambdaBody(LambdaBodyContext ctx) {
-
-	}
-
-	public void enterLabeledStatementNoShortIf(LabeledStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterLabeledStatement(LabeledStatementContext ctx) {
-
-	}
-
-	public void enterInterfaceType_lfno_classOrInterfaceType(InterfaceType_lfno_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterInterfaceType_lf_classOrInterfaceType(InterfaceType_lf_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterInterfaceTypeList(InterfaceTypeListContext ctx) {
-
-		lastInterface = ctx.getChild(ctx.getChildCount() - 1).getText();
-
-	}
-
-	public void enterInterfaceType(InterfaceTypeContext ctx) {
-
-		try {
-			bw.write(ctx.classType().getChild(0).getText());
-			if (ctx.classType().getChildCount() > 1 && ctx.classType().typeArguments() == null) {
-				bw.write(ctx.classType().getChild(1).getText() + ctx.classType().getChild(2).getText());
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
+		if ((prefix + methodName).equals("System.out.println")) {
+			prefix = "";
+			methodName = "print";
 		}
-	}
 
-	public void enterInterfaceModifier(InterfaceModifierContext ctx) {
-
-	}
-
-	public void enterInterfaceMethodModifier(InterfaceMethodModifierContext ctx) {
-
-		if (ctx.getText().equals("public"))
-			try {
-				bw.write("shared ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterInterfaceMethodDeclaration(InterfaceMethodDeclarationContext ctx) {
-
-		if (ctx.methodBody().getText().equals(";")) {
-			try {
-				bw.write("formal ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void enterInterfaceMemberDeclaration(InterfaceMemberDeclarationContext ctx) {
-
-	}
-
-	public void enterInterfaceDeclaration(InterfaceDeclarationContext ctx) {
-
-	}
-
-	public void enterInterfaceBody(InterfaceBodyContext ctx) {
-
-		try {
-			if (typeConstraints) {
-				bw.write(" given "
-						+ ((NormalInterfaceDeclarationContext) ctx.getParent()).typeParameters().typeParameterList()
-								.typeParameter(0).getChild(0).getText()
-						+ " satisfies " + ((NormalInterfaceDeclarationContext) ctx.getParent()).typeParameters()
-								.typeParameterList().typeParameter(0).typeBound().getChild(1).getText());
-			}
-			typeConstraints = false;
-
-			enterInterfaceDeclaration = false;
-			bw.write(ctx.getChild(0).toString() + "\n");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterIntegralType(IntegralTypeContext ctx) {
-
-	}
-
-	public void enterInstanceInitializer(InstanceInitializerContext ctx) {
-
-	}
-
-	public void enterInferredFormalParameterList(InferredFormalParameterListContext ctx) {
-
-	}
-
-	public void enterInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1 && !enterfor) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	public void enterImportDeclaration(ImportDeclarationContext ctx) {
-
-	}
-
-	public void enterIfThenStatement(IfThenStatementContext ctx) {
-
-		try {
-			bw.write(ctx.getChild(0).getText() + ctx.getChild(1).getText());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterIfThenElseStatementNoShortIf(IfThenElseStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterIfThenElseStatement(IfThenElseStatementContext ctx) {
-
-		try {
-			bw.write(ctx.getChild(0).getText() + ctx.getChild(1).getText());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterFormalParameters(FormalParametersContext ctx) {
-
-	}
-
-	public void enterFormalParameterList(FormalParameterListContext ctx) {
-		try {
-			bw.write("(");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterFormalParameter(FormalParameterContext ctx) {
-
-	}
-
-	public void enterForUpdate(ForUpdateContext ctx) {
-
-		try {
-			enterForUpdate = true;
-
-			if (Character.isUpperCase(forlimit.charAt(0))) {
-				forlimit = "\\i" + forlimit;
-			}
-
-			for (String str : keywords) {
-				if (str.equals(forlimit)) {
-					forlimit = "\\i" + forlimit;
-				}
-			}
-
-			if (forConditionOperator.equals("<=") || forConditionOperator.equals(">="))
-				bw.write(".." + forlimit + ")");
-			else if (isNumeric(forlimit)) {
-				if (forCounterDatatype.equals("int"))
-					bw.write(".." + (int) (Double.parseDouble(forlimit) - 1) + ")");
-				else
-					bw.write(".." + (Double.parseDouble(forlimit) - 1) + ")");
-			} else
-				bw.write(".." + forlimit + " - 1)");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterForStatementNoShortIf(ForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterForStatement(ForStatementContext ctx) {
-
-	}
-
-	public void enterForInit(ForInitContext ctx) {
-
-	}
-
-	public void enterFloatingPointType(FloatingPointTypeContext ctx) {
-
-	}
-
-	public void enterFinally_(Finally_Context ctx) {
-
-		try {
-			bw.write("finally ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterFieldModifier(FieldModifierContext ctx) {
-
-		variableModifier = ctx.getText();
-		try {
-			if (!enterfor && !enterresult) {
-				if (variableModifier.equals("public"))
-
-					bw.write("shared ");
-
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterFieldDeclaration(FieldDeclarationContext ctx) {
-
-	}
-
-	public void enterFieldAccess_lfno_primary(FieldAccess_lfno_primaryContext ctx) {
-
-	}
-
-	public void enterFieldAccess_lf_primary(FieldAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void enterFieldAccess(FieldAccessContext ctx) {
-
-		if (ctx.primary().getText().equals("this"))
-			try {
-				String text = ctx.getChild(2).getText();
-
-				if (Character.isUpperCase(text.charAt(0))) {
-					text = "\\i" + text;
-				}
-
-				for (String str : keywords) {
-					if (str.equals(text)) {
-						text = "\\i" + text;
-					}
-				}
-
-				bw.write("this." + text);
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterExtendsInterfaces(ExtendsInterfacesContext ctx) {
-
-		try {
-			bw.write("satisfies ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterExpressionStatement(ExpressionStatementContext ctx) {
-
-	}
-
-	public void enterExpressionName(ExpressionNameContext ctx) {
-
-		try {
-			String expressionName = "";
-			if (Character.isUpperCase(ctx.getText().charAt(0))) {
-				expressionName = "\\i" + ctx.getText();
+		write(prefix);
+		Matcher matcher = GETTER_PATTERN.matcher(methodName);
+		if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
+			String property = matcher.group(2);
+			if (property.length() > 1) {
+				property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
 			} else {
-				expressionName = ctx.getText();
+				property = property.toLowerCase();
 			}
-
-			for (String str : keywords) {
-				if (str.equals(ctx.getText())) {
-					expressionName = "\\i" + ctx.getText();
-				}
+			write(property);
+		} else {
+			write(methodName);
+			write("(");
+			if (ctx.argumentList() != null) {
+				visitArgumentList(ctx.argumentList());
 			}
-
-			if (!(ctx.getParent() instanceof ArrayAccessContext)
-					&& !(ctx.getParent() instanceof ArrayAccess_lfno_primaryContext)) {
-				if (equalsequalsNull) {
-					bw.write("!");
-				}
-
-				// if (enterArrayAccessSet && !enterArrayAccess_lfno_primary) {
-				// bw.write(expressionName + ")");
-				// enterArrayAccessSet = false;
-				// }
-				if (!isInstanceOf)
-					if (!enterfor) {
-						bw.write(expressionName);
-					}
-				// else {
-				// forinit = ctx.getText();
-				// forlimit = forinit;
-				// }
-			}
-		} catch (IOException e) {
-
-			e.printStackTrace();
+			write(")");
 		}
+
+		return null;
 	}
 
-	public void enterExpression(ExpressionContext ctx) {
-		try {
-			if (!isInstanceOf)
-				if (!enterfor) {
-					if (enterEnhancedfor) {
-						bw.write(" in ");
-					}
-				}
-
-		} catch (IOException e) {
-			e.printStackTrace();
+	@Override
+	public Void visitMethodInvocation_lf_primary(MethodInvocation_lf_primaryContext ctx) {
+		write(".");
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
 		}
-	}
-
-	public void enterExplicitConstructorInvocation(ExplicitConstructorInvocationContext ctx) {
-
-	}
-
-	public void enterExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1 && !enterfor) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	public void enterExceptionTypeList(ExceptionTypeListContext ctx) {
-
-	}
-
-	public void enterExceptionType(ExceptionTypeContext ctx) {
-
-	}
-
-	public void enterEqualityExpression(EqualityExpressionContext ctx) {
-		try {
-			if (ctx.getChildCount() > 1) {
-				if (!ctx.getChild(2).getText().equals("null")) {
-					operators.push(ctx.getChild(1).getText());
-				} else {
-					if (!inExpression) {
-						bw.write("exists ");
-					}
-					if (ctx.getChild(1).getText().equals("!="))
-						notEqualNull = true;
-					else if (ctx.getChild(1).getText().equals("=="))
-						equalsequalsNull = true;
-				}
-				if (openParenthesis) {
-					bracketInstance.push(ctx);
-					bw.write("(");
-					openParenthesis = false;
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterEnumDeclaration(EnumDeclarationContext ctx) {
-
-		String modifier = "";
-		enterEnum = true;
-		enumName = ctx.getChild(ctx.getChildCount() - 2).getText();
-
-		if (ctx.classModifier() != null)
-			for (ClassModifierContext c : ctx.classModifier()) {
-				String mod = c.getText();
-				if (mod.equals("public"))
-					modifier = "shared ";
-				else if (mod.equals("abstract"))
-					modifier = "abstract ";
-			}
-
-		try {
-			bw.write(modifier + "class " + enumName);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterEnumConstantName(EnumConstantNameContext ctx) {
-
-	}
-
-	public void enterEnumConstantModifier(EnumConstantModifierContext ctx) {
-
-	}
-
-	public void enterEnumConstantList(EnumConstantListContext ctx) {
-
-	}
-
-	public void enterEnumConstant(EnumConstantContext ctx) {
-		try {
-			if (enumConstructor)
-				bw.write("shared new _" + ctx.getChild(0).getText() + " extends _" + enumName);
-			else
-				bw.write("shared new _" + ctx.getChild(0).getText());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterEnumBodyDeclarations(EnumBodyDeclarationsContext ctx) {
-
-	}
-
-	public void enterEnumBody(EnumBodyContext ctx) {
-		try {
-			if (ctx.enumBodyDeclarations() != null)
-				if (ctx.enumBodyDeclarations().classBodyDeclaration() != null) {
-					for (ClassBodyDeclarationContext c : ctx.enumBodyDeclarations().classBodyDeclaration()) {
-						if (c.constructorDeclaration() != null)
-							enumConstructor = true;
-					}
-				}
-
-			bw.write(" {\n");
-			bw.write("shared actual String string;\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterEnhancedForStatementNoShortIf(EnhancedForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterEnhancedForStatement(EnhancedForStatementContext ctx) {
-
-		try {
-			enterEnhancedfor = true;
-			bw.write("for(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterEmptyStatement(EmptyStatementContext ctx) {
-
-	}
-
-	public void enterElementValuePairList(ElementValuePairListContext ctx) {
-
-	}
-
-	public void enterElementValuePair(ElementValuePairContext ctx) {
-
-	}
-
-	public void enterElementValueList(ElementValueListContext ctx) {
-
-	}
-
-	public void enterElementValueArrayInitializer(ElementValueArrayInitializerContext ctx) {
-
-	}
-
-	public void enterElementValue(ElementValueContext ctx) {
-
-	}
-
-	public void enterDoStatement(DoStatementContext ctx) {
-		try {
-			bw.write("while(true) ");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterDims(DimsContext ctx) {
-
-	}
-
-	public void enterDimExprs(DimExprsContext ctx) {
-
-	}
-
-	public void enterDimExpr(DimExprContext ctx) {
-
-	}
-
-	public void enterDefaultValue(DefaultValueContext ctx) {
-
-	}
-
-	public void enterContinueStatement(ContinueStatementContext ctx) {
-
-	}
-
-	public void enterConstructorModifier(ConstructorModifierContext ctx) {
-		if (ctx.getText().equals("public"))
-			try {
-				bw.write("shared ");
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterConstructorDeclarator(ConstructorDeclaratorContext ctx) {
-		try {
-			if (enterEnum)
-				bw.write("abstract ");
-
-			bw.write("new ");
-
-			if (enterEnum)
-				bw.write("_" + ctx.simpleTypeName().getText());
-			if (ctx.formalParameterList() == null)
-				bw.write("(");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterConstructorDeclaration(ConstructorDeclarationContext ctx) {
-
-	}
-
-	public void enterConstructorBody(ConstructorBodyContext ctx) {
-		try {
-			bw.write("{\n");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void enterConstantModifier(ConstantModifierContext ctx) {
-
-	}
-
-	public void enterConstantExpression(ConstantExpressionContext ctx) {
-
-	}
-
-	public void enterConstantDeclaration(ConstantDeclarationContext ctx) {
-
-	}
-
-	public void enterConditionalOrExpression(ConditionalOrExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	public void enterConditionalExpression(ConditionalExpressionContext ctx) {
-		if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("?")) {
-			try {
-				bw.write("if (");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void enterConditionalAndExpression(ConditionalAndExpressionContext ctx) {
-
-		if (ctx.getChildCount() > 1) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	public void enterCompilationUnit(CompilationUnitContext ctx) {
-
-	}
-
-	public void enterClassType_lfno_classOrInterfaceType(ClassType_lfno_classOrInterfaceTypeContext ctx) {
-		if (!(ctx.getParent().getParent() instanceof ArrayCreationExpressionContext)
-				&& !(ctx.getParent().getParent().getParent() instanceof CastExpressionContext))
-			try {
-				if (enterTypeArgumentsList && !typeConstraints) {
-					bw.write(ctx.getChild(0).getText());
-				}
-
-				if (!(ctx.getParent().getParent().getParent() instanceof InterfaceTypeContext))
-					if (!isInstanceOf && !enterTypeArgumentsList && !enterTypeParametersList && !typeConstraints) {
-						bw.write(ctx.getText());
-					}
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-	}
-
-	public void enterClassType_lf_classOrInterfaceType(ClassType_lf_classOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterClassType(ClassTypeContext ctx) {
-
-	}
-
-	public void enterClassOrInterfaceType(ClassOrInterfaceTypeContext ctx) {
-
-	}
-
-	public void enterClassModifier(ClassModifierContext ctx) {
-
-	}
-
-	public void enterClassMemberDeclaration(ClassMemberDeclarationContext ctx) {
-
-	}
-
-	public void enterClassInstanceCreationExpression_lfno_primary(
-			ClassInstanceCreationExpression_lfno_primaryContext ctx) {
-
-		try {
-			if (ctx.classBody() != null) {
-				if (ctx.argumentList() == null) {
-					bw.write("object satisfies "); // assuming it is an
-													// interface because of no
-													// arguments
-				} else {
-					bw.write("object extends ");
-				}
-			}
-
-			bw.write(ctx.getChild(1).getText());
-
-			if (ctx.typeArgumentsOrDiamond() != null) {
-				enterTypeArgumentsList = true;
-			} else if (ctx.argumentList() != null) {
-				enterArgumentList.push(true);
-			} else if (ctx.classBody() == null) {
-				bw.write("()");
-			}
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterClassInstanceCreationExpression_lf_primary(ClassInstanceCreationExpression_lf_primaryContext ctx) {
-
-	}
-
-	public void enterClassInstanceCreationExpression(ClassInstanceCreationExpressionContext ctx) {
-
-	}
-
-	public void enterClassDeclaration(ClassDeclarationContext ctx) {
-
-	}
-
-	public void enterClassBodyDeclaration(ClassBodyDeclarationContext ctx) {
-
-	}
-
-	public void enterCatches(CatchesContext ctx) {
-
-	}
-
-	public void enterCatchType(CatchTypeContext ctx) {
-
-	}
-
-	public void enterCatchFormalParameter(CatchFormalParameterContext ctx) {
-
-		try {
-			bw.write("(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterCatchClause(CatchClauseContext ctx) {
-
-		try {
-			bw.write("catch ");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterCastExpression(CastExpressionContext ctx) {
-
-	}
-
-	public void enterBreakStatement(BreakStatementContext ctx) {
-
-	}
-
-	public void enterBlockStatements(BlockStatementsContext ctx) {
-
-	}
-
-	public void enterBlockStatement(BlockStatementContext ctx) {
-
-	}
-
-	public void enterBasicForStatementNoShortIf(BasicForStatementNoShortIfContext ctx) {
-
-	}
-
-	public void enterBasicForStatement(BasicForStatementContext ctx) {
-
-		try {
-			enterfor = true;
-			bw.write(ctx.getChild(0).getText() + ctx.getChild(1).getText());
-		} catch (IOException e) {
-			e.getStackTrace();
-		}
-	}
-
-	public void enterAssignmentOperator(AssignmentOperatorContext ctx) {
-
-		try {
-			if (!enterfor && !enterArrayAccessSet)
-				bw.write(ctx.getText());
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterAssignmentExpression(AssignmentExpressionContext ctx) {
-
-	}
-
-	public void enterAssertStatement(AssertStatementContext ctx) {
-
-	}
-
-	public void enterArrayType(ArrayTypeContext ctx) {
-
-	}
-
-	public void enterArrayInitializer(ArrayInitializerContext ctx) {
-
-	}
-
-	public void enterArrayCreationExpression(ArrayCreationExpressionContext ctx) {
-
-		String type = "";
-		if (ctx.primitiveType() != null)
-			type = ctx.primitiveType().getText();
-		else if (ctx.classOrInterfaceType() != null) {
-			type = ctx.classOrInterfaceType().getText();
-		}
-		String ceylonType = "";
-		try {
-			if (type.equals("int")) {
-				ceylonType = "IntArray";
-			} else if (type.equals("short")) {
-				ceylonType = "ShortArray";
-			} else if (type.equals("boolean")) {
-				ceylonType = "BooleanArray ";
-			} else if (type.equals("byte")) {
-				ceylonType = "ByteArray";
-			} else if (type.equals("long")) {
-				ceylonType = "LongArray";
-			} else if (type.equals("float")) {
-				ceylonType = "FloatArray";
-			} else if (type.equals("double")) {
-				ceylonType = "DoubleArray";
-			} else if (type.equals("char")) {
-				ceylonType = "CharArray";
+		Matcher matcher = GETTER_PATTERN.matcher(ctx.Identifier().getText());
+		if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
+			String property = matcher.group(2);
+			if (property.length() > 1) {
+				property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
 			} else {
-				ceylonType = "ObjectArray<" + type + ">";
+				property = property.toLowerCase();
+			}
+			write(RESERVED_KEYWORDS.contains(property) ? "\\i" + property : property);
+		} else {
+			write(ctx.Identifier().getText());
+			write("(");
+			if (ctx.argumentList() != null) {
+				visitArgumentList(ctx.argumentList());
+			}
+			write(")");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitLiteral(LiteralContext ctx) {
+		write(ctx.getText());
+		return super.visitLiteral(ctx);
+	}
+
+	@Override
+	public Void visitReturnStatement(ReturnStatementContext ctx) {
+		write("return ");
+		if (ctx.expression() != null) {
+			visitExpression(ctx.expression());
+		}
+		write(";\n");
+		return null;
+	}
+
+	@Override
+	public Void visitExpressionStatement(ExpressionStatementContext ctx) {
+		super.visitExpressionStatement(ctx);
+		write(";\n");
+		return null;
+	}
+
+	@Override
+	public Void visitAssignment(AssignmentContext ctx) {
+		ArrayAccessContext array = ctx.leftHandSide().arrayAccess();
+
+		// Bypass array assignment to replace it with a.set(b, c)
+		if (array != null) {
+			if (array.expressionName() != null) {
+				visitExpressionName(array.expressionName());
+			} else {
+				visitPrimaryNoNewArray_lfno_arrayAccess(array.primaryNoNewArray_lfno_arrayAccess());
+			}
+			write(".set(");
+			visitExpression(array.expression().get(0));
+			write(", ");
+			visitExpression(ctx.expression());
+			write(")");
+		} else {
+			super.visitAssignment(ctx);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitArrayAccess_lfno_primary(ArrayAccess_lfno_primaryContext ctx) {
+		// Bypass array access to replace it with a.get(b)
+		if (ctx.expressionName() != null) {
+			visitExpressionName(ctx.expressionName());
+		} else {
+			visitPrimaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary(
+					ctx.primaryNoNewArray_lfno_primary_lfno_arrayAccess_lfno_primary());
+		}
+		write(".get(");
+		visitExpression(ctx.expression().get(0));
+		write(")");
+		return null;
+	}
+
+	@Override
+	public Void visitAssignmentOperator(AssignmentOperatorContext ctx) {
+		write(" ");
+		write(ctx.getText());
+		write(" ");
+		return null;
+	}
+
+	@Override
+	public Void visitUnannArrayType(UnannArrayTypeContext ctx) {
+		if (ctx.unannPrimitiveType() != null) {
+			String ceylonType;
+			String type = ctx.unannPrimitiveType().getText();
+			switch (type) {
+				case "int":
+					ceylonType = "IntArray";
+					break;
+				case "short":
+					ceylonType = "ShortArray";
+					break;
+				case "boolean":
+					ceylonType = "BooleanArray";
+					break;
+				case "byte":
+					ceylonType = "ByteArray";
+					break;
+				case "long":
+					ceylonType = "LongArray";
+					break;
+				case "float":
+					ceylonType = "FloatArray";
+					break;
+				case "double":
+					ceylonType = "DoubleArray";
+					break;
+				case "char":
+					ceylonType = "CharArray";
+					break;
+				default:
+					ceylonType = "ObjectArray<" + type + ">";
+					break;
+			}
+			write(ceylonType);
+		} else if (ctx.unannTypeVariable() != null) {
+			write("ObjectArray<" + ctx.unannTypeVariable().Identifier().getText() + ">");
+		} else {
+			write("ObjectArray<");
+			visitUnannClassOrInterfaceType(ctx.unannClassOrInterfaceType());
+			write(">");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitArrayCreationExpression(ArrayCreationExpressionContext ctx) {
+		if (ctx.primitiveType() != null) {
+			String ceylonType;
+			String type = ctx.primitiveType().getText();
+			switch (type) {
+				case "int":
+					ceylonType = "IntArray";
+					break;
+				case "short":
+					ceylonType = "ShortArray";
+					break;
+				case "boolean":
+					ceylonType = "BooleanArray";
+					break;
+				case "byte":
+					ceylonType = "ByteArray";
+					break;
+				case "long":
+					ceylonType = "LongArray";
+					break;
+				case "float":
+					ceylonType = "FloatArray";
+					break;
+				case "double":
+					ceylonType = "DoubleArray";
+					break;
+				case "char":
+					ceylonType = "CharArray";
+					break;
+				default:
+					ceylonType = "ObjectArray<" + type + ">";
+					break;
+			}
+			write(ceylonType);
+		} else {
+			write("ObjectArray<");
+			visitClassOrInterfaceType(ctx.classOrInterfaceType());
+			write(">");
+		}
+		write("(");
+		if (ctx.dimExprs() != null) {
+			visitDimExprs(ctx.dimExprs());
+		} else {
+			visitDims(ctx.dims());
+		}
+		write(")");
+
+		return null;
+	}
+
+	@Override
+	public Void visitLocalVariableDeclarationStatement(LocalVariableDeclarationStatementContext ctx) {
+		for (VariableDeclaratorContext var : ctx.localVariableDeclaration().variableDeclaratorList().variableDeclarator()) {
+			boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
+
+			if (shouldUseAssert) {
+				write("assert(is ");
+			} else if (useVariable) {
+				write("variable ");
+			}
+			visitUnannType(ctx.localVariableDeclaration().unannType());
+			write(" ");
+			write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+			if (var.variableInitializer() != null) {
+				write(" = ");
+				visitVariableInitializer(var.variableInitializer());
+			}
+			if (shouldUseAssert) {
+				write(")");
+			}
+			write(";\n");
+		}
+
+		return null;
+	}
+
+    @Override
+    public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
+        for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
+            if (useVariable) {
+                write("variable ");
+            }
+            visitUnannType(ctx.unannType());
+            write(" ");
+            write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+            if (var.variableInitializer() != null) {
+                write(" = ");
+                visitVariableInitializer(var.variableInitializer());
+            }
+            write(";\n");
+        }
+
+        return null;
+    }
+
+	@Override
+	public Void visitClassInstanceCreationExpression_lfno_primary(ClassInstanceCreationExpression_lfno_primaryContext ctx) {
+		boolean isObjectSatisfying = false;
+		if (ctx.classBody() != null) {
+			if (ctx.argumentList() == null) {
+				isObjectSatisfying = true;
+				write("object satisfies ");
+			} else {
+				write("object extends ");
+			}
+		}
+		write(ctx.Identifier().get(0).getText());
+		// TODO other identifiers
+		if (ctx.typeArgumentsOrDiamond() != null) {
+			visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond());
+		}
+		if (!isObjectSatisfying) {
+			write("(");
+		}
+		if (ctx.argumentList() != null) {
+			visitArgumentList(ctx.argumentList());
+		}
+		if (!isObjectSatisfying) {
+			write(")");
+		}
+
+		if (ctx.classBody() != null) {
+			visitClassBody(ctx.classBody());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitConditionalExpression(ConditionalExpressionContext ctx) {
+		if (isTernaryOperator(ctx)) {
+			// ternary operator
+			write("if (");
+			visitConditionalOrExpression(ctx.conditionalOrExpression());
+			write(") then ");
+			visitExpression(ctx.expression());
+			write(" else ");
+			visitConditionalExpression(ctx.conditionalExpression());
+		} else {
+			super.visitConditionalExpression(ctx);
+		}
+
+		return null;
+	}
+
+	@Override
+	public Void visitExpressionName(ExpressionNameContext ctx) {
+		write(ctx.getText());
+		return null;
+	}
+
+	@Override
+	public Void visitArgumentList(ArgumentListContext ctx) {
+		for (int i = 0; i < ctx.getChildCount(); i++) {
+			if (!(ctx.getChild(i) instanceof ExpressionContext)) {
+				continue;
+			}
+			if (i > 0) {
+				write(", ");
+			}
+			visitExpression((ExpressionContext) ctx.getChild(i));
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitIfThenStatement(IfThenStatementContext ctx) {
+		write("if (");
+		visitExpression(ctx.expression());
+		write(") ");
+
+		if (!isBlock(ctx.statement())) {
+			write("{\n");
+		}
+		visitStatement(ctx.statement());
+		if (!isBlock(ctx.statement())) {
+			write("}\n");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitIfThenElseStatement(IfThenElseStatementContext ctx) {
+		write("if (");
+		visitExpression(ctx.expression());
+		write(") ");
+
+		if (!isBlock(ctx.statementNoShortIf())) {
+			write("{\n");
+		}
+		visitStatementNoShortIf(ctx.statementNoShortIf());
+		if (!isBlock(ctx.statementNoShortIf())) {
+			write("}\n");
+		}
+
+		write("else ");
+		if (!isBlock(ctx.statement()) && !isIf(ctx.statement())) {
+			write("{\n");
+		}
+		visitStatement(ctx.statement());
+		if (!isBlock(ctx.statement()) && !isIf(ctx.statement())) {
+			write("}\n");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitBasicForStatement(BasicForStatementContext ctx) {
+		// TODO can we detect for(i = 0; i < n; i++) and transform it to for (i in 0..n) ??
+		if (ctx.forInit() != null) {
+			visitForInit(ctx.forInit());
+		}
+		write("while(");
+		if (ctx.expression() != null) {
+			visitExpression(ctx.expression());
+		} else {
+			write("true");
+		}
+		write(") ");
+		if (!isBlock(ctx.statement())) {
+			write("{\n");
+		}
+		visitStatement(ctx.statement());
+		if (ctx.forUpdate() != null) {
+			visitForUpdate(ctx.forUpdate());
+			write(";\n");
+		}
+		write("}\n");
+		return null;
+	}
+
+	@Override
+	public Void visitEnhancedForStatement(EnhancedForStatementContext ctx) {
+		write("for (");
+		visitUnannType(ctx.unannType());
+		write(" ");
+		write(ctx.variableDeclaratorId().getText());
+		write(" in ");
+		visitExpression(ctx.expression());
+		write(") ");
+
+		if (!isBlock(ctx.statement())) {
+			write("{\n");
+		}
+		visitStatement(ctx.statement());
+		if (!isBlock(ctx.statement())) {
+			write("}\n");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitSwitchStatement(SwitchStatementContext ctx) {
+		write("switch (");
+		visitExpression(ctx.expression());
+		write(")\n");
+		return visitSwitchBlock(ctx.switchBlock());
+	}
+
+	@Override
+	public Void visitSwitchBlock(SwitchBlockContext ctx) {
+		boolean hasElse = false;
+		for (SwitchBlockStatementGroupContext group : ctx.switchBlockStatementGroup()) {
+			// TODO transform `case a: case b:` to `case (a|b)`
+			SwitchLabelContext label = group.switchLabels().switchLabel(0);
+			if (label.getChild(0).getText().equals("case")) {
+				write("case (");
+				if (label.constantExpression() != null) {
+					visitConstantExpression(label.constantExpression());
+				} else {
+					visitEnumConstantName(label.enumConstantName());
+				}
+				write(") {\n");
+			} else {
+				hasElse = true;
+				write("else {\n");
+			}
+			visitBlockStatements(group.blockStatements());
+			write("}\n");
+		}
+
+		if (!hasElse) {
+			write("else {}\n");
+		}
+		// TODO is it really necessary to loop over switchLabel*, since those are "empty" cases?
+		return null;
+	}
+
+	@Override
+	public Void visitBlock(BlockContext ctx) {
+		write("{\n");
+		super.visitBlock(ctx);
+		if (!isBlockInDoWhile(ctx)) {
+			write("}\n");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitDoStatement(DoStatementContext ctx) {
+		write("while (true) ");
+		if (!isBlock(ctx.statement())) {
+			write("{\n");
+		}
+		visitStatement(ctx.statement());
+		write("if (");
+		visitExpression(ctx.expression());
+		write(") {break;}\n");
+		write("}\n");
+		return null;
+	}
+
+	@Override
+	public Void visitPrimaryNoNewArray(PrimaryNoNewArrayContext ctx) {
+		switch (ctx.getChild(0).getText()) {
+			case "this":
+				write("this");
+				break;
+			case "(":
+				write("(");
+				visitExpression(ctx.expression());
+				write(")");
+				break;
+			default:
+				super.visitPrimaryNoNewArray(ctx);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
+		switch (ctx.getChild(0).getText()) {
+			case "this":
+				write("this");
+				break;
+			case "(":
+				write("(");
+				visitExpression(ctx.expression());
+				write(")");
+				break;
+			default:
+				super.visitPrimaryNoNewArray_lfno_primary(ctx);
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitConditionalOrExpression(ConditionalOrExpressionContext ctx) {
+		if (ctx.conditionalOrExpression() != null) {
+			visitConditionalOrExpression(ctx.conditionalOrExpression());
+			write(" || ");
+		}
+		return visitConditionalAndExpression(ctx.conditionalAndExpression());
+	}
+
+	@Override
+	public Void visitConditionalAndExpression(ConditionalAndExpressionContext ctx) {
+		if (ctx.conditionalAndExpression() != null) {
+			visitConditionalAndExpression(ctx.conditionalAndExpression());
+
+			if (isInIfCondition(ctx)) {
+				write(", ");
+			} else {
+				write(" && ");
+			}
+		}
+		return visitInclusiveOrExpression(ctx.inclusiveOrExpression());
+	}
+
+	@Override
+	public Void visitInclusiveOrExpression(InclusiveOrExpressionContext ctx) {
+		if (ctx.inclusiveOrExpression() != null) {
+			visitInclusiveOrExpression(ctx.inclusiveOrExpression());
+			write(" | ");
+		}
+		return visitExclusiveOrExpression(ctx.exclusiveOrExpression());
+	}
+
+	@Override
+	public Void visitExclusiveOrExpression(ExclusiveOrExpressionContext ctx) {
+		if (ctx.exclusiveOrExpression() != null) {
+			visitExclusiveOrExpression(ctx.exclusiveOrExpression());
+			write(" ^ ");
+		}
+		return visitAndExpression(ctx.andExpression());
+	}
+
+	@Override
+	public Void visitAndExpression(AndExpressionContext ctx) {
+		if (ctx.andExpression() != null) {
+			visitAndExpression(ctx.andExpression());
+			write(" & ");
+		}
+		return visitEqualityExpression(ctx.equalityExpression());
+	}
+
+	@Override
+	public Void visitEqualityExpression(EqualityExpressionContext ctx) {
+		if (ctx.equalityExpression() != null) {
+			String operator = ctx.getChild(1).getText();
+
+			if (ctx.relationalExpression().getText().equals("null")) {
+				if (operator.equals("==")) {
+					write("!");
+				}
+				write("exists ");
+                // We need to assign things like `exists a.b.c`
+                if (!ctx.equalityExpression().getText().matches("\\w+")) {
+                    write(ctx.equalityExpression().getText().substring(0, 1).toLowerCase());
+                    write(" = ");
+                }
+                visitEqualityExpression(ctx.equalityExpression());
+				return null;
+			} else {
+				visitEqualityExpression(ctx.equalityExpression());
+				write(" " + operator + " ");
+			}
+		}
+
+		return visitRelationalExpression(ctx.relationalExpression());
+	}
+
+	@Override
+	public Void visitRelationalExpression(RelationalExpressionContext ctx) {
+		if (ctx.relationalExpression() != null) {
+			if (ctx.getChild(1).getText().equals("instanceof") && isInIfCondition(ctx)) {
+				write("is ");
+				visitReferenceType(ctx.referenceType());
+				write(" ");
+				visitRelationalExpression(ctx.relationalExpression());
+				return null;
 			}
 
-			bw.write(ceylonType + "(");
-		} catch (IOException e) {
-			e.printStackTrace();
+			visitRelationalExpression(ctx.relationalExpression());
+			write(" ");
+			write(ctx.getChild(1).getText().replace("instanceof", "is"));
+			write(" ");
+		}
+
+		if (ctx.shiftExpression() != null) {
+			visitShiftExpression(ctx.shiftExpression());
+		} else {
+			visitReferenceType(ctx.referenceType());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitShiftExpression(ShiftExpressionContext ctx) {
+		if (ctx.shiftExpression() != null) {
+			visitShiftExpression(ctx.shiftExpression());
+			write(" << ");
+		}
+		return visitAdditiveExpression(ctx.additiveExpression());
+	}
+
+	@Override
+	public Void visitAdditiveExpression(AdditiveExpressionContext ctx) {
+		if (ctx.additiveExpression() != null) {
+			visitAdditiveExpression(ctx.additiveExpression());
+			write(" " + ctx.getChild(1).getText() + " ");
+		}
+		return visitMultiplicativeExpression(ctx.multiplicativeExpression());
+	}
+
+	@Override
+	public Void visitMultiplicativeExpression(MultiplicativeExpressionContext ctx) {
+		if (ctx.multiplicativeExpression() != null) {
+			visitMultiplicativeExpression(ctx.multiplicativeExpression());
+			write(" " + ctx.getChild(1).getText() + " ");
+		}
+		return visitUnaryExpression(ctx.unaryExpression());
+	}
+
+	@Override
+	public Void visitUnaryExpression(UnaryExpressionContext ctx) {
+		String op = ctx.getChild(0).getText();
+		if (op.equals("+") || op.equals("-")) {
+			write(op);
+			return visitUnaryExpression(ctx.unaryExpression());
+		} else {
+			return super.visitUnaryExpression(ctx);
 		}
 	}
 
-	public void enterArrayAccess_lfno_primary(ArrayAccess_lfno_primaryContext ctx) {
+	@Override
+	public Void visitPreIncrementExpression(PreIncrementExpressionContext ctx) {
+		write("++");
+		return super.visitPreIncrementExpression(ctx);
+	}
 
-		try {
-			enterArrayAccess_lfno_primary = true;
+	@Override
+	public Void visitPreDecrementExpression(PreDecrementExpressionContext ctx) {
+		write("--");
+		return super.visitPreDecrementExpression(ctx);
+	}
 
-			if (equalsequalsNull) {
-				bw.write("!");
+	@Override
+	public Void visitPostIncrementExpression(PostIncrementExpressionContext ctx) {
+		super.visitPostIncrementExpression(ctx);
+		write("++");
+		return null;
+	}
+
+	@Override
+	public Void visitPostIncrementExpression_lf_postfixExpression(PostIncrementExpression_lf_postfixExpressionContext ctx) {
+		super.visitPostIncrementExpression_lf_postfixExpression(ctx);
+		write("++");
+		return null;
+	}
+
+	@Override
+	public Void visitPostDecrementExpression(PostDecrementExpressionContext ctx) {
+		super.visitPostDecrementExpression(ctx);
+		write("--");
+		return null;
+	}
+
+	@Override
+	public Void visitPostDecrementExpression_lf_postfixExpression(PostDecrementExpression_lf_postfixExpressionContext ctx) {
+		super.visitPostDecrementExpression_lf_postfixExpression(ctx);
+		write("--");
+		return null;
+	}
+
+	@Override
+	public Void visitUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
+		if (ctx.getChild(0).getText().equals("!")) {
+			write("!");
+		}
+		return super.visitUnaryExpressionNotPlusMinus(ctx);
+	}
+
+	@Override
+	public Void visitCastExpression(CastExpressionContext ctx) {
+		if (ctx.unaryExpression() != null) {
+			visitUnaryExpression(ctx.unaryExpression());
+		}
+		if (ctx.unaryExpressionNotPlusMinus() != null) {
+			visitUnaryExpressionNotPlusMinus(ctx.unaryExpressionNotPlusMinus());
+		}
+		if (ctx.lambdaExpression() != null) {
+			visitLambdaExpression(ctx.lambdaExpression());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitEnumDeclaration(EnumDeclarationContext ctx) {
+		if (hasModifier(ctx.classModifier(), "public")) {
+			write("shared ");
+		}
+		write("class ");
+		write(ctx.Identifier().getText());
+		if (ctx.superinterfaces() != null) {
+			visitSuperinterfaces(ctx.superinterfaces());
+		}
+		return visitEnumBody(ctx.enumBody());
+	}
+
+	@Override
+	public Void visitEnumBody(EnumBodyContext ctx) {
+		write(" {\n");
+		write("shared actual String string;\n");
+        if (ctx.enumBodyDeclarations() != null) {
+            for (ClassBodyDeclarationContext classBody : ctx.enumBodyDeclarations().classBodyDeclaration()) {
+                if (classBody.constructorDeclaration() != null) {
+                    // Special case, we need to add an extra "String string" parameter
+                    visitEnumConstructorDeclaration(classBody.constructorDeclaration());
+                } else {
+                    visitClassBodyDeclaration(classBody);
+                }
+            }
+        }
+        if (ctx.enumConstantList() != null) {
+			visitEnumConstantList(ctx.enumConstantList());
+		}
+		write("}\n");
+		return null;
+	}
+
+    private void visitEnumConstructorDeclaration(ConstructorDeclarationContext ctx) {
+        write("abstract new _");
+        write(ctx.constructorDeclarator().simpleTypeName().getText());
+        write("(String string, ");
+        if (ctx.constructorDeclarator().formalParameterList() != null) {
+            visitFormalParameterList(ctx.constructorDeclarator().formalParameterList());
+        }
+        write(")");
+
+        write(" {\n");
+        write("this.string = string;\n");
+        super.visitConstructorBody(ctx.constructorBody());
+        write("}\n\n");
+    }
+
+    @Override
+	public Void visitEnumConstant(EnumConstantContext ctx) {
+		write("shared new _");
+		write(ctx.Identifier().getText());
+        if (ctx.argumentList() == null) {
+            write(" { string = \"");
+            write(ctx.Identifier().getText());
+            write("\"; }\n");
+        } else {
+            write(" extends _");
+            write(((EnumDeclarationContext) ctx.getParent().getParent().getParent()).Identifier().getText());
+            write("(\"");
+            write(ctx.Identifier().getText());
+			write("\", ");
+			visitArgumentList(ctx.argumentList());
+			write(") { }\n");
+        }
+		return null;
+	}
+
+	@Override
+	public Void visitFieldDeclaration(FieldDeclarationContext ctx) {
+		for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
+	        if (hasModifier(ctx.fieldModifier(), "public")) {
+	            write("shared ");
+	        }
+			if (useVariable) {
+				write("variable ");
 			}
-
-			bw.write(ctx.expressionName().getText() + ".get(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterArrayAccess_lf_primary(ArrayAccess_lf_primaryContext ctx) {
-
-	}
-
-	public void enterArrayAccess(ArrayAccessContext ctx) {
-
-		try {
-			enterArrayAccess = true;
-			if (ctx.expressionName() != null)
-				bw.write(ctx.expressionName().getText() + ".set(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-
-	public void enterArgumentList(ArgumentListContext ctx) {
-
-		enterArgumentList.push(true);
-		try {
-			bw.write("(");
-		} catch (IOException e) {
-
-			e.printStackTrace();
+			visitUnannType(ctx.unannType());
+			write(" ");
+			write(var.variableDeclaratorId().getText()); // TODO escape uppercase, keywords etc
+			if (var.variableInitializer() != null) {
+				write(" = ");
+				visitVariableInitializer(var.variableInitializer());
+			}
+			write(";\n");
 		}
 
-		lastActualParameter = ctx.getChild(ctx.getChildCount() - 1).getText();
+		return null;
 	}
 
-	public void enterAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclarationContext ctx) {
+	@Override
+	public Void visitFieldAccess(FieldAccessContext ctx) {
+		visitPrimary(ctx.primary());
+		write(".");
+		write(ctx.Identifier().getText());
+		return null;
+	}
+
+	@Override
+	public Void visitTryStatement(TryStatementContext ctx) {
+		if (ctx.tryWithResourcesStatement() == null) {
+			write("try ");
+		}
+		return super.visitTryStatement(ctx);
+	}
+
+	@Override
+	public Void visitCatchClause(CatchClauseContext ctx) {
+		write("catch (");
+		visitCatchFormalParameter(ctx.catchFormalParameter());
+		write(") ");
+		return visitBlock(ctx.block());
+	}
+
+	@Override
+	public Void visitTryWithResourcesStatement(TryWithResourcesStatementContext ctx) {
+		write("try ");
+		return super.visitTryWithResourcesStatement(ctx);
+	}
+
+	@Override
+	public Void visitResourceSpecification(ResourceSpecificationContext ctx) {
+		write("(");
+		visitResourceList(ctx.resourceList());
+		write(") ");
+		return null;
+	}
+
+	@Override
+	public Void visitUnannClassType(UnannClassTypeContext ctx) {
+		if (ctx.unannClassOrInterfaceType() != null) {
+			visitUnannClassOrInterfaceType(ctx.unannClassOrInterfaceType());
+			write(".");
+			write(ctx.Identifier().getText());
+		} else {
+			write(ctx.Identifier().getText());
+		}
+		if (ctx.typeArguments() != null) {
+			visitTypeArguments(ctx.typeArguments());
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitResourceList(ResourceListContext ctx) {
+		int i = 0;
+		for (ResourceContext resource : ctx.resource()) {
+			if (i > 0) {
+				write("; ");
+			}
+			visitResource(resource);
+			i++;
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitResource(ResourceContext ctx) {
+		visitUnannType(ctx.unannType());
+		write(" ");
+		visitVariableDeclaratorId(ctx.variableDeclaratorId());
+		write(" = ");
+		return visitExpression(ctx.expression());
+	}
+
+	@Override
+	public Void visitCatchType(CatchTypeContext ctx) {
+		super.visitCatchType(ctx);
+		write(" ");
+		return null;
+	}
+
+	@Override
+	public Void visitVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
+		write(ctx.Identifier().getText());
+		return null;
+	}
+
+	@Override
+	public Void visitFinally_(Finally_Context ctx) {
+		write("finally ");
+		return super.visitFinally_(ctx);
+	}
+
+	@Override
+	public Void visitWhileStatement(WhileStatementContext ctx) {
+		write("while (");
+		visitExpression(ctx.expression());
+		write(") ");
+		if (ctx.statement().statementWithoutTrailingSubstatement() != null
+				&& ctx.statement().statementWithoutTrailingSubstatement().block() != null) {
+			visitStatement(ctx.statement());
+		} else {
+			write("{\n");
+			visitStatement(ctx.statement());
+			write("}\n");
+		}
+		return null;
+	}
+
+	@Override
+	public Void visitWhileStatementNoShortIf(WhileStatementNoShortIfContext ctx) {
+		write("while (");
+		visitExpression(ctx.expression());
+		write(") ");
+		if (ctx.statementNoShortIf().statementWithoutTrailingSubstatement() != null
+				&& ctx.statementNoShortIf().statementWithoutTrailingSubstatement().block() != null) {
+			visitStatementNoShortIf(ctx.statementNoShortIf());
+		} else {
+			write("{\n");
+			visitStatementNoShortIf(ctx.statementNoShortIf());
+			write("}\n");
+		}
+		return null;
+	}
+
+    @Override
+    public Void visitBreakStatement(BreakStatementContext ctx) {
+        if (parent(ctx, 6) instanceof SwitchBlockContext) {
+            return null;
+        }
+        write("break;\n");
+        return null;
+    }
+
+    @Override
+    public Void visitContinueStatement(ContinueStatementContext ctx) {
+        write("continue;\n");
+        return null;
+    }
+
+    private boolean isBlock(StatementContext ctx) {
+		return ctx.statementWithoutTrailingSubstatement() != null
+				&& ctx.statementWithoutTrailingSubstatement().block() != null;
+	}
+
+	private boolean isIf(StatementContext ctx) {
+		return ctx.ifThenStatement() != null || ctx.ifThenElseStatement() != null;
+	}
+
+	private boolean isBlock(StatementNoShortIfContext ctx) {
+		return ctx.statementWithoutTrailingSubstatement() != null
+				&& ctx.statementWithoutTrailingSubstatement().block() != null;
+	}
+
+	private boolean isBlockInDoWhile(BlockContext block) {
+		return block.getParent() instanceof StatementWithoutTrailingSubstatementContext
+				&& block.getParent().getParent() instanceof StatementContext
+				&& (block.getParent().getParent().getParent() instanceof DoStatementContext
+				|| block.getParent().getParent().getParent() instanceof BasicForStatementContext);
+	}
+
+	private boolean isInIfCondition(ConditionalAndExpressionContext ctx) {
+		while (ctx.getParent() instanceof ConditionalAndExpressionContext) {
+			ctx = (ConditionalAndExpressionContext) ctx.getParent();
+		}
+		return parent(ctx, 1) instanceof ConditionalOrExpressionContext
+				&& parent(ctx, 2) instanceof ConditionalExpressionContext
+				&& isInIfCondition((ConditionalExpressionContext) parent(ctx, 2));
 
 	}
 
-	public void enterAnnotationTypeElementModifier(AnnotationTypeElementModifierContext ctx) {
+	private boolean isInIfCondition(ConditionalExpressionContext ctx) {
+		if (parent(ctx, 1) instanceof AssignmentExpressionContext
+				&& parent(ctx, 2) instanceof ExpressionContext) {
 
+			ParserRuleContext candidate = parent(ctx, 3);
+			return candidate instanceof IfThenElseStatementContext
+					|| candidate instanceof IfThenStatementContext
+					|| candidate instanceof IfThenElseStatementNoShortIfContext;
+		}
+		return false;
 	}
 
-	public void enterAnnotationTypeElementDeclaration(AnnotationTypeElementDeclarationContext ctx) {
+	private boolean isInIfCondition(RelationalExpressionContext ctx) {
+		if (ctx.getParent() instanceof EqualityExpressionContext
+				&& parent(ctx, 2) instanceof AndExpressionContext
+				&& parent(ctx, 3) instanceof ExclusiveOrExpressionContext
+				&& parent(ctx, 4) instanceof InclusiveOrExpressionContext
+				&& parent(ctx, 5) instanceof ConditionalAndExpressionContext
+				&& parent(ctx, 6) instanceof ConditionalOrExpressionContext
+				&& parent(ctx, 7) instanceof ConditionalExpressionContext) {
 
+			ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(ctx, 7);
+
+			if (isTernaryOperator(condExpr)) {
+				return true;
+			} else {
+				return isInIfCondition(condExpr);
+			}
+		}
+		return false;
 	}
 
-	public void enterAnnotationTypeDeclaration(AnnotationTypeDeclarationContext ctx) {
-
+	private boolean isTernaryOperator(ConditionalExpressionContext ctx) {
+		return ctx.getChildCount() > 1;
 	}
 
-	public void enterAnnotationTypeBody(AnnotationTypeBodyContext ctx) {
+	private ParserRuleContext parent(ParserRuleContext ctx, int level) {
+		for (int i = 0; i < level; i++) {
+			if (ctx != null) {
+				ctx = ctx.getParent();
+			}
+		}
 
+		return ctx;
 	}
 
-	public void enterAnnotation(AnnotationContext ctx) {
+	private boolean isCastOutsideOfInstanceof(LocalVariableDeclarationContext ctx, VariableDeclaratorContext var) {
+		// checks if this involves a cast
+		if (getInnerChild(var.variableInitializer(),
+				ExpressionContext.class,
+				AssignmentExpressionContext.class,
+				ConditionalExpressionContext.class,
+				ConditionalOrExpressionContext.class,
+				ConditionalAndExpressionContext.class,
+				InclusiveOrExpressionContext.class,
+				ExclusiveOrExpressionContext.class,
+				AndExpressionContext.class,
+				EqualityExpressionContext.class,
+				RelationalExpressionContext.class,
+				ShiftExpressionContext.class,
+				AdditiveExpressionContext.class,
+				MultiplicativeExpressionContext.class,
+				UnaryExpressionContext.class,
+				UnaryExpressionNotPlusMinusContext.class,
+				CastExpressionContext.class) == null) {
+			return false;
+		}
+		// checks if the variable declaration is located inside an if
+		if (hasParents(ctx,
+				LocalVariableDeclarationStatementContext.class,
+				BlockStatementContext.class,
+				BlockStatementsContext.class,
+				BlockContext.class,
+				StatementWithoutTrailingSubstatementContext.class)) {
 
+			StatementWithoutTrailingSubstatementContext st = (StatementWithoutTrailingSubstatementContext) parent(ctx, 5);
+
+			if (hasParents(st, StatementNoShortIfContext.class, IfThenElseStatementContext.class)) {
+				// checks if the condition involves an instanceof
+				return !isInstanceofCondition(((IfThenElseStatementContext) st.getParent().getParent()).expression(), var.variableDeclaratorId().getText());
+			} else if (hasParents(st, StatementContext.class, IfThenStatementContext.class)) {
+				// checks if the condition involves an instanceof
+				return !isInstanceofCondition(((IfThenStatementContext) st.getParent().getParent()).expression(), ""/* TODO extract casted identifier */);
+			}
+		}
+		return true;
 	}
 
-	public void enterAndExpression(AndExpressionContext ctx) {
+	private boolean isInstanceofCondition(ExpressionContext expr, String identifier) {
+		RelationalExpressionContext child = (RelationalExpressionContext) getInnerChild(expr,
+				AssignmentExpressionContext.class,
+				ConditionalExpressionContext.class,
+				ConditionalOrExpressionContext.class,
+				ConditionalAndExpressionContext.class,
+				InclusiveOrExpressionContext.class,
+				ExclusiveOrExpressionContext.class,
+				AndExpressionContext.class,
+				EqualityExpressionContext.class,
+				RelationalExpressionContext.class);
 
-		if (ctx.getChildCount() > 1) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
+		if (child == null) {
+			return false;
+		}
 
-					e.printStackTrace();
+		if (child.getChildCount() > 1 && child.getChild(1).getText().equals("instanceof")) {
+			return true; // TODO compare identifiers
+		}
+
+		return false;
+	}
+
+	private boolean hasParents(ParserRuleContext ctx, Class<?>... parents) {
+		if (parents != null) {
+			ParserRuleContext parent = ctx;
+
+			for (Class<?> p : parents) {
+				parent = parent.getParent();
+				if (!p.isAssignableFrom(parent.getClass())) {
+					return false;
 				}
 			}
 		}
+
+		return true;
 	}
 
-	public void enterAmbiguousName(AmbiguousNameContext ctx) {
+	private ParseTree getInnerChild(ParserRuleContext ctx, Class<?>... children) {
+		if (children != null) {
+			ParseTree rule = ctx;
 
-	}
+			for (Class<?> p : children) {
+				boolean foundChild = false;
+				for (int i = 0; i < rule.getChildCount(); i++) {
+					ParseTree child = rule.getChild(i);
 
-	public void enterAdditiveExpression(AdditiveExpressionContext ctx) {
+					if (p.isAssignableFrom(child.getClass())) {
+						rule = child;
+						foundChild = true;
+						break;
+					}
+				}
 
-		if (ctx.getChildCount() > 1 && !enterfor) {
-			operators.push(ctx.getChild(1).getText());
-			if (openParenthesis) {
-				bracketInstance.push(ctx);
-				try {
-					bw.write("(");
-					openParenthesis = false;
-				} catch (IOException e) {
-
-					e.printStackTrace();
+				if (!foundChild) {
+					return null;
 				}
 			}
+
+			return rule;
 		}
-	}
 
-	public void enterAdditionalBound(AdditionalBoundContext ctx) {
-
+		return null;
 	}
 }
