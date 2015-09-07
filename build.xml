@@ -208,14 +208,14 @@
 		<makeurl property="destinationRepository" file="${osgi.dist}" />
 		<makeurl property="categoryDefinition" file="${osgi.p2}/category.xml" />
 		<mkdir dir="${osgi.build}" />
-		<touch file="${osgi.build}/bundles.info" />
-		<makeurl property="bundlesInfoUrl" file="${osgi.build}/bundles.info" />
-		<loadfile srcfile="${basedir}/../ceylon-dist/osgi/p2/bundlesToStart" property="bundlesToStart">
-			<filterchain>
-				<striplinebreaks />
-			</filterchain>
-		</loadfile>
-		<ceylon-p2 executable="${ceylon.executable}" offline="true" verbose="${ceylon.verbosity}" nodefaultrepositories="true" out="${osgi.dist}" repositoryName="Ceylon SDK Bundles" categoryPrefix="ceylon.sdk" categories="${osgi.p2}/category.xml">
+		<ceylon-p2 executable="${ceylon.executable}"
+			offline="true" 
+			verbose="${ceylon.verbosity}" 
+			nodefaultrepositories="true" 
+			out="${osgi.dist}" 
+			repositoryName="Java To Ceylon Converter Bundles" 
+			categoryPrefix="ceylon.tool.converter.java2ceylon" 
+			categories="${osgi.p2}/category.xml">
 			<moduleset refid="modules.source" />
 			<rep url="modules" />
 		</ceylon-p2>
