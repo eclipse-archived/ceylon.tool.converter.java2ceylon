@@ -572,7 +572,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.methodName() != null) {
             methodName = ctx.methodName().getText();
         } else if (ctx.typeName() != null) {
-            prefix = ctx.typeName().getText() + ".";
+            prefix = escapeIdentifier(ctx.typeName().getText(), false) + ".";
             if (ctx.getChild(2).getText().equals("super")) {
                 prefix += "super.";
             }
