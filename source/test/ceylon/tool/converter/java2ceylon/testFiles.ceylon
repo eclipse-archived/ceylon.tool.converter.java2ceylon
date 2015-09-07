@@ -15,8 +15,14 @@ import org.apache.commons.io {
 	FileUtils
 }
 
-shared void testFiles(String javaFileName, String ceylonFileName) {
-	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", true);
+shared void testFiles(String suffix, Boolean transformGetters = true, Boolean useVariableInParams = true,
+        Boolean useVariableInLocals = true, Boolean useValues = false) {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/Test" + suffix;
+    String ceylonFileName = workingDir + "/testFiles/test" + suffix;
+
+	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", transformGetters,
+        useVariableInParams, useVariableInLocals, useValues);
 	File file1 = File(ceylonFileName + ".ceylon");
 	File file2 = File("testFiles/testConvertedFile.ceylon");
 	assertEquals(FileUtils.readFileToString(file2), FileUtils.readFileToString(file1));
@@ -24,232 +30,150 @@ shared void testFiles(String javaFileName, String ceylonFileName) {
 
 test
 shared void testAbstract() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestAbstract";
-	String ceylonFileName = workingDir + "/testFiles/testAbstract";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Abstract");
 }
 
 test
 shared void testAnonymousClass() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestAnonymousClass";
-	String ceylonFileName = workingDir + "/testFiles/testAnonymousClass";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("AnonymousClass");
 }
 
 test
 shared void testArrays() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestArrays";
-	String ceylonFileName = workingDir + "/testFiles/testArrays";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Arrays");
 }
 
 test
 shared void testArrays2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestArrays2";
-	String ceylonFileName = workingDir + "/testFiles/testArrays2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Arrays2");
 }
 
 test
 shared void testClass() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestClass";
-	String ceylonFileName = workingDir + "/testFiles/testClass";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Class");
 }
 
 test
 shared void testConstructors() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestConstructors";
-	String ceylonFileName = workingDir + "/testFiles/testConstructors";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Constructors");
 }
 
 test
 shared void testDoWhile() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestDoWhile";
-	String ceylonFileName = workingDir + "/testFiles/testDoWhile";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("DoWhile");
 }
 
 test
 shared void testExpressions() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestExpressions";
-	String ceylonFileName = workingDir + "/testFiles/testExpressions";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Expressions");
 }
 
 test
 shared void testExpressions2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestExpressions2";
-	String ceylonFileName = workingDir + "/testFiles/testExpressions2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Expressions2");
 }
 
 test
 shared void testFor() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestFor";
-	String ceylonFileName = workingDir + "/testFiles/testFor";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("For");
 }
 
 test
 shared void testFor2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestFor2";
-	String ceylonFileName = workingDir + "/testFiles/testFor2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("For2");
 }
 
 test
 shared void testGenerics() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestGenerics";
-	String ceylonFileName = workingDir + "/testFiles/testGenerics";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Generics");
 }
 
 test
 shared void testGenerics2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestGenerics2";
-	String ceylonFileName = workingDir + "/testFiles/testGenerics2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Generics2");
 }
 
 test
 shared void testIf() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestIf";
-	String ceylonFileName = workingDir + "/testFiles/testIf";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("If");
 }
 
 test
 shared void testImports() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestImports";
-	String ceylonFileName = workingDir + "/testFiles/testImports";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Imports");
 }
 
 test
 shared void testMethod1() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestMethod";
-	String ceylonFileName = workingDir + "/testFiles/testMethod";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Method");
 }
 
 test
 shared void testMethod2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestMethod2";
-	String ceylonFileName = workingDir + "/testFiles/testMethod2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Method2");
 }
 
 test
 shared void testInterface1() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestInterface";
-	String ceylonFileName = workingDir + "/testFiles/testInterface";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Interface");
 }
 
 test
 shared void testInterface2() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestInterface2";
-	String ceylonFileName = workingDir + "/testFiles/testInterface2";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Interface2");
 }
 
 test
 shared void testSwitch() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestSwitch";
-	String ceylonFileName = workingDir + "/testFiles/testSwitch";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Switch");
 }
 
 test
 shared void testTypeCast() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestTypeCast";
-	String ceylonFileName = workingDir + "/testFiles/testTypeCast";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("TypeCast");
 }
 
 test
 shared void testVariableDeclaration() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestVariableDeclaration";
-	String ceylonFileName = workingDir + "/testFiles/testVariableDeclaration";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("VariableDeclaration");
 }
 
 test
 shared void testGetterSetter() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestGetterSetter";
-	String ceylonFileName = workingDir + "/testFiles/testGetterSetter";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("GetterSetter");
 }
 
 test
 shared void testEnums() {
-	String workingDir = System.getProperty("user.dir");
-	String javaFileName = workingDir + "/testFiles/TestEnums";
-	String ceylonFileName = workingDir + "/testFiles/testEnums";
-	testFiles(javaFileName, ceylonFileName);
+	testFiles("Enums");
 }
 
 test
 shared void testSingleMethod() {
-    String workingDir = System.getProperty("user.dir");
-    String javaFileName = workingDir + "/testFiles/TestSingleMethod";
-    String ceylonFileName = workingDir + "/testFiles/testSingleMethod";
-    testFiles(javaFileName, ceylonFileName);
+    testFiles("Method");
 }
 
 test
 shared void testTryCatch() {
-    String workingDir = System.getProperty("user.dir");
-    String javaFileName = workingDir + "/testFiles/TestTryCatch";
-    String ceylonFileName = workingDir + "/testFiles/testTryCatch";
-    testFiles(javaFileName, ceylonFileName);
+    testFiles("TryCatch");
 }
 
 test
 shared void testWhile() {
-    String workingDir = System.getProperty("user.dir");
-    String javaFileName = workingDir + "/testFiles/TestWhile";
-    String ceylonFileName = workingDir + "/testFiles/testWhile";
-    testFiles(javaFileName, ceylonFileName);
+    testFiles("While");
 }
 
 test
 shared void testExists() {
-    String workingDir = System.getProperty("user.dir");
-    String javaFileName = workingDir + "/testFiles/TestExists";
-    String ceylonFileName = workingDir + "/testFiles/testExists";
-    testFiles(javaFileName, ceylonFileName);
+    testFiles("Exists");
 }
 
 test
 shared void testEscaping() {
-    String workingDir = System.getProperty("user.dir");
-    String javaFileName = workingDir + "/testFiles/TestEscaping";
-    String ceylonFileName = workingDir + "/testFiles/testEscaping";
-    testFiles(javaFileName, ceylonFileName);
+    testFiles("Escaping");
+}
+
+test
+shared void testValues() {
+    testFiles("Values", true, false, false, true);
 }

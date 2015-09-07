@@ -5,6 +5,7 @@ variable String a;
 variable String b;
 variable String c = "";
 variable String d = "1";
+String e = "e";
 }
 
 }

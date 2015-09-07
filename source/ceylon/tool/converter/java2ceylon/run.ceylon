@@ -10,7 +10,8 @@ import org.antlr.v4.runtime {
 }
 
 "Converts the given Java file to Ceylon."
-shared void convert(String? sourceFile, String? targetFile, Boolean transformGetters = false, Boolean useVariable = true) {
+shared void convert(String? sourceFile, String? targetFile, Boolean transformGetters = false, Boolean useVariableInParams = true,
+		Boolean useVariableInLocals = true, Boolean useValues = true) {
 
 	File f = File(sourceFile);
 
@@ -23,7 +24,7 @@ shared void convert(String? sourceFile, String? targetFile, Boolean transformGet
 
 	FileWriter fw = FileWriter(File(targetFile));
 
-	JavaToCeylonConverter converter = JavaToCeylonConverter(fw, transformGetters, useVariable);
+	JavaToCeylonConverter converter = JavaToCeylonConverter(fw, transformGetters, useVariableInParams, useVariableInLocals, useValues);
 
 	tree.accept(converter);
 

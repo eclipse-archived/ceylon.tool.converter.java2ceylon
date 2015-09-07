@@ -5,7 +5,7 @@ public class TestMethod {
 		
 	}
 	
-	public int bar(int a, float b) {
+	public int bar(int a, final float b) {
 		return a;
 	}
 }

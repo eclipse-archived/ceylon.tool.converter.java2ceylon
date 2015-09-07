@@ -13,7 +13,9 @@ import java.util.regex.Pattern;
 public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     private boolean transformGetters;
-    private boolean useVariable;
+    private boolean useVariableInParams;
+    private boolean useVariableInLocals;
+    private boolean useValues;
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
     private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
@@ -23,10 +25,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             "satisfies", "super", "switch", "then", "this", "throw", "try", "value", "void", "while"
     );
 
-    public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useVariable) {
+    public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useVariableInParams,
+                                 boolean useVariableInLocals, boolean useValues) {
         writer = out;
         this.transformGetters = transformGetters;
-        this.useVariable = useVariable;
+        this.useVariableInParams = useVariableInParams;
+        this.useVariableInLocals = useVariableInLocals;
+        this.useValues = useValues;
     }
 
     private void write(String str) {
@@ -305,7 +310,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitFormalParameter(FormalParameterContext param) {
-        if (useVariable) {
+        if (useVariableInParams && !hasModifier(param.variableModifier(), "final")) {
             write("variable ");
         }
         visitUnannType(param.unannType());
@@ -804,16 +809,20 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         for (VariableDeclaratorContext var : ctx.localVariableDeclaration().variableDeclaratorList().variableDeclarator()) {
             boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
 
-            if (shouldUseAssert) {
-                write("assert(is ");
-            } else if (useVariable) {
-                write("variable ");
+            if (!shouldUseAssert && useValues) {
+                write("value");
+            } else {
+                if (shouldUseAssert) {
+                    write("assert(is ");
+                } else if (useVariableInParams && !hasModifier(ctx.localVariableDeclaration().variableModifier(), "final")) {
+                    write("variable ");
+                }
+                visitUnannType(ctx.localVariableDeclaration().unannType());
             }
-            visitUnannType(ctx.localVariableDeclaration().unannType());
             write(" ");
 
             write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
-            
+
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
@@ -830,15 +839,19 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
-            if (useVariable) {
-                write("variable ");
+            if (useValues) {
+                write("value");
+            } else {
+                if (useVariableInLocals && !hasModifier(ctx.variableModifier(), "final")) {
+                    write("variable ");
+                }
+                visitUnannType(ctx.unannType());
             }
-            visitUnannType(ctx.unannType());
             write(" ");
 
             write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
 
-            
+
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
@@ -987,8 +1000,10 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitEnhancedForStatement(EnhancedForStatementContext ctx) {
         write("for (");
-        visitUnannType(ctx.unannType());
-        write(" ");
+        if (!useValues) {
+            visitUnannType(ctx.unannType());
+            write(" ");
+        }
         write(ctx.variableDeclaratorId().getText());
         write(" in ");
         visitExpression(ctx.expression());
@@ -1375,14 +1390,18 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             if (hasModifier(ctx.fieldModifier(), "public")) {
                 write("shared ");
             }
-            if (useVariable) {
-                write("variable ");
+            if (useValues && var.variableInitializer() != null) {
+                write("value");
+            } else {
+                if (useVariableInLocals && !hasModifier(ctx.fieldModifier(), "final")) {
+                    write("variable ");
+                }
+                visitUnannType(ctx.unannType());
             }
-            visitUnannType(ctx.unannType());
             write(" ");
 
             write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
-            
+
             if (var.variableInitializer() != null) {
                 write(" = ");
                 visitVariableInitializer(var.variableInitializer());
