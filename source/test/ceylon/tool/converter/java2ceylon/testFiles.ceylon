@@ -245,3 +245,11 @@ shared void testExists() {
     String ceylonFileName = workingDir + "/testFiles/testExists";
     testFiles(javaFileName, ceylonFileName);
 }
+
+test
+shared void testEscaping() {
+    String workingDir = System.getProperty("user.dir");
+    String javaFileName = workingDir + "/testFiles/TestEscaping";
+    String ceylonFileName = workingDir + "/testFiles/testEscaping";
+    testFiles(javaFileName, ceylonFileName);
+}

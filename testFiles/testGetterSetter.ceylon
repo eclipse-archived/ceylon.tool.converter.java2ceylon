@@ -7,6 +7,8 @@ foo.method;
 a = foo.getMethod(true);
 foo.setMethod();
 foo.setMethod(true);
+a = foo.bar.baz.method().foo;
+a = foo.\ipackage.\imodule.shared.\iobject;
 }
 
 }

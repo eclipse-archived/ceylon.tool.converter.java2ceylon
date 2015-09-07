@@ -8,5 +8,8 @@ public class TestMethod {
 		a = foo.getMethod(true);
 		foo.setMethod();
 		foo.setMethod(true);
+
+		a = foo.getBar().getBaz().method().getFoo();
+		a = foo.getPackage().getModule().getShared().getObject();
 	}
 }

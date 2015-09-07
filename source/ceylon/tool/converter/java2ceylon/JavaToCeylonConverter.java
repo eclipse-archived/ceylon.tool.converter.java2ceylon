@@ -268,7 +268,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitMethodDeclarator(MethodDeclaratorContext ctx) {
-        write(ctx.Identifier().getText());
+        write(escapeIdentifier(ctx.Identifier().getText(), true));
 
         write("(");
         if (ctx.formalParameterList() != null) {
@@ -310,7 +310,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
         visitUnannType(param.unannType());
         write(" ");
-        write(param.variableDeclaratorId().getText());
+        write(escapeIdentifier(param.variableDeclaratorId().getText(), true));
         return null;
     }
 
@@ -501,7 +501,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         String name = null;
 
         if (ctx.methodName() != null) {
-            write(ctx.methodName().getText());
+            write(escapeIdentifier(ctx.methodName().getText(), true));
         } else if (ctx.typeName() != null) {
             String text = ctx.typeName().getText();
             if (text.equals("System.out") && ctx.Identifier().getText().equals("println")) {
@@ -529,7 +529,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     break;
             }
 
-            write(name);
+            write(escapeIdentifier(name, true));
         } else {
             if (ctx.typeArguments() != null) {
                 visitTypeArguments(ctx.typeArguments());
@@ -543,10 +543,10 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     } else {
                         property = property.toLowerCase();
                     }
-                    write(property);
+                    write(escapeIdentifier(property, true));
                     return null;
                 } else {
-                    write(ctx.Identifier().getText());
+                    write(escapeIdentifier(ctx.Identifier().getText(), true));
                 }
             }
         }
@@ -596,9 +596,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             } else {
                 property = property.toLowerCase();
             }
-            write(property);
+            write(escapeIdentifier(property, true));
         } else {
-            write(methodName);
+            write(escapeIdentifier(methodName, true));
             write("(");
             if (ctx.argumentList() != null) {
                 visitArgumentList(ctx.argumentList());
@@ -623,9 +623,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             } else {
                 property = property.toLowerCase();
             }
-            write(RESERVED_KEYWORDS.contains(property) ? "\\i" + property : property);
+            write(escapeIdentifier(property, true));
         } else {
-            write(ctx.Identifier().getText());
+            write(escapeIdentifier(ctx.Identifier().getText(), true));
             write("(");
             if (ctx.argumentList() != null) {
                 visitArgumentList(ctx.argumentList());
@@ -811,14 +811,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.localVariableDeclaration().unannType());
             write(" ");
-            
-            String varId = var.variableDeclaratorId().getText();
 
-			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
-				varId = "\\i" + varId;
-
-			write(varId);
-
+            write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
             
             if (var.variableInitializer() != null) {
                 write(" = ");
@@ -841,13 +835,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.unannType());
             write(" ");
-            
-            String varId = var.variableDeclaratorId().getText();
 
-			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
-				varId = "\\i" + varId;
-
-			write(varId);
+            write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
 
             
             if (var.variableInitializer() != null) {
@@ -911,7 +900,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitExpressionName(ExpressionNameContext ctx) {
-        write(ctx.getText());
+        write(escapeIdentifier(ctx.getText(), false));
         return null;
     }
 
@@ -1391,13 +1380,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             visitUnannType(ctx.unannType());
             write(" ");
-            
-            String varId = var.variableDeclaratorId().getText();
 
-			if (Character.isUpperCase(varId.charAt(0)) || RESERVED_KEYWORDS.contains(varId))
-				varId = "\\i" + varId;
-
-			write(varId);
+            write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
             
             if (var.variableInitializer() != null) {
                 write(" = ");
@@ -1413,7 +1397,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitFieldAccess(FieldAccessContext ctx) {
         visitPrimary(ctx.primary());
         write(".");
-        write(ctx.Identifier().getText());
+        write(escapeIdentifier(ctx.Identifier().getText(), true));
         return null;
     }
 
@@ -1493,7 +1477,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitVariableDeclaratorId(VariableDeclaratorIdContext ctx) {
-        write(ctx.Identifier().getText());
+        write(escapeIdentifier(ctx.Identifier().getText(), true));
         return null;
     }
 
@@ -1732,5 +1716,16 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
 
         return null;
+    }
+
+    private String escapeIdentifier(String identifier, boolean shouldBeLowercase) {
+
+        if (RESERVED_KEYWORDS.contains(identifier)) {
+            return "\\i" + identifier;
+        } else if (shouldBeLowercase && !Character.isLowerCase(identifier.charAt(0))) {
+            return "\\i" + identifier;
+        }
+
+        return identifier;
     }
 }
