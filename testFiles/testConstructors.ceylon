@@ -1,4 +1,4 @@
-shared class TestConstructors {
+shared class TestConstructors extends Object {
 
 variable Integer a;
 shared new () {

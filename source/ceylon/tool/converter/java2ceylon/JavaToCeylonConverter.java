@@ -131,6 +131,10 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
         if (ctx.superclass() != null) {
             visitSuperclass(ctx.superclass());
+
+            if (!hasExplicitConstructor) {
+                write("()");
+            }
         }
         if (ctx.superinterfaces() != null) {
             visitSuperinterfaces(ctx.superinterfaces());
@@ -194,7 +198,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitSuperclass(SuperclassContext ctx) {
         write(" extends ");
         super.visitSuperclass(ctx);
-        write("()");
         return null;
     }
 
