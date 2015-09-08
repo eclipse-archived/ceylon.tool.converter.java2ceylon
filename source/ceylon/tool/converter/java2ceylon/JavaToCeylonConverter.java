@@ -918,7 +918,26 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitExpressionName(ExpressionNameContext ctx) {
-        write(escapeIdentifier(ctx.getText(), false));
+        if (ctx.ambiguousName() != null) {
+            visitAmbiguousName(ctx.ambiguousName());
+            write(".");
+        }
+        boolean shouldBeLc = ctx.getParent() instanceof ArrayAccessContext
+                || ctx.getParent() instanceof ArrayAccess_lfno_primaryContext
+                || ctx.getParent() instanceof PostfixExpressionContext;
+
+        write(escapeIdentifier(ctx.Identifier().getText(), shouldBeLc));
+
+        return null;
+    }
+
+    @Override
+    public Void visitAmbiguousName(AmbiguousNameContext ctx) {
+        if (ctx.ambiguousName() != null) {
+            visitAmbiguousName(ctx.ambiguousName());
+            write(".");
+        }
+        write(ctx.Identifier().getText());
         return null;
     }
 
@@ -1009,7 +1028,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             visitUnannType(ctx.unannType());
             write(" ");
         }
-        write(ctx.variableDeclaratorId().getText());
+        write(escapeIdentifier(ctx.variableDeclaratorId().getText(), true));
         write(" in ");
         visitExpression(ctx.expression());
         write(") ");
