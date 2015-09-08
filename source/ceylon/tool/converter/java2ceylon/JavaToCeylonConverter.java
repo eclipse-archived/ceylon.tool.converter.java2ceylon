@@ -602,6 +602,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 property = property.toLowerCase();
             }
             write(escapeIdentifier(property, true));
+        } else if ("toString".equals(methodName) && ctx.argumentList() == null){
+            write("string");
         } else {
             write(escapeIdentifier(methodName, true));
             write("(");

@@ -9,6 +9,8 @@ foo.setMethod();
 foo.setMethod(true);
 a = foo.bar.baz.method().foo;
 a = foo.\ipackage.\imodule.shared.\iobject;
+a = foo.string;
+a = foo.toString(a);
 }
 
 }

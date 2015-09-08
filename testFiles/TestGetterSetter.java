@@ -11,5 +11,7 @@ public class TestMethod {
 
 		a = foo.getBar().getBaz().method().getFoo();
 		a = foo.getPackage().getModule().getShared().getObject();
+		a = foo.toString();
+		a = foo.toString(a);
 	}
 }
