@@ -1445,6 +1445,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     @Override
+    public Void visitFieldAccess_lf_primary(FieldAccess_lf_primaryContext ctx) {
+        write(".");
+        write(escapeIdentifier(ctx.Identifier().getText(), true));
+        return null;
+    }
+
+    @Override
     public Void visitTryStatement(TryStatementContext ctx) {
         if (ctx.tryWithResourcesStatement() == null) {
             write("try ");
