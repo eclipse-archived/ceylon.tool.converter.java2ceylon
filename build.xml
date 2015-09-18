@@ -34,30 +34,32 @@
 		<pathelement location="${ceylon.ant.lib}" />
 	</path>
 
-	<typedef resource="com/redhat/ceylon/ant/antlib.xml" classpathref="ant-tasks" />
+    <target name="ceylondefs">
+        <typedef resource="com/redhat/ceylon/ant/antlib.xml" classpathref="ant-tasks" />
 
-	<reposet id="reposet.compile.source">
-		<repo url="${out.repo}" />
-		<repo url="${basedir}/repo"/>
-	</reposet>
+        <reposet id="reposet.compile.source">
+            <repo url="${out.repo}" />
+            <repo url="${basedir}/repo"/>
+        </reposet>
 
-	<reposet id="reposet.compile.test">
-		<repo url="${out.repo}" />
-		<repo url="${basedir}/repo"/>
-	</reposet>
+        <reposet id="reposet.compile.test">
+            <repo url="${out.repo}" />
+            <repo url="${basedir}/repo"/>
+        </reposet>
 
-	<reposet id="reposet.run.test">
-		<reposet refid="reposet.compile.test" />
-		<repo url="${out.repo}" />
-	</reposet>
+        <reposet id="reposet.run.test">
+            <reposet refid="reposet.compile.test" />
+            <repo url="${out.repo}" />
+        </reposet>
 
-	<moduleset id="modules.source">
-		<module name="ceylon.tool.converter.java2ceylon" />
-	</moduleset>
+        <moduleset id="modules.source">
+            <module name="ceylon.tool.converter.java2ceylon" />
+        </moduleset>
 
-	<moduleset id="modules.test">
-		<module name="test.ceylon.tool.converter.java2ceylon" />
-	</moduleset>
+        <moduleset id="modules.test">
+            <module name="test.ceylon.tool.converter.java2ceylon" />
+        </moduleset>
+    </target>
 
 	<target name="clean" description="Deletes the test-modules and modules directories">
 		<delete dir="${out.repo}" />
@@ -72,7 +74,7 @@
 
     <property name="sources" refid="sources-path" />
 
-    <target name="compile-source" description="Compiles the Converter modules without re-generating sources">
+    <target name="compile-source" depends="ceylondefs" description="Compiles the Converter modules without re-generating sources">
 		<ceylon-compile executable="${ceylon.executable}" src="${sources}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
             <rep url="${extra.repo}"/>
 			<moduleset refid="modules.source" />
@@ -88,7 +90,7 @@
 
 	<property name="test-sources" refid="test-sources-path" />
 
-	<target name="compile-test" description="Compiles the test module">
+	<target name="compile-test" depends="ceylondefs" description="Compiles the test module">
 		<ceylon-compile executable="${ceylon.executable}" src="${test-sources}" out="${out.repo}" verbose="${ceylon.verbosity}" encoding="UTF-8">
             <rep url="${extra.repo}"/>
 			<reposet refid="reposet.compile.test" />
@@ -113,13 +115,13 @@
 		</copy>
 	</target>
 
-	<target name="scripts">
+	<target name="scripts" depends="ceylondefs">
         <ceylon-plugin mode="pack" out="${out.repo}">
 			<moduleset refid="modules.source" />
 		</ceylon-plugin>
 	</target>
 
-	<target name="install" depends="publish">
+	<target name="install" depends="ceylondefs,publish">
         <ceylon-plugin mode="install" force="true" out="${out.repo}">
 			<moduleset refid="modules.source" />
 		</ceylon-plugin>
@@ -144,7 +146,7 @@
 		</if>
 	</target>
 
-	<target name="retrieveDependencies">
+	<target name="retrieveDependencies" depends="ceylondefs">
 			<ceylon-copy executable="${ceylon.executable}"
 					offline="true"
 					verbose="${ceylon.verbosity}"
@@ -199,7 +201,7 @@
     </target>
     
 	<!-- Rule to setup a plugins directory with required bundles -->
-	<target name="osgi-p2-quick" depends="osgi-quick">
+	<target name="osgi-p2-quick" depends="ceylondefs,osgi-quick">
         <mkdir dir="${osgi.dist.features}"/>
         <ant target="generateFeatures" inheritall="true">
             <property name="feature.id" value="ceylon.tool.converter.java2ceylon.feature"/>
