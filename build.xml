@@ -1,8 +1,8 @@
-<project name="Java to Ceylon Converter" basedir="." default="test">
+<project name="Java to Ceylon Converter" default="test">
 	<property file="build.properties" />
 	<property name="ceylon.verbosity" value="false" />
 	<property name="ceylon.executable" value="${dist.bin.dir}/ceylon" />
-	<property name="out.repo" location="modules" />
+    <property name="out.repo" location="${basedir}/modules" />
 	<property name="extra.repo" location="repo" />
 
 	<property name="osgi" location="${basedir}/osgi" />
@@ -38,12 +38,12 @@
 
 	<reposet id="reposet.compile.source">
 		<repo url="${out.repo}" />
-		<repo url="./repo"/>
+		<repo url="${basedir}/repo"/>
 	</reposet>
 
 	<reposet id="reposet.compile.test">
 		<repo url="${out.repo}" />
-		<repo url="./repo"/>
+		<repo url="${basedir}/repo"/>
 	</reposet>
 
 	<reposet id="reposet.run.test">
@@ -76,6 +76,7 @@
 		<ceylon-compile executable="${ceylon.executable}" src="${sources}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
             <rep url="${extra.repo}"/>
 			<moduleset refid="modules.source" />
+			<reposet refid="reposet.compile.source" />
 		</ceylon-compile>
 	</target>
 
