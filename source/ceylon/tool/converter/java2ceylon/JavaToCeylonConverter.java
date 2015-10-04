@@ -660,6 +660,16 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         write(";\n");
         return null;
     }
+    
+    @Override
+    public Void visitThrowStatement(ThrowStatementContext ctx) {
+        write("throw ");
+        if (ctx.expression() != null) {
+            visitExpression(ctx.expression());
+        }
+        write(";\n");
+        return null;
+    }
 
     @Override
     public Void visitExpressionStatement(ExpressionStatementContext ctx) {
@@ -1374,7 +1384,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     private void visitEnumConstructorDeclaration(ConstructorDeclarationContext ctx) {
-        write("abstract new _");
+        write("abstract new \\i");
         write(ctx.constructorDeclarator().simpleTypeName().getText());
         write("(String string, ");
         if (ctx.constructorDeclarator().formalParameterList() != null) {
@@ -1390,14 +1400,14 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitEnumConstant(EnumConstantContext ctx) {
-        write("shared new _");
+        write("shared new \\i");
         write(ctx.Identifier().getText());
         if (ctx.argumentList() == null) {
             write(" { string = \"");
             write(ctx.Identifier().getText());
             write("\"; }\n");
         } else {
-            write(" extends _");
+            write(" extends \\i");
             write(((EnumDeclarationContext) ctx.getParent().getParent().getParent()).Identifier().getText());
             write("(\"");
             write(ctx.Identifier().getText());
