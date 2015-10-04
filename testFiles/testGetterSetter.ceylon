@@ -11,6 +11,7 @@ a = foo.bar.baz.method().foo;
 a = foo.\ipackage.\imodule.shared.\iobject;
 a = foo.string;
 a = foo.toString(a);
+Runtime.runtime.exec("");
 }
 
 }

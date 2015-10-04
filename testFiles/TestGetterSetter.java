@@ -13,5 +13,7 @@ public class TestMethod {
 		a = foo.getPackage().getModule().getShared().getObject();
 		a = foo.toString();
 		a = foo.toString(a);
+		
+		Runtime.getRuntime().exec("");
 	}
 }
