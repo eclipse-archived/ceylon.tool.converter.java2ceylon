@@ -978,7 +978,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
         return null;
     }
-
+    
     @Override
     public Void visitIfThenStatement(IfThenStatementContext ctx) {
         write("if (");
@@ -1216,18 +1216,18 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitEqualityExpression(EqualityExpressionContext ctx) {
         if (ctx.equalityExpression() != null) {
             String operator = ctx.getChild(1).getText();
-
             if (ctx.relationalExpression().getText().equals("null")) {
                 if (operator.equals("==")) {
                     write("!");
                 }
-                write("exists ");
-                // We need to assign things like `exists a.b.c`
-                if (!ctx.equalityExpression().getText().matches("\\w+")) {
-                    write(ctx.equalityExpression().getText().substring(0, 1).toLowerCase());
-                    write(" = ");
+                if (ctx.equalityExpression().getText().matches("\\w+") && isInIfCondition(ctx)) {
+                    write("exists ");
+                    visitEqualityExpression(ctx.equalityExpression());
                 }
-                visitEqualityExpression(ctx.equalityExpression());
+                else {
+                    visitEqualityExpression(ctx.equalityExpression());
+                    write(" exists");
+                }
                 return null;
             } else {
                 visitEqualityExpression(ctx.equalityExpression());
@@ -1241,17 +1241,25 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitRelationalExpression(RelationalExpressionContext ctx) {
         if (ctx.relationalExpression() != null) {
-            if (ctx.getChild(1).getText().equals("instanceof") && isInIfCondition(ctx)) {
-                write("is ");
-                visitReferenceType(ctx.referenceType());
-                write(" ");
-                visitRelationalExpression(ctx.relationalExpression());
+            String operator = ctx.getChild(1).getText();
+            if (operator.equals("instanceof")) {
+                if (ctx.relationalExpression().getText().matches("\\w+") && isInIfCondition(ctx)) {
+                    write("is ");
+                    visitReferenceType(ctx.referenceType());
+                    write(" ");
+                    visitRelationalExpression(ctx.relationalExpression());
+                }
+                else {
+                    visitRelationalExpression(ctx.relationalExpression());
+                    write(" is ");
+                    visitReferenceType(ctx.referenceType());
+                }
                 return null;
             }
 
             visitRelationalExpression(ctx.relationalExpression());
             write(" ");
-            write(ctx.getChild(1).getText().replace("instanceof", "is"));
+            write(operator.replace("instanceof", "is"));
             write(" ");
         }
 
@@ -1661,6 +1669,25 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 && parent(ctx, 7) instanceof ConditionalExpressionContext) {
 
             ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(ctx, 7);
+
+            if (isTernaryOperator(condExpr)) {
+                return true;
+            } else {
+                return isInIfCondition(condExpr);
+            }
+        }
+        return false;
+    }
+
+    private boolean isInIfCondition(EqualityExpressionContext ctx) {
+        if (ctx.getParent() instanceof AndExpressionContext
+                && parent(ctx, 2) instanceof ExclusiveOrExpressionContext
+                && parent(ctx, 3) instanceof InclusiveOrExpressionContext
+                && parent(ctx, 4) instanceof ConditionalAndExpressionContext
+                && parent(ctx, 5) instanceof ConditionalOrExpressionContext
+                && parent(ctx, 6) instanceof ConditionalExpressionContext) {
+
+            ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(ctx, 6);
 
             if (isTernaryOperator(condExpr)) {
                 return true;

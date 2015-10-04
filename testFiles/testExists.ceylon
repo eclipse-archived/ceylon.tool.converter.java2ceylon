@@ -1,7 +1,12 @@
 shared void testExists() {
 if (!exists foo) {
 }
-if (!exists f = foo.bar) {
+if (!foo.bar exists) {
 }
+if (exists foo) {
+}
+if (foo.bar exists) {
+}
+Boolean baz = foo exists;
 }
 
