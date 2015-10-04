@@ -276,13 +276,27 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitMethodDeclarator(MethodDeclaratorContext ctx) {
-        write(escapeIdentifier(ctx.Identifier().getText(), true));
-
-        write("(");
-        if (ctx.formalParameterList() != null) {
-            visitFormalParameterList(ctx.formalParameterList());
+        String methodName = ctx.Identifier().getText();
+        Matcher matcher = GETTER_PATTERN.matcher(methodName);
+        if (transformGetters && matcher.matches() && ctx.formalParameterList() == null) {
+            String property = matcher.group(2);
+            if (property.length() > 1) {
+                property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
+            } else {
+                property = property.toLowerCase();
+            }
+            write(escapeIdentifier(property, true));
+        } else if ("toString".equals(methodName) && ctx.formalParameterList() == null){
+            write("string");
+        } else {
+            write(escapeIdentifier(methodName, true));
+            
+            write("(");
+            if (ctx.formalParameterList() != null) {
+                visitFormalParameterList(ctx.formalParameterList());
+            }
+            write(")");
         }
-        write(")");
         return null;
     }
 

@@ -15,5 +15,7 @@ public class TestMethod {
 		a = foo.toString(a);
 		
 		Runtime.getRuntime().exec("");
+		
+		System.out.println(toString());
 	}
 }

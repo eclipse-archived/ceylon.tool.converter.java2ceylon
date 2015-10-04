@@ -8,4 +8,13 @@ public class TestMethod {
 	public int bar(int a, final float b) {
 		return a;
 	}
+	
+	public String getName() {
+	    return "Trompon";
+	}
+	
+	@Override
+	public String toString() {
+	    return super.toString();
+	}
 }
