@@ -229,7 +229,7 @@ ambiguousName
  */
 
 compilationUnit
-	:	methodDeclaration | (packageDeclaration? importDeclaration* typeDeclaration*) EOF
+	:	methodDeclaration+ | (packageDeclaration? importDeclaration* typeDeclaration*) EOF
 	;
 
 packageDeclaration

@@ -150,7 +150,7 @@ shared void testEnums() {
 
 test
 shared void testSingleMethod() {
-    testFiles("Method");
+    testFiles("SingleMethod");
 }
 
 test
