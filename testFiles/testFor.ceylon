@@ -16,6 +16,11 @@ while(i >= 0) {
 print(i);
 i -= 2;
 }
+variable Integer j;
+j = 0;
+while(j < 10) {
+j++;
+}
 }
 
 }

@@ -1043,7 +1043,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         visitStatement(ctx.statement());
         if (ctx.forUpdate() != null) {
             visitForUpdate(ctx.forUpdate());
-            write(";\n");
         }
         write("}\n");
         return null;
@@ -1617,6 +1616,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitContinueStatement(ContinueStatementContext ctx) {
         write("continue;\n");
+        return null;
+    }
+
+    @Override
+    public Void visitStatementExpressionList(StatementExpressionListContext ctx) {
+        super.visitStatementExpressionList(ctx);
+        write(";\n");
         return null;
     }
 
