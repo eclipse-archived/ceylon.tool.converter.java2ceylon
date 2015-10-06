@@ -847,11 +847,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 } else if (useVariableInParams && !hasModifier(ctx.localVariableDeclaration().variableModifier(), "final")) {
                     write("variable ");
                 }
+                // TODO int a[] should be converted to IntArray, but unfortunately at this point we can't know that it's an array
+                // we should do some sort of lookahead :(
                 visitUnannType(ctx.localVariableDeclaration().unannType());
             }
             write(" ");
 
-            write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
+            write(escapeIdentifier(var.variableDeclaratorId().Identifier().getText(), true));
 
             if (var.variableInitializer() != null) {
                 write(" = ");
@@ -879,7 +881,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             write(" ");
 
-            write(escapeIdentifier(var.variableDeclaratorId().getText(), true));
+            write(escapeIdentifier(var.variableDeclaratorId().Identifier().getText(), true));
 
 
             if (var.variableInitializer() != null) {
