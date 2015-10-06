@@ -838,7 +838,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         for (VariableDeclaratorContext var : ctx.localVariableDeclaration().variableDeclaratorList().variableDeclarator()) {
             boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
 
-            if (!shouldUseAssert && useValues) {
+            if (!shouldUseAssert && useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
                 if (shouldUseAssert) {
@@ -868,7 +868,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
-            if (useValues) {
+            if (useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
                 if (useVariableInLocals && !hasModifier(ctx.variableModifier(), "final")) {

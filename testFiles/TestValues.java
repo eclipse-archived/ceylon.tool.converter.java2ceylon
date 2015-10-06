@@ -8,5 +8,7 @@ public class TestValues {
         for (String foo : bar) {
 
         }
+        int c;
+        c = 2;
     }
 }

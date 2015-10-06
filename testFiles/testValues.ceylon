@@ -6,6 +6,8 @@ shared void testValues(Integer a) {
 value b = "";
 for (foo in bar) {
 }
+Integer c;
+c = 2;
 }
 
 }
