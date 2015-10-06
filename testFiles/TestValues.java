@@ -10,5 +10,6 @@ public class TestValues {
         }
         int c;
         c = 2;
+        int _d;
     }
 }

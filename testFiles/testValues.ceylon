@@ -8,6 +8,7 @@ for (foo in bar) {
 }
 Integer c;
 c = 2;
+Integer _d;
 }
 
 }

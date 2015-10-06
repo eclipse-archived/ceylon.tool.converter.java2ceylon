@@ -280,6 +280,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         Matcher matcher = GETTER_PATTERN.matcher(methodName);
         if (transformGetters && matcher.matches() && ctx.formalParameterList() == null) {
             String property = matcher.group(2);
+            // TODO we should use NamingBase.getJavaBeanName() instead
             if (property.length() > 1) {
                 property = Character.toLowerCase(property.charAt(0)) + property.substring(1);
             } else {
@@ -1823,7 +1824,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
         if (RESERVED_KEYWORDS.contains(identifier)) {
             return "\\i" + identifier;
-        } else if (shouldBeLowercase && !Character.isLowerCase(identifier.charAt(0))) {
+        } else if (shouldBeLowercase && identifier.charAt(0) != '_' && !Character.isLowerCase(identifier.charAt(0))) {
             return "\\i" + identifier;
         }
 
