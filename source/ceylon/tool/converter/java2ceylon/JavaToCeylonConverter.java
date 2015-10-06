@@ -359,6 +359,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 break;
             case "char":
                 write("Character");
+                break;
             default:
                 write(type);
         }
