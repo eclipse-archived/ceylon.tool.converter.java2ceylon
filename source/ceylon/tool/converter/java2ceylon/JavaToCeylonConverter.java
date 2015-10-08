@@ -115,7 +115,11 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write("abstract ");
         }
         write("class ");
-        write(ctx.Identifier().getText()); // TODO uppercase first letter
+        
+        String identifier = ctx.Identifier().getText();
+		identifier = Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1);
+
+		write(identifier); // TODO uppercase first letter
         if (ctx.typeParameters() != null) {
             visitTypeParameters(ctx.typeParameters());
         }
@@ -446,7 +450,11 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
 
         write("interface ");
-        write(ctx.Identifier().getText()); // TODO uppercase first letter
+        
+        String identifier = ctx.Identifier().getText();
+		identifier = Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1);
+
+		write(identifier); // TODO uppercase first letter
         if (ctx.typeParameters() != null) {
             visitTypeParameters(ctx.typeParameters());
         }
