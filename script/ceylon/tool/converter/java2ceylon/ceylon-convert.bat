@@ -28,4 +28,4 @@ call %CEYLON_HOME%\bin\ceylon-sh-setup.bat %*
 if "%errorlevel%" == "1" (
     exit /b 0
 )
-%CEYLON% run ceylon.tool.converter.java2ceylon/1.0.0 "%*"
+%CEYLON% run ceylon.tool.converter.java2ceylon/1.2.0 "%*"
