@@ -253,7 +253,10 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write("shared ");
         }
         if (hasModifier(ctx.methodModifier(), "@Override")) {
-            write("actual ");
+            if(!hasModifier(ctx.methodModifier(), "public")) 
+                write("shared actual ");
+            else 
+                write("actual ");
         }
         if (hasModifier(ctx.methodModifier(), "abstract")) {
             write("formal ");

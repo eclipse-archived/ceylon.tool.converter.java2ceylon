@@ -14,7 +14,7 @@ public class TestMethod {
 	}
 	
 	@Override
-	public String toString() {
+	String toString() {
 	    return super.toString();
 	}
 }
