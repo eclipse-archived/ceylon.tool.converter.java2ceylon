@@ -1257,7 +1257,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.relationalExpression() != null) {
             String operator = ctx.getChild(1).getText();
             if (operator.equals("instanceof")) {
-                if (ctx.relationalExpression().getText().matches("\\w+") && isInIfCondition(ctx)) {
+                if (ctx.relationalExpression().getText().matches("\\w+") && isInIfCondition(ctx) 
+                		&& !isExpression(ctx)) {
                     write("is ");
                     visitReferenceType(ctx.referenceType());
                     write(" ");
@@ -1656,6 +1657,16 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 && block.getParent().getParent() instanceof StatementContext
                 && (block.getParent().getParent().getParent() instanceof DoStatementContext
                 || block.getParent().getParent().getParent() instanceof BasicForStatementContext);
+    }
+    
+    private boolean isExpression(RelationalExpressionContext ctx) {
+    	for(int i = 1; i <= 8; i++) {
+    		if(parent(ctx, i).getChildCount() > 1) {
+    			return true;
+    		}
+    	}
+    	
+    	return false;
     }
 
     private boolean isInIfCondition(ConditionalAndExpressionContext ctx) {
