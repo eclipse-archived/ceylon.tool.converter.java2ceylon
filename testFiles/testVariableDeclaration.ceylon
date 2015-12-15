@@ -1,10 +1,10 @@
 shared class TestVariableDeclaration() {
 
 shared void foo() {
-variable String a;
-variable String b;
-variable String c = "";
-variable String d = "1";
+String a;
+String b;
+String c = "";
+String d = "1";
 String e = "e";
 }
 

@@ -1,8 +1,8 @@
 shared class TestArrays2() {
 
 shared void foo() {
-variable Integer a = 5;
-variable ObjectArray<TestArrays> ta = ObjectArray<TestArrays>(a);
+Integer a = 5;
+ObjectArray<TestArrays> ta = ObjectArray<TestArrays>(a);
 }
 
 }

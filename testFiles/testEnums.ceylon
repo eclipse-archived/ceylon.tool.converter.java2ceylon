@@ -10,8 +10,8 @@ shared new \iSATURDAY { string = "SATURDAY"; }
 }
 shared class Languages {
 shared actual String string;
-shared variable Integer score;
-abstract new \iLanguages(String string, variable Integer score) {
+shared Integer score;
+abstract new \iLanguages(String string, Integer score) {
 this.string = string;
 this.score = score;
 }

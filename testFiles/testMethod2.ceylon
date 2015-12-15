@@ -1,10 +1,10 @@
 shared class TestMethod2() {
 
-shared Integer foo(variable Integer a, variable Integer b) {
+shared Integer foo(Integer a, Integer b) {
 return b;
 }
 
-shared Integer bar(variable Float c, variable Integer d) {
+shared Integer bar(Float c, Integer d) {
 return d;
 }
 

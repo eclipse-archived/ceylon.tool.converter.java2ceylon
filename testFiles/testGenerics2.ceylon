@@ -3,7 +3,7 @@ Map
 }
 shared class TestGenerics2() {
 
-void java(variable Map<in String, out Widget> map) {
+void java(Map<in String, out Widget> map) {
 }
 
 }

@@ -6,7 +6,7 @@ shared void testValues(Integer a) {
 value b = "";
 for (foo in bar) {
 }
-Integer c;
+variable Integer c;
 c = 2;
 Integer _d;
 Character t;

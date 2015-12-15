@@ -1,6 +1,6 @@
 shared class TestIf() {
 
-shared void foo(variable Integer a, variable Integer b) {
+shared void foo(variable Integer a, Integer b) {
 if (a > b) {
 a = b;
 }
@@ -13,7 +13,7 @@ a = b + 1;
 if (a % b == 0) {
 a = b;
 }
-variable String c = if (a > b) then "gt" else "lt";
+String c = if (a > b) then "gt" else "lt";
 }
 
 }

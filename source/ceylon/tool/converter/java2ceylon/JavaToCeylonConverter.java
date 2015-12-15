@@ -1,6 +1,8 @@
 package ceylon.tool.converter.java2ceylon;
 
 import ceylon.tool.converter.java2ceylon.Java8Parser.*;
+import ceylon.tool.converter.java2ceylon.ScopeTree.Node;
+
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -18,6 +20,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     private boolean useValues;
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
+    private ScopeTree scopeTree;
+    private ParserRuleContext scope;
     private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
             "assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
             "continue", "dynamic", "else", "exists", "extends", "finally", "for", "function", "given", "if", "import",
@@ -26,12 +30,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     );
 
     public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useVariableInParams,
-                                 boolean useVariableInLocals, boolean useValues) {
+                                 boolean useVariableInLocals, boolean useValues, ScopeTree scopeTree) {
         writer = out;
         this.transformGetters = transformGetters;
         this.useVariableInParams = useVariableInParams;
         this.useVariableInLocals = useVariableInLocals;
         this.useValues = useValues;
+        this.scopeTree = scopeTree;
     }
 
     private void write(String str) {
@@ -108,6 +113,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitNormalClassDeclaration(NormalClassDeclarationContext ctx) {
+        scope = ctx;
+        
         if (hasModifier(ctx.classModifier(), "public")) {
             write("shared ");
         }
@@ -249,6 +256,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
+        scope = ctx;
+        
         if (hasModifier(ctx.methodModifier(), "public")) {
             write("shared ");
         }
@@ -335,7 +344,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitFormalParameter(FormalParameterContext param) {
-        if (useVariableInParams && !hasModifier(param.variableModifier(), "final")) {
+        Node n = scopeTree.getNode(param.variableDeclaratorId(), scopeTree.root, scope);
+        
+        if (n.variable && !hasModifier(param.variableModifier(), "final")) {
             write("variable ");
         }
         visitUnannType(param.unannType());
@@ -851,12 +862,14 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         for (VariableDeclaratorContext var : ctx.localVariableDeclaration().variableDeclaratorList().variableDeclarator()) {
             boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
 
+            Node n = scopeTree.getNode(var.variableDeclaratorId(), scopeTree.root, scope);
+            
             if (!shouldUseAssert && useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
                 if (shouldUseAssert) {
                     write("assert(is ");
-                } else if (useVariableInParams && !hasModifier(ctx.localVariableDeclaration().variableModifier(), "final")) {
+                } else if (n.variable && !hasModifier(ctx.localVariableDeclaration().variableModifier(), "final")) {
                     write("variable ");
                 }
                 // TODO int a[] should be converted to IntArray, but unfortunately at this point we can't know that it's an array
@@ -883,17 +896,21 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
+            VariableDeclaratorIdContext context = var.variableDeclaratorId();
+            
+            Node n = scopeTree.getNode(context, scopeTree.root, scope);
+            
             if (useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
-                if (useVariableInLocals && !hasModifier(ctx.variableModifier(), "final")) {
+                if (n.variable && !hasModifier(ctx.variableModifier(), "final")) {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
             }
             write(" ");
 
-            write(escapeIdentifier(var.variableDeclaratorId().Identifier().getText(), true));
+            write(escapeIdentifier(context.Identifier().getText(), true));
 
 
             if (var.variableInitializer() != null) {
@@ -1458,13 +1475,17 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitFieldDeclaration(FieldDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
+            VariableDeclaratorIdContext context = var.variableDeclaratorId();
+            
+            Node n = scopeTree.getNode(context, scopeTree.root, scope);
+            
             if (hasModifier(ctx.fieldModifier(), "public")) {
                 write("shared ");
             }
             if (useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
-                if (useVariableInLocals && !hasModifier(ctx.fieldModifier(), "final")) {
+                if (n.variable && !hasModifier(ctx.fieldModifier(), "final")) {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
