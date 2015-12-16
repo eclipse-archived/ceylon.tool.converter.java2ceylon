@@ -43,13 +43,12 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
         }
     }
 
-    public Node getNode(ParserRuleContext ctx, Node n,
-            ParserRuleContext scope) {
+    public Node getNode(ParserRuleContext ctx, Node n) {
         if (ctx == n.data) {
             return n;
         } else {
             for (Node c : n.children) {
-                Node found = getNode(ctx, c, scope);
+                Node found = getNode(ctx, c);
                 if (found != null)
                     return found;
             }

@@ -21,7 +21,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
     private ScopeTree scopeTree;
-    private ParserRuleContext scope;
     private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
             "assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
             "continue", "dynamic", "else", "exists", "extends", "finally", "for", "function", "given", "if", "import",
@@ -113,8 +112,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitNormalClassDeclaration(NormalClassDeclarationContext ctx) {
-        scope = ctx;
-        
         if (hasModifier(ctx.classModifier(), "public")) {
             write("shared ");
         }
@@ -256,8 +253,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
-        scope = ctx;
-        
         if (hasModifier(ctx.methodModifier(), "public")) {
             write("shared ");
         }
@@ -344,7 +339,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitFormalParameter(FormalParameterContext param) {
-        Node n = scopeTree.getNode(param.variableDeclaratorId(), scopeTree.root, scope);
+        Node n = scopeTree.getNode(param.variableDeclaratorId(), scopeTree.root);
         
         if (n.variable && !hasModifier(param.variableModifier(), "final")) {
             write("variable ");
@@ -862,7 +857,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         for (VariableDeclaratorContext var : ctx.localVariableDeclaration().variableDeclaratorList().variableDeclarator()) {
             boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
 
-            Node n = scopeTree.getNode(var.variableDeclaratorId(), scopeTree.root, scope);
+            Node n = scopeTree.getNode(var.variableDeclaratorId(), scopeTree.root);
             
             if (!shouldUseAssert && useValues && var.variableInitializer() != null) {
                 write("value");
@@ -898,7 +893,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
             VariableDeclaratorIdContext context = var.variableDeclaratorId();
             
-            Node n = scopeTree.getNode(context, scopeTree.root, scope);
+            Node n = scopeTree.getNode(context, scopeTree.root);
             
             if (useValues && var.variableInitializer() != null) {
                 write("value");
@@ -1476,8 +1471,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitFieldDeclaration(FieldDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
             VariableDeclaratorIdContext context = var.variableDeclaratorId();
-            
-            Node n = scopeTree.getNode(context, scopeTree.root, scope);
+           
+            Node n = scopeTree.getNode(context, scopeTree.root);
             
             if (hasModifier(ctx.fieldModifier(), "public")) {
                 write("shared ");
