@@ -10,6 +10,11 @@ import ceylon.tool.converter.java2ceylon.Java8Parser.LeftHandSideContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.LocalVariableDeclarationContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.MethodDeclarationContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.NormalClassDeclarationContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.PostDecrementExpressionContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.PostIncrementExpressionContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.PostfixExpressionContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.PreDecrementExpressionContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.PreIncrementExpressionContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.VariableDeclaratorContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.VariableDeclaratorIdContext;
 
@@ -105,6 +110,51 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
         scopeNode = n.parent;
 
         return null;
+    }
+
+    @Override
+    public Void visitPostIncrementExpression(
+            PostIncrementExpressionContext ctx) {
+        String var = ctx.postfixExpression().getText();
+        checkVariable(scopeNode, var);
+
+        return super.visitPostIncrementExpression(ctx);
+    }
+
+    @Override
+    public Void visitPostfixExpression(PostfixExpressionContext ctx) {
+        if (ctx.postDecrementExpression_lf_postfixExpression(0) != null || ctx
+                .postIncrementExpression_lf_postfixExpression(0) != null) {
+            String var = ctx.expressionName().getText();
+            checkVariable(scopeNode, var);
+        }
+
+        return super.visitPostfixExpression(ctx);
+    }
+
+    @Override
+    public Void visitPostDecrementExpression(
+            PostDecrementExpressionContext ctx) {
+        String var = ctx.postfixExpression().getText();
+        checkVariable(scopeNode, var);
+
+        return super.visitPostDecrementExpression(ctx);
+    }
+
+    @Override
+    public Void visitPreIncrementExpression(PreIncrementExpressionContext ctx) {
+        String var = ctx.unaryExpression().getText();
+        checkVariable(scopeNode, var);
+
+        return super.visitPreIncrementExpression(ctx);
+    }
+
+    @Override
+    public Void visitPreDecrementExpression(PreDecrementExpressionContext ctx) {
+        String var = ctx.unaryExpression().getText();
+        checkVariable(scopeNode, var);
+
+        return super.visitPreDecrementExpression(ctx);
     }
 
     @Override
