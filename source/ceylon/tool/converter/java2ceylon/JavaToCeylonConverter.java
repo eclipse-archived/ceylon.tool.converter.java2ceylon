@@ -75,12 +75,37 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             return; // No need to add a single import if there's already a wildcard
         }
 
-        imports.add(type);
+        if(!imports.contains(type))
+            imports.add(type);
+    }
+    
+    private void addStaticImport(Map<String, List<String>> staticImports, String pack, String type) {
+        List<String> imports;
+        
+        if(staticImports.containsKey(pack)) {
+            imports = staticImports.get(pack);
+        } else {
+            imports = new ArrayList<>();
+            staticImports.put(pack, imports);
+        }
+        
+        // import on demand wins over single imports
+        if (type.equals("...") && !imports.isEmpty()) {
+            imports.clear();
+        }
+
+        if (imports.size() == 1 && imports.get(0).equals("...")) {
+            return; // No need to add a single import if there's already a wildcard
+        }
+
+        if(!imports.contains(type))
+            imports.add(type);
     }
 
     @Override
     public Void visitCompilationUnit(CompilationUnitContext ctx) {
         Map<String, List<String>> importsByPackage = new LinkedHashMap<>();
+        Map<String, List<String>> staticImports = new LinkedHashMap<>();
 
         for (ImportDeclarationContext decl : ctx.importDeclaration()) {
             if (decl.singleTypeImportDeclaration() != null) {
@@ -91,18 +116,44 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 String pkgName = decl.typeImportOnDemandDeclaration().packageOrTypeName().getText();
                 addImport(importsByPackage, pkgName, "...");
             }
+            
+            if(decl.singleStaticImportDeclaration() != null) {
+                TypeNameContext typeName = decl.singleStaticImportDeclaration().typeName();
+                addImport(importsByPackage, typeName.packageOrTypeName().getText(), typeName.Identifier().getText());
+                addStaticImport(staticImports, typeName.getText(), decl.singleStaticImportDeclaration().Identifier().getText());
+            }
+            if(decl.staticImportOnDemandDeclaration() != null) {
+                TypeNameContext typeName = decl.staticImportOnDemandDeclaration().typeName();
+                addImport(importsByPackage, typeName.packageOrTypeName().getText(), typeName.Identifier().getText());
+                addStaticImport(staticImports, typeName.getText(), "...");
+            }
         }
 
         for (Map.Entry<String, List<String>> entry : importsByPackage.entrySet()) {
+            String key = entry.getKey();
             write("import ");
-            write(entry.getKey());
+            write(key);
             write(" {\n");
 
             for (int i = 0; i < entry.getValue().size(); i++) {
                 if (i > 0) {
                     write(",\n");
                 }
-                write(entry.getValue().get(i));
+
+                String value = entry.getValue().get(i);
+                
+                write(value);
+                if(staticImports.containsKey(key + "." + value)) {
+                    write("{\n");
+                    List<String> imports = staticImports.get(key + "." + value);
+                    for(int j = 0; j < imports.size(); j++) {
+                        if(j > 0)
+                            write(", \n");
+                        
+                        write(imports.get(j));
+                    }
+                    write("\n}\n");
+                }
             }
             write("\n}\n");
         }
@@ -1356,28 +1407,32 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPostIncrementExpression_lf_postfixExpression(PostIncrementExpression_lf_postfixExpressionContext ctx) {
+    public Void visitPostIncrementExpression_lf_postfixExpression(
+            PostIncrementExpression_lf_postfixExpressionContext ctx) {
         super.visitPostIncrementExpression_lf_postfixExpression(ctx);
         write("++");
         return null;
     }
 
     @Override
-    public Void visitPostDecrementExpression(PostDecrementExpressionContext ctx) {
+    public Void visitPostDecrementExpression(
+            PostDecrementExpressionContext ctx) {
         super.visitPostDecrementExpression(ctx);
         write("--");
         return null;
     }
 
     @Override
-    public Void visitPostDecrementExpression_lf_postfixExpression(PostDecrementExpression_lf_postfixExpressionContext ctx) {
+    public Void visitPostDecrementExpression_lf_postfixExpression(
+            PostDecrementExpression_lf_postfixExpressionContext ctx) {
         super.visitPostDecrementExpression_lf_postfixExpression(ctx);
         write("--");
         return null;
     }
 
     @Override
-    public Void visitUnaryExpressionNotPlusMinus(UnaryExpressionNotPlusMinusContext ctx) {
+    public Void visitUnaryExpressionNotPlusMinus(
+            UnaryExpressionNotPlusMinusContext ctx) {
         if (ctx.getChild(0).getText().equals("!")) {
             write("!");
         }
@@ -1416,10 +1471,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         write(" {\n");
         write("shared actual String string;\n");
         if (ctx.enumBodyDeclarations() != null) {
-            for (ClassBodyDeclarationContext classBody : ctx.enumBodyDeclarations().classBodyDeclaration()) {
+            for (ClassBodyDeclarationContext classBody : ctx
+                    .enumBodyDeclarations().classBodyDeclaration()) {
                 if (classBody.constructorDeclaration() != null) {
-                    // Special case, we need to add an extra "String string" parameter
-                    visitEnumConstructorDeclaration(classBody.constructorDeclaration());
+                    // Special case, we need to add an extra "String string"
+                    // parameter
+                    visitEnumConstructorDeclaration(
+                            classBody.constructorDeclaration());
                 } else {
                     visitClassBodyDeclaration(classBody);
                 }
@@ -1432,12 +1490,14 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         return null;
     }
 
-    private void visitEnumConstructorDeclaration(ConstructorDeclarationContext ctx) {
+    private void visitEnumConstructorDeclaration(
+            ConstructorDeclarationContext ctx) {
         write("abstract new \\i");
         write(ctx.constructorDeclarator().simpleTypeName().getText());
         write("(String string, ");
         if (ctx.constructorDeclarator().formalParameterList() != null) {
-            visitFormalParameterList(ctx.constructorDeclarator().formalParameterList());
+            visitFormalParameterList(
+                    ctx.constructorDeclarator().formalParameterList());
         }
         write(")");
 
@@ -1457,7 +1517,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write("\"; }\n");
         } else {
             write(" extends \\i");
-            write(((EnumDeclarationContext) ctx.getParent().getParent().getParent()).Identifier().getText());
+            write(((EnumDeclarationContext) ctx.getParent().getParent()
+                    .getParent()).Identifier().getText());
             write("(\"");
             write(ctx.Identifier().getText());
             write("\", ");
@@ -1469,11 +1530,12 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitFieldDeclaration(FieldDeclarationContext ctx) {
-        for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
+        for (VariableDeclaratorContext var : ctx.variableDeclaratorList()
+                .variableDeclarator()) {
             VariableDeclaratorIdContext context = var.variableDeclaratorId();
-           
+
             Node n = scopeTree.getNode(context, scopeTree.root);
-            
+
             if (hasModifier(ctx.fieldModifier(), "public")) {
                 write("shared ");
             }
@@ -1531,7 +1593,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitTryWithResourcesStatement(TryWithResourcesStatementContext ctx) {
+    public Void visitTryWithResourcesStatement(
+            TryWithResourcesStatementContext ctx) {
         write("try ");
         return super.visitTryWithResourcesStatement(ctx);
     }
@@ -1606,7 +1669,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         visitExpression(ctx.expression());
         write(") ");
         if (ctx.statement().statementWithoutTrailingSubstatement() != null
-                && ctx.statement().statementWithoutTrailingSubstatement().block() != null) {
+                && ctx.statement().statementWithoutTrailingSubstatement()
+                        .block() != null) {
             visitStatement(ctx.statement());
         } else {
             write("{\n");
@@ -1617,12 +1681,16 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitWhileStatementNoShortIf(WhileStatementNoShortIfContext ctx) {
+    public Void visitWhileStatementNoShortIf(
+            WhileStatementNoShortIfContext ctx) {
         write("while (");
         visitExpression(ctx.expression());
         write(") ");
-        if (ctx.statementNoShortIf().statementWithoutTrailingSubstatement() != null
-                && ctx.statementNoShortIf().statementWithoutTrailingSubstatement().block() != null) {
+        if (ctx.statementNoShortIf()
+                .statementWithoutTrailingSubstatement() != null
+                && ctx.statementNoShortIf()
+                        .statementWithoutTrailingSubstatement()
+                        .block() != null) {
             visitStatementNoShortIf(ctx.statementNoShortIf());
         } else {
             write("{\n");
@@ -1648,7 +1716,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitStatementExpressionList(StatementExpressionListContext ctx) {
+    public Void visitStatementExpressionList(
+            StatementExpressionListContext ctx) {
         super.visitStatementExpressionList(ctx);
         write(";\n");
         return null;
@@ -1660,7 +1729,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     private boolean isIf(StatementContext ctx) {
-        return ctx.ifThenStatement() != null || ctx.ifThenElseStatement() != null;
+        return ctx.ifThenStatement() != null
+                || ctx.ifThenElseStatement() != null;
     }
 
     private boolean isBlock(StatementNoShortIfContext ctx) {
@@ -1669,20 +1739,23 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     }
 
     private boolean isBlockInDoWhile(BlockContext block) {
-        return block.getParent() instanceof StatementWithoutTrailingSubstatementContext
+        return block
+                .getParent() instanceof StatementWithoutTrailingSubstatementContext
                 && block.getParent().getParent() instanceof StatementContext
-                && (block.getParent().getParent().getParent() instanceof DoStatementContext
-                || block.getParent().getParent().getParent() instanceof BasicForStatementContext);
+                && (block.getParent().getParent()
+                        .getParent() instanceof DoStatementContext
+                        || block.getParent().getParent()
+                                .getParent() instanceof BasicForStatementContext);
     }
-    
+
     private boolean isExpression(RelationalExpressionContext ctx) {
-    	for(int i = 1; i <= 8; i++) {
-    		if(parent(ctx, i).getChildCount() > 1) {
-    			return true;
-    		}
-    	}
-    	
-    	return false;
+        for (int i = 1; i <= 8; i++) {
+            if (parent(ctx, i).getChildCount() > 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean isInIfCondition(ConditionalAndExpressionContext ctx) {
@@ -1691,7 +1764,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
         return parent(ctx, 1) instanceof ConditionalOrExpressionContext
                 && parent(ctx, 2) instanceof ConditionalExpressionContext
-                && isInIfCondition((ConditionalExpressionContext) parent(ctx, 2));
+                && isInIfCondition(
+                        (ConditionalExpressionContext) parent(ctx, 2));
 
     }
 
@@ -1716,7 +1790,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 && parent(ctx, 6) instanceof ConditionalOrExpressionContext
                 && parent(ctx, 7) instanceof ConditionalExpressionContext) {
 
-            ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(ctx, 7);
+            ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(
+                    ctx, 7);
 
             if (isTernaryOperator(condExpr)) {
                 return true;
@@ -1735,7 +1810,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 && parent(ctx, 5) instanceof ConditionalOrExpressionContext
                 && parent(ctx, 6) instanceof ConditionalExpressionContext) {
 
-            ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(ctx, 6);
+            ConditionalExpressionContext condExpr = (ConditionalExpressionContext) parent(
+                    ctx, 6);
 
             if (isTernaryOperator(condExpr)) {
                 return true;
@@ -1760,20 +1836,19 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         return ctx;
     }
 
-    private boolean isCastOutsideOfInstanceof(LocalVariableDeclarationContext ctx, VariableDeclaratorContext var) {
+    private boolean isCastOutsideOfInstanceof(
+            LocalVariableDeclarationContext ctx,
+            VariableDeclaratorContext var) {
         // checks if this involves a cast
-        if (getInnerChild(var.variableInitializer(),
-                ExpressionContext.class,
+        if (getInnerChild(var.variableInitializer(), ExpressionContext.class,
                 AssignmentExpressionContext.class,
                 ConditionalExpressionContext.class,
                 ConditionalOrExpressionContext.class,
                 ConditionalAndExpressionContext.class,
                 InclusiveOrExpressionContext.class,
-                ExclusiveOrExpressionContext.class,
-                AndExpressionContext.class,
+                ExclusiveOrExpressionContext.class, AndExpressionContext.class,
                 EqualityExpressionContext.class,
-                RelationalExpressionContext.class,
-                ShiftExpressionContext.class,
+                RelationalExpressionContext.class, ShiftExpressionContext.class,
                 AdditiveExpressionContext.class,
                 MultiplicativeExpressionContext.class,
                 UnaryExpressionContext.class,
@@ -1782,35 +1857,42 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             return false;
         }
         // checks if the variable declaration is located inside an if
-        if (hasParents(ctx,
-                LocalVariableDeclarationStatementContext.class,
-                BlockStatementContext.class,
-                BlockStatementsContext.class,
+        if (hasParents(ctx, LocalVariableDeclarationStatementContext.class,
+                BlockStatementContext.class, BlockStatementsContext.class,
                 BlockContext.class,
                 StatementWithoutTrailingSubstatementContext.class)) {
 
-            StatementWithoutTrailingSubstatementContext st = (StatementWithoutTrailingSubstatementContext) parent(ctx, 5);
+            StatementWithoutTrailingSubstatementContext st = (StatementWithoutTrailingSubstatementContext) parent(
+                    ctx, 5);
 
-            if (hasParents(st, StatementNoShortIfContext.class, IfThenElseStatementContext.class)) {
+            if (hasParents(st, StatementNoShortIfContext.class,
+                    IfThenElseStatementContext.class)) {
                 // checks if the condition involves an instanceof
-                return !isInstanceofCondition(((IfThenElseStatementContext) st.getParent().getParent()).expression(), var.variableDeclaratorId().getText());
-            } else if (hasParents(st, StatementContext.class, IfThenStatementContext.class)) {
+                return !isInstanceofCondition(
+                        ((IfThenElseStatementContext) st.getParent()
+                                .getParent()).expression(),
+                        var.variableDeclaratorId().getText());
+            } else if (hasParents(st, StatementContext.class,
+                    IfThenStatementContext.class)) {
                 // checks if the condition involves an instanceof
-                return !isInstanceofCondition(((IfThenStatementContext) st.getParent().getParent()).expression(), ""/* TODO extract casted identifier */);
+                return !isInstanceofCondition(
+                        ((IfThenStatementContext) st.getParent().getParent())
+                                .expression(),
+                        ""/* TODO extract casted identifier */);
             }
         }
         return true;
     }
 
-    private boolean isInstanceofCondition(ExpressionContext expr, String identifier) {
-        RelationalExpressionContext child = (RelationalExpressionContext) getInnerChild(expr,
-                AssignmentExpressionContext.class,
+    private boolean isInstanceofCondition(ExpressionContext expr,
+            String identifier) {
+        RelationalExpressionContext child = (RelationalExpressionContext) getInnerChild(
+                expr, AssignmentExpressionContext.class,
                 ConditionalExpressionContext.class,
                 ConditionalOrExpressionContext.class,
                 ConditionalAndExpressionContext.class,
                 InclusiveOrExpressionContext.class,
-                ExclusiveOrExpressionContext.class,
-                AndExpressionContext.class,
+                ExclusiveOrExpressionContext.class, AndExpressionContext.class,
                 EqualityExpressionContext.class,
                 RelationalExpressionContext.class);
 
@@ -1818,7 +1900,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             return false;
         }
 
-        if (child.getChildCount() > 1 && child.getChild(1).getText().equals("instanceof")) {
+        if (child.getChildCount() > 1
+                && child.getChild(1).getText().equals("instanceof")) {
             return true; // TODO compare identifiers
         }
 
@@ -1840,7 +1923,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         return true;
     }
 
-    private ParseTree getInnerChild(ParserRuleContext ctx, Class<?>... children) {
+    private ParseTree getInnerChild(ParserRuleContext ctx,
+            Class<?>... children) {
         if (children != null) {
             ParseTree rule = ctx;
 
@@ -1867,11 +1951,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         return null;
     }
 
-    private String escapeIdentifier(String identifier, boolean shouldBeLowercase) {
+    private String escapeIdentifier(String identifier,
+            boolean shouldBeLowercase) {
 
         if (RESERVED_KEYWORDS.contains(identifier)) {
             return "\\i" + identifier;
-        } else if (shouldBeLowercase && identifier.charAt(0) != '_' && !Character.isLowerCase(identifier.charAt(0))) {
+        } else if (shouldBeLowercase && identifier.charAt(0) != '_'
+                && !Character.isLowerCase(identifier.charAt(0))) {
             return "\\i" + identifier;
         }
 

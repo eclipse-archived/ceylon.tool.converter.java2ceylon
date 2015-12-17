@@ -11,6 +11,18 @@ FileInputStream,
 FileWriter,
 IOException
 }
+import java.lang {
+Math{
+PI, 
+E
+}
+,
+Appendable,
+Enum{
+...
+}
+
+}
 import java.util {
 ...
 }
