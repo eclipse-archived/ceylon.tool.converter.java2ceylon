@@ -591,7 +591,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitMethodInvocation(MethodInvocationContext ctx) {
         String name = null;
-
+        
         if (ctx.methodName() != null) {
             write(escapeIdentifier(ctx.methodName().getText(), true));
         } else if (ctx.typeName() != null) {
@@ -623,9 +623,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
             write(escapeIdentifier(name, true));
         } else {
-            if (ctx.typeArguments() != null) {
-                visitTypeArguments(ctx.typeArguments());
-            }
             if (ctx.Identifier() != null) {
                 Matcher matcher = GETTER_PATTERN.matcher(ctx.Identifier().getText());
                 if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
@@ -640,6 +637,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 } else {
                     write(escapeIdentifier(ctx.Identifier().getText(), true));
                 }
+            }
+            if (ctx.typeArguments() != null) {
+                visitTypeArguments(ctx.typeArguments());
             }
         }
 
