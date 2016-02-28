@@ -857,43 +857,79 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.primitiveType() != null) {
             String ceylonType;
             String type = ctx.primitiveType().getText();
-            switch (type) {
-                case "int":
-                    ceylonType = "IntArray";
+            
+            if(ctx.arrayInitializer() != null) {
+            	switch (type) {
+            	case "int":
+                    ceylonType = "createJavaIntArray";
                     break;
                 case "short":
-                    ceylonType = "ShortArray";
+                    ceylonType = "createJavaShortArray";
                     break;
                 case "boolean":
-                    ceylonType = "BooleanArray";
+                    ceylonType = "createJavaBooleanArray";
                     break;
                 case "byte":
-                    ceylonType = "ByteArray";
+                    ceylonType = "createJavaByteArray";
                     break;
                 case "long":
-                    ceylonType = "LongArray";
+                    ceylonType = "createJavaLongArray";
                     break;
                 case "float":
-                    ceylonType = "FloatArray";
+                    ceylonType = "createJavaFloatArray";
                     break;
                 case "double":
-                    ceylonType = "DoubleArray";
-                    break;
-                case "char":
-                    ceylonType = "CharArray";
+                    ceylonType = "createJavaDoubleArray";
                     break;
                 default:
-                    ceylonType = "ObjectArray<" + type + ">";
+                    ceylonType = "createJavaObjectArray<" + type + ">";
                     break;
+				}
+            } else {
+	            switch (type) {
+	                case "int":
+	                    ceylonType = "IntArray";
+	                    break;
+	                case "short":
+	                    ceylonType = "ShortArray";
+	                    break;
+	                case "boolean":
+	                    ceylonType = "BooleanArray";
+	                    break;
+	                case "byte":
+	                    ceylonType = "ByteArray";
+	                    break;
+	                case "long":
+	                    ceylonType = "LongArray";
+	                    break;
+	                case "float":
+	                    ceylonType = "FloatArray";
+	                    break;
+	                case "double":
+	                    ceylonType = "DoubleArray";
+	                    break;
+	                case "char":
+	                    ceylonType = "CharArray";
+	                    break;
+	                default:
+	                    ceylonType = "ObjectArray<" + type + ">";
+	                    break;
+	            }
             }
             write(ceylonType);
         } else {
-            write("ObjectArray<");
+        	if(ctx.arrayInitializer() != null)
+        		write("createJavaObjectArray<");
+        	else
+        		write("ObjectArray<");
             visitClassOrInterfaceType(ctx.classOrInterfaceType());
             write(">");
         }
         write("(");
-        if (ctx.dimExprs() != null) {
+        
+        if(ctx.arrayInitializer() != null) {
+        	visitArrayInitializer(ctx.arrayInitializer());
+        } else if (ctx.dimExprs() != null) {
             visitDimExprs(ctx.dimExprs());
         } else {
             visitDims(ctx.dims());
@@ -901,6 +937,28 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         write(")");
 
         return null;
+    }
+    
+    @Override
+    public Void visitArrayInitializer(ArrayInitializerContext ctx) {
+    	write("{");
+    	if(ctx.variableInitializerList() != null)
+    		visitVariableInitializerList(ctx.variableInitializerList());
+    	write("}");
+    	
+    	return null;
+    }
+    
+    @Override
+    public Void visitVariableInitializerList(VariableInitializerListContext ctx) {
+    	for (int i = 0; i < ctx.getChildCount(); i++) {
+    		if(ctx.getChild(i) instanceof VariableInitializerContext)
+    			visitVariableInitializer((VariableInitializerContext) ctx.getChild(i));
+    		else
+    			write(", ");
+    	}
+    	
+    	return null;
     }
 
     @Override
