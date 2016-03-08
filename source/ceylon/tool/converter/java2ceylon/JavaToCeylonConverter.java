@@ -560,9 +560,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitConstructorDeclaration(ConstructorDeclarationContext ctx) {
-        if (hasModifier(ctx.constructorModifier(), "public")) {
-            write("shared ");
-        }
+        write("shared ");
         visitConstructorDeclarator(ctx.constructorDeclarator());
         visitConstructorBody(ctx.constructorBody());
         return null;
