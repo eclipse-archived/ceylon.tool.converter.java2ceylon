@@ -15,14 +15,12 @@ import org.apache.commons.io {
 	FileUtils
 }
 
-shared void testFiles(String suffix, Boolean transformGetters = true, Boolean useVariableInParams = true,
-        Boolean useVariableInLocals = true, Boolean useValues = false) {
+shared void testFiles(String suffix, Boolean transformGetters = true, Boolean useValues = false) {
     String workingDir = System.getProperty("user.dir");
     String javaFileName = workingDir + "/testFiles/Test" + suffix;
     String ceylonFileName = workingDir + "/testFiles/test" + suffix;
 
-	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", transformGetters,
-        useVariableInParams, useVariableInLocals, useValues);
+	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", transformGetters, useValues);
 	File file1 = File(ceylonFileName + ".ceylon");
 	File file2 = File("testFiles/testConvertedFile.ceylon");
 	assertEquals(FileUtils.readFileToString(file2), FileUtils.readFileToString(file1));
@@ -175,5 +173,5 @@ shared void testEscaping() {
 
 test
 shared void testValues() {
-    testFiles("Values", true, false, false, true);
+    testFiles("Values", true, true);
 }

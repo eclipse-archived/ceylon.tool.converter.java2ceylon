@@ -23,21 +23,13 @@ shared class CeylonConvertTool() extends CeylonBaseTool() {
 	option__SETTER
 	shared variable Boolean transformGetters = false;
 	
-	description__SETTER ("Transform getters to properties, use `--variables-in-params`")
-	option__SETTER
-	shared variable Boolean variablesInParams = false;
-	
-	description__SETTER ("Transform getters to properties, use `--variables-in-locals`")
-	option__SETTER
-	shared variable Boolean variablesInLocals = false;
-	
 	description__SETTER ("Transform getters to properties, use `--use-values`")
 	option__SETTER
 	shared variable Boolean useValues = false;
 	
 	shared actual void run() {
 		if (exists v = arguments) {
-			convert(v.get(0).string, v.get(1).string, transformGetters, variablesInParams, variablesInLocals, useValues);
+			convert(v.get(0).string, v.get(1).string, transformGetters, useValues);
 		} else {
 			print("Wrong options. Try `ceylon convert --help` for help.");
 		}

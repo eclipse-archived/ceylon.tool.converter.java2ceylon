@@ -15,8 +15,6 @@ import java.util.regex.Pattern;
 public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     private boolean transformGetters;
-    private boolean useVariableInParams;
-    private boolean useVariableInLocals;
     private boolean useValues;
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
@@ -28,12 +26,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             "satisfies", "super", "switch", "then", "this", "throw", "try", "value", "void", "while"
     );
 
-    public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useVariableInParams,
-                                 boolean useVariableInLocals, boolean useValues, ScopeTree scopeTree) {
+    public JavaToCeylonConverter(Writer out, boolean transformGetters, boolean useValues, ScopeTree scopeTree) {
         writer = out;
         this.transformGetters = transformGetters;
-        this.useVariableInParams = useVariableInParams;
-        this.useVariableInLocals = useVariableInLocals;
         this.useValues = useValues;
         this.scopeTree = scopeTree;
     }
