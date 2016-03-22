@@ -1,6 +1,6 @@
 native("jvm")
 suppressWarnings("ceylonNamespace")
-module ceylon.tool.converter.java2ceylon "1.2.3" {
+module ceylon.tool.converter.java2ceylon "1.2.3.SNAPSHOT" {
 	shared import com.redhat.ceylon.common "1.2.3.SNAPSHOT";
 	shared import com.redhat.ceylon.cli "1.2.3.SNAPSHOT";
 	shared import java.base "7";
