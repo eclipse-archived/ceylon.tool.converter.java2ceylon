@@ -12,10 +12,10 @@
 	<property name="osgi.dist.plugins" location="${osgi.dist}/plugins" />
     <property name="osgi.dist.features" location="${osgi.dist}/features" />
 	<property name="eclipse.project.path" location="${basedir}/../ceylon-ide-eclipse"/>
-	
+
     <tstamp>
         <format property="qualifier" timezone="GMT" pattern="'v'yyyyMMdd-HHmm"/>
-    </tstamp>        
+    </tstamp>
 
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
@@ -78,7 +78,7 @@
     <property name="sources" refid="sources-path" />
 
     <target name="compile-source" depends="ceylondefs" description="Compiles the Converter modules without re-generating sources">
-		<ceylon-compile executable="${ceylon.executable}" src="${sources}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
+		<ceylon-compile fork="true" executable="${ceylon.executable}" src="${sources}" verbose="${ceylon.verbosity}" encoding="UTF-8" pack200="true" out="${out.repo}">
             <rep url="${extra.repo}"/>
 			<moduleset refid="modules.source" />
 			<reposet refid="reposet.compile.source" />
@@ -94,7 +94,7 @@
 	<property name="test-sources" refid="test-sources-path" />
 
 	<target name="compile-test" depends="ceylondefs" description="Compiles the test module">
-		<ceylon-compile executable="${ceylon.executable}" src="${test-sources}" out="${out.repo}" verbose="${ceylon.verbosity}" encoding="UTF-8">
+		<ceylon-compile fork="true" executable="${ceylon.executable}" src="${test-sources}" out="${out.repo}" verbose="${ceylon.verbosity}" encoding="UTF-8">
             <rep url="${extra.repo}"/>
 			<reposet refid="reposet.compile.test" />
 			<moduleset refid="modules.test" />
@@ -200,9 +200,9 @@
         <xslt style="${osgi.p2}/${xslFileName}" in="${osgi.dist}/repository.xml" out="${featureFile}">
             <param name="featureId" expression="${feature.id}"/>
             <param name="featureVersion" expression="${feature.version}"/>
-        </xslt>            
+        </xslt>
     </target>
-    
+
 	<!-- Rule to setup a plugins directory with required bundles -->
 	<target name="osgi-p2-quick" depends="ceylondefs,osgi-quick">
         <mkdir dir="${osgi.dist.features}"/>
@@ -220,12 +220,12 @@
 		<makeurl property="categoryDefinition" file="${osgi.p2}/category.xml" />
 		<mkdir dir="${osgi.build}" />
 		<ceylon-p2 executable="${ceylon.executable}"
-			offline="true" 
-			verbose="${ceylon.verbosity}" 
-			nodefaultrepositories="true" 
-			out="${osgi.dist}" 
-			repositoryName="Java To Ceylon Converter Bundles" 
-			categoryPrefix="ceylon.tool.converter.java2ceylon" 
+			offline="true"
+			verbose="${ceylon.verbosity}"
+			nodefaultrepositories="true"
+			out="${osgi.dist}"
+			repositoryName="Java To Ceylon Converter Bundles"
+			categoryPrefix="ceylon.tool.converter.java2ceylon"
 			categories="${osgi.p2}/category.xml">
 			<moduleset refid="modules.source" />
             <rep url="${basedir}/modules" />
@@ -280,20 +280,20 @@
             <locationURI>PARENT-3-PROJECT_LOC/ceylon.tool.converter.java2ceylon</locationURI>
         </link>
     </linkedResources>
-</projectDescription>]]></echo>     
+</projectDescription>]]></echo>
         <echo file="${proxy-project}/.classpath"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <classpath>
     <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
     <classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
     <classpathentry exported="true" kind="lib" path="${archiveFileName}" sourcepath="project"/>
     <classpathentry kind="output" path="bin"/>
-</classpath>]]></echo>     
+</classpath>]]></echo>
         <echo file="${proxy-project}/.gitignore"><![CDATA[/META-INF
 /${archiveFileName}
 /.classpath
 /.project
 /.gitignore
-/bin/]]></echo>     
+/bin/]]></echo>
     </target>
 
 	<target name="ide" depends="osgi-p2" />
