@@ -43,16 +43,19 @@
         <reposet id="reposet.compile.source">
             <repo url="${out.repo}"/>
             <repo url="${basedir}/repo"/>
+            <repo url="${ceylon.repo.dir}"/>
         </reposet>
 
         <reposet id="reposet.compile.test">
             <repo url="${out.repo}"/>
             <repo url="${basedir}/repo"/>
+            <repo url="${ceylon.repo.dir}"/>
         </reposet>
 
         <reposet id="reposet.run.test">
             <reposet refid="reposet.compile.test"/>
             <repo url="${out.repo}"/>
+            <repo url="${ceylon.repo.dir}"/>
         </reposet>
 
         <moduleset id="modules.source">
