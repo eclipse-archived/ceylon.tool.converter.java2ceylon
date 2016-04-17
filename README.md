@@ -1,3 +1,5 @@
+[![Build Status](https://ci-ceylon.rhcloud.com/buildStatus/icon?job=ceylon.tool.converter.java2ceylon)](https://ci-ceylon.rhcloud.com/job/ceylon.tool.converter.java2ceylon)
+
 # Java to Ceylon Converter
 
 This is a project to convert java to Ceylon. 
