@@ -115,6 +115,16 @@
         </ceylon-test>
     </target>
 
+    <target name="test-tap" depends="compile,compile-test"
+            description="Runs the compiled test module, writing a TAP report to test-converter.tap">
+        <ceylon-test
+                tap="test-converter.tap"
+                fork="true">
+            <reposet refid="reposet.run.test"/>
+            <moduleset refid="modules.test"/>
+        </ceylon-test>
+    </target>
+
     <target name="publish" depends="publish-internal"
             description="Copies the Converter modules to the user's repository">
     </target>
