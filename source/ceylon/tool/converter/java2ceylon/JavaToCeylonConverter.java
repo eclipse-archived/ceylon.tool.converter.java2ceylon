@@ -1703,7 +1703,12 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitCatchType(CatchTypeContext ctx) {
-        super.visitCatchType(ctx);
+        visitUnannClassType(ctx.unannClassType());
+
+        for (ClassTypeContext ct : ctx.classType()) {
+            write(" | ");
+            visitClassType(ct);
+        }
         write(" ");
         return null;
     }

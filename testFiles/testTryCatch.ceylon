@@ -49,6 +49,12 @@ print(e);
 finally {
 print("done");
 }
+try {
+foo();
+}
+catch (Exception | RuntimeException e) {
+print(e);
+}
 }
 
 }
