@@ -13,6 +13,7 @@ import java.io.FileWriter;
 import java.util.*;
 import java.io.IOException;
 import java.util.List;
+import pkg.module.value.SomeClass;
 
 /**
  * 
