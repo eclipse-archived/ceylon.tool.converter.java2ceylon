@@ -175,3 +175,8 @@ test
 shared void testValues() {
     testFiles("Values", true, true);
 }
+
+test
+shared void testOptional() {
+	testFiles("Optional");
+}

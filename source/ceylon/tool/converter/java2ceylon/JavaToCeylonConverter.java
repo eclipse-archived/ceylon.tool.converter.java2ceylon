@@ -414,7 +414,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitUnannPrimitiveType(UnannPrimitiveTypeContext ctx) {
         String type = ctx.getText();
-
+        
         switch (type) {
             case "int":
             case "long":
@@ -987,6 +987,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 // TODO int a[] should be converted to IntArray, but unfortunately at this point we can't know that it's an array
                 // we should do some sort of lookahead :(
                 visitUnannType(ctx.localVariableDeclaration().unannType());
+                
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 
@@ -1019,6 +1022,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
+            
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 
@@ -1618,6 +1624,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
+                
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 

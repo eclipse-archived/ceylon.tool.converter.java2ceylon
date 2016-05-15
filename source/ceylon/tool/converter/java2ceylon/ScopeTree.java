@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
+import ceylon.tool.converter.java2ceylon.Java8Parser.AssignmentContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.CompilationUnitContext;
-import ceylon.tool.converter.java2ceylon.Java8Parser.LeftHandSideContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.LocalVariableDeclarationContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.MethodDeclarationContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.NormalClassDeclarationContext;
@@ -17,6 +17,7 @@ import ceylon.tool.converter.java2ceylon.Java8Parser.PreDecrementExpressionConte
 import ceylon.tool.converter.java2ceylon.Java8Parser.PreIncrementExpressionContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.VariableDeclaratorContext;
 import ceylon.tool.converter.java2ceylon.Java8Parser.VariableDeclaratorIdContext;
+import ceylon.tool.converter.java2ceylon.Java8Parser.VariableInitializerContext;
 
 public class ScopeTree extends Java8BaseVisitor<Void> {
     public Node root, scopeNode;
@@ -29,12 +30,13 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
         ParserRuleContext data;
         Node parent;
         List<Node> children;
-        boolean scope, variable;
+        boolean scope, variable, optional;
 
         Node() {
             data = new ParserRuleContext();
             scope = false;
             variable = false;
+            optional = false;
             children = new ArrayList<>();
         }
 
@@ -88,6 +90,16 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
         Node n = new Node();
         n.data = ctx;
         n.parent = scopeNode;
+
+        ParserRuleContext parent = ctx.getParent();
+
+        if (parent instanceof VariableDeclaratorContext) {
+            VariableInitializerContext initial = ((VariableDeclaratorContext) parent).variableInitializer();
+
+            if (initial != null && initial.getText().equals("null"))
+                n.optional = true;
+        }
+
         scopeNode.addNode(n);
 
         return super.visitVariableDeclaratorId(ctx);
@@ -112,30 +124,28 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
     }
 
     @Override
-    public Void visitPostIncrementExpression(
-            PostIncrementExpressionContext ctx) {
+    public Void visitPostIncrementExpression(PostIncrementExpressionContext ctx) {
         String var = ctx.postfixExpression().getText();
-        checkVariable(scopeNode, var);
+        checkVariable(scopeNode, var, false);
 
         return super.visitPostIncrementExpression(ctx);
     }
 
     @Override
     public Void visitPostfixExpression(PostfixExpressionContext ctx) {
-        if (ctx.postDecrementExpression_lf_postfixExpression(0) != null || ctx
-                .postIncrementExpression_lf_postfixExpression(0) != null) {
+        if (ctx.postDecrementExpression_lf_postfixExpression(0) != null
+                || ctx.postIncrementExpression_lf_postfixExpression(0) != null) {
             String var = ctx.expressionName().getText();
-            checkVariable(scopeNode, var);
+            checkVariable(scopeNode, var, false);
         }
 
         return super.visitPostfixExpression(ctx);
     }
 
     @Override
-    public Void visitPostDecrementExpression(
-            PostDecrementExpressionContext ctx) {
+    public Void visitPostDecrementExpression(PostDecrementExpressionContext ctx) {
         String var = ctx.postfixExpression().getText();
-        checkVariable(scopeNode, var);
+        checkVariable(scopeNode, var, false);
 
         return super.visitPostDecrementExpression(ctx);
     }
@@ -143,7 +153,7 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
     @Override
     public Void visitPreIncrementExpression(PreIncrementExpressionContext ctx) {
         String var = ctx.unaryExpression().getText();
-        checkVariable(scopeNode, var);
+        checkVariable(scopeNode, var, false);
 
         return super.visitPreIncrementExpression(ctx);
     }
@@ -151,31 +161,38 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
     @Override
     public Void visitPreDecrementExpression(PreDecrementExpressionContext ctx) {
         String var = ctx.unaryExpression().getText();
-        checkVariable(scopeNode, var);
+        checkVariable(scopeNode, var, false);
 
         return super.visitPreDecrementExpression(ctx);
     }
 
     @Override
-    public Void visitLeftHandSide(LeftHandSideContext ctx) {
-        String var = ctx.getText();
-        checkVariable(scopeNode, var);
+    public Void visitAssignment(AssignmentContext ctx) {
+        String leftHandSide = ctx.leftHandSide().getText();
 
-        return super.visitLeftHandSide(ctx);
+        String expression = ctx.expression().getText();
+
+        checkVariable(scopeNode, leftHandSide, expression.equals("null"));
+
+        return super.visitAssignment(ctx);
     }
 
-    void checkVariable(Node n, String var) {
+    private void checkVariable(Node n, String var, boolean isNull) {
         boolean flag = false;
+
         for (Node c : n.children) {
             if (c.data instanceof LocalVariableDeclarationContext) {
                 LocalVariableDeclarationContext context = (LocalVariableDeclarationContext) c.data;
 
-                for (VariableDeclaratorContext x : context
-                        .variableDeclaratorList().variableDeclarator()) {
+                for (VariableDeclaratorContext x : context.variableDeclaratorList().variableDeclarator()) {
                     String id = x.variableDeclaratorId().getText();
 
                     if (var.equals(id)) {
                         c.variable = true;
+
+                        if (isNull)
+                            c.optional = true;
+
                         flag = true;
                         break;
                     }
@@ -188,11 +205,14 @@ public class ScopeTree extends Java8BaseVisitor<Void> {
                 if (var.equals(context.Identifier().getText())) {
                     c.variable = true;
                     flag = true;
+
+                    if (isNull)
+                        c.optional = true;
                 }
             }
         }
 
         if (!flag && n.parent != null)
-            checkVariable(n.parent, var);
+            checkVariable(n.parent, var, isNull);
     }
 }
