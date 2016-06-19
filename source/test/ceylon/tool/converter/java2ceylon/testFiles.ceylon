@@ -57,6 +57,11 @@ shared void testConstructors() {
 }
 
 test
+shared void testConstructors2() {
+	testFiles("Constructors2");
+}
+
+test
 shared void testDoWhile() {
 	testFiles("DoWhile");
 }

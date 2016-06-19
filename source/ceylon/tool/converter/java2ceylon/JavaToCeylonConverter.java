@@ -19,6 +19,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
     private ScopeTree scopeTree;
+    private ClassTypeContext superClass;
     private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
             "assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
             "continue", "dynamic", "else", "exists", "extends", "finally", "for", "function", "given", "if", "import",
@@ -266,6 +267,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitSuperclass(SuperclassContext ctx) {
         write(" extends ");
+        
+        superClass = ctx.classType();
         super.visitSuperclass(ctx);
         return null;
     }
@@ -572,8 +575,36 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitConstructorDeclaration(ConstructorDeclarationContext ctx) {
         write("shared ");
         visitConstructorDeclarator(ctx.constructorDeclarator());
+        
+        ExplicitConstructorInvocationContext child = 
+                ctx.constructorBody().explicitConstructorInvocation();
+        
+        if(child != null) {
+            for(ParseTree c : child.children) {
+                if(c.getText().equals("super")) {
+                    write(" extends " + superClass.getText());
+                    write("(");
+                    visitArgumentList(child.argumentList());
+                    write(")");
+                    break;
+                }
+            }
+        }
+        
         visitConstructorBody(ctx.constructorBody());
         return null;
+    }
+    
+    @Override
+    public Void visitExplicitConstructorInvocation(
+            ExplicitConstructorInvocationContext ctx) {
+        for(ParseTree c : ctx.children) {
+            if(c.getText().equals("super")) {
+                return null;
+            }
+        }
+        
+        return super.visitExplicitConstructorInvocation(ctx);
     }
 
     @Override
