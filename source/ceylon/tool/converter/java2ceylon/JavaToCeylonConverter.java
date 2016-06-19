@@ -1024,7 +1024,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             write(" ");
 
-            write(escapeIdentifier(var.variableDeclaratorId().Identifier().getText(), true));
+            String identifier = var.variableDeclaratorId().Identifier().getText();
+            
+            write(escapeIdentifier(identifier, true));
 
             if (var.variableInitializer() != null) {
                 write(" = ");
@@ -2073,11 +2075,43 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
         if (RESERVED_KEYWORDS.contains(identifier)) {
             return "\\i" + identifier;
+        } else if(is_CONSTANT_CASE(identifier.toCharArray())) {
+            return constant_case_toCamelCase(identifier.toCharArray());
         } else if (shouldBeLowercase && identifier.charAt(0) != '_'
                 && !Character.isLowerCase(identifier.charAt(0))) {
             return "\\i" + identifier;
         }
 
         return identifier;
+    }
+    
+    private static String constant_case_toCamelCase(char[] newName) {
+        int j = 0;
+        boolean capitaliseNext = false;
+        for(int i=0;i<newName.length;i++){
+            char codepoint = newName[i];
+            if(codepoint == '_'){
+                // skip underscore
+                capitaliseNext = true;
+            }else if(capitaliseNext){
+                newName[j++] = codepoint;
+                capitaliseNext = false;
+            }else{
+                newName[j++] = Character.toLowerCase(codepoint);
+            }
+        }
+        return new String(newName, 0, j);
+    }
+
+    private static boolean is_CONSTANT_CASE(char[] newName) {
+        // reject empty, "U" and "_"
+        if(newName.length <= 1)
+            return false;
+        for(int i=0;i<newName.length;i++){
+            int codepoint = newName[i];
+            if(Character.isLowerCase(codepoint) && codepoint != '_')
+                return false;
+        }
+        return true;
     }
 }
