@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="ceylon" name="Ceylon">
+      <configuration>
+        <option name="compileForJvm" value="true" />
+        <option name="compileToJs" value="false" />
+        <option name="systemRepository" value="" />
+        Do not edit, modify .config/ide-config instead
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/.exploded" />
+    <output-test url="file://$MODULE_DIR$/.exploded" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/source" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.exploded" />
+      <excludeFolder url="file://$MODULE_DIR$/modules" />
+      <excludeFolder url="file://$MODULE_DIR$/src/test/java/com/rohit/testFiles" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: org.antlr:antlr4-runtime:4.5" level="project" />
+    <orderEntry type="library" name="Maven: org.abego.treelayout:org.abego.treelayout.core:1.0.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
+    <orderEntry type="module-library">
+      <library name="Ceylon Stuff">
+        <CLASSES>
+          <root url="jar://$APPLICATION_PLUGINS_DIR$/CeylonRuntime/lib/ceylon.language-1.2.3.car!/" />
+          <root url="jar://$APPLICATION_PLUGINS_DIR$/CeylonIDEA/classes/embeddedDist/repo/com/redhat/ceylon/common/1.2.3/com.redhat.ceylon.common-1.2.3.jar!/" />
+          <root url="jar://$MODULE_DIR$/repo/org/antlr/antlr4-runtime-osgi/4.5.1/org.antlr.antlr4-runtime-osgi-4.5.1.jar!/" />
+          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/interop/java/1.2.3/ceylon.interop.java-1.2.3.car!/" />
+          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/collection/1.2.3/ceylon.collection-1.2.3.car!/" />
+          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/test/1.2.3/ceylon.test-1.2.3.car!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.collection/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.interop.java/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.language/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.test/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: commons-io:commons-io/2.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: org.antlr.antlr4-runtime-osgi/4.5.1" level="project" />
+  </component>
+</module>
