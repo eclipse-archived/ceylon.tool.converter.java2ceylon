@@ -26,29 +26,15 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.antlr:antlr4-runtime:4.5" level="project" />
-    <orderEntry type="library" name="Maven: org.abego.treelayout:org.abego.treelayout.core:1.0.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
-    <orderEntry type="module-library">
-      <library name="Ceylon Stuff">
-        <CLASSES>
-          <root url="jar://$APPLICATION_PLUGINS_DIR$/CeylonRuntime/lib/ceylon.language-1.2.3.car!/" />
-          <root url="jar://$APPLICATION_PLUGINS_DIR$/CeylonIDEA/classes/embeddedDist/repo/com/redhat/ceylon/common/1.2.3/com.redhat.ceylon.common-1.2.3.jar!/" />
-          <root url="jar://$MODULE_DIR$/repo/org/antlr/antlr4-runtime-osgi/4.5.1/org.antlr.antlr4-runtime-osgi-4.5.1.jar!/" />
-          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/interop/java/1.2.3/ceylon.interop.java-1.2.3.car!/" />
-          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/collection/1.2.3/ceylon.collection-1.2.3.car!/" />
-          <root url="jar://$USER_HOME$/.ceylon/repo/ceylon/test/1.2.3/ceylon.test-1.2.3.car!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.collection/1.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.interop.java/1.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.language/1.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: ceylon.test/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: com.redhat.ceylon.cli/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: com.redhat.ceylon.common/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: com.redhat.ceylon.langtools.classfile/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: com.redhat.ceylon.model/1.3.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Ceylon: com.redhat.ceylon.module-resolver/1.3.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: commons-io:commons-io/2.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Ceylon: org.antlr.antlr4-runtime-osgi/4.5.1" level="project" />
   </component>
