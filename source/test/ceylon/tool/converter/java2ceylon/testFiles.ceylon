@@ -16,13 +16,13 @@ import org.apache.commons.io {
 }
 
 shared void testFiles(String suffix, Boolean transformGetters = true, Boolean useValues = false) {
-    String workingDir = System.getProperty("user.dir");
+    String workingDir = System.getProperty("ceylon.cwd");
     String javaFileName = workingDir + "/testFiles/Test" + suffix;
     String ceylonFileName = workingDir + "/testFiles/test" + suffix;
 
-	convert(javaFileName + ".java", "testFiles/testConvertedFile.ceylon", transformGetters, useValues);
+	convert(javaFileName + ".java", workingDir + "/testFiles/testConvertedFile.ceylon", transformGetters, useValues);
 	File file1 = File(ceylonFileName + ".ceylon");
-	File file2 = File("testFiles/testConvertedFile.ceylon");
+	File file2 = File(workingDir + "/testFiles/testConvertedFile.ceylon");
 	assertEquals(FileUtils.readFileToString(file2), FileUtils.readFileToString(file1));
 }
 
@@ -54,6 +54,11 @@ shared void testClass() {
 test
 shared void testConstructors() {
 	testFiles("Constructors");
+}
+
+test
+shared void testConstructors2() {
+	testFiles("Constructors2");
 }
 
 test
@@ -174,4 +179,9 @@ shared void testEscaping() {
 test
 shared void testValues() {
     testFiles("Values", true, true);
+}
+
+test
+shared void testOptional() {
+	testFiles("Optional");
 }

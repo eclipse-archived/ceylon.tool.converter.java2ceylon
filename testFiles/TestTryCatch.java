@@ -43,5 +43,11 @@ public class TestCatch {
         } finally {
             System.out.println("done");
         }
+
+        try {
+            foo();
+        } catch (Exception | RuntimeException e) {
+            System.out.println(e);
+        }
     }
 }

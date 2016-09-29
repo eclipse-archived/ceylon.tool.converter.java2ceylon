@@ -19,6 +19,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     private Writer writer;
     private Pattern GETTER_PATTERN = Pattern.compile("(get|is)([A-Z]\\w*)");
     private ScopeTree scopeTree;
+    private ClassTypeContext superClass;
     private static final List<String> RESERVED_KEYWORDS = Arrays.asList(
             "assembly", "abstracts", "alias", "assert", "assign", "break", "case", "catch", "class",
             "continue", "dynamic", "else", "exists", "extends", "finally", "for", "function", "given", "if", "import",
@@ -54,6 +55,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     private void addImport(Map<String, List<String>> importsByPackage, String pack, String type) {
         List<String> imports;
 
+        pack = escapePackageIdentifiers(pack);
+
         if (importsByPackage.containsKey(pack)) {
             imports = importsByPackage.get(pack);
         } else {
@@ -73,7 +76,20 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if(!imports.contains(type))
             imports.add(type);
     }
-    
+
+    private String escapePackageIdentifiers(String pack) {
+        StringBuilder builder = new StringBuilder();
+
+        for (String id : pack.split("\\.")) {
+            if (builder.length() > 0) {
+                builder.append(".");
+            }
+            builder.append(escapeIdentifier(id, false));
+        }
+
+        return builder.toString();
+    }
+
     private void addStaticImport(Map<String, List<String>> staticImports, String pack, String type) {
         List<String> imports;
         
@@ -251,6 +267,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitSuperclass(SuperclassContext ctx) {
         write(" extends ");
+        
+        superClass = ctx.classType();
         super.visitSuperclass(ctx);
         return null;
     }
@@ -303,9 +321,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write("shared ");
         }
         if (hasModifier(ctx.methodModifier(), "@Override")) {
-            if(!hasModifier(ctx.methodModifier(), "public")) 
+            if(!hasModifier(ctx.methodModifier(), "public"))
                 write("shared actual ");
-            else 
+            else
                 write("actual ");
         }
         if (hasModifier(ctx.methodModifier(), "abstract")) {
@@ -348,7 +366,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write("string");
         } else {
             write(escapeIdentifier(methodName, true));
-            
+
             write("(");
             if (ctx.formalParameterList() != null) {
                 visitFormalParameterList(ctx.formalParameterList());
@@ -386,7 +404,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitFormalParameter(FormalParameterContext param) {
         Node n = scopeTree.getNode(param.variableDeclaratorId(), scopeTree.root);
-        
+
         if (n.variable && !hasModifier(param.variableModifier(), "final")) {
             write("variable ");
         }
@@ -399,7 +417,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitUnannPrimitiveType(UnannPrimitiveTypeContext ctx) {
         String type = ctx.getText();
-
+        
         switch (type) {
             case "int":
             case "long":
@@ -505,7 +523,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
 
         write("interface ");
-        
+
         String identifier = ctx.Identifier().getText();
 		identifier = Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1);
 
@@ -557,8 +575,36 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitConstructorDeclaration(ConstructorDeclarationContext ctx) {
         write("shared ");
         visitConstructorDeclarator(ctx.constructorDeclarator());
+        
+        ExplicitConstructorInvocationContext child = 
+                ctx.constructorBody().explicitConstructorInvocation();
+        
+        if(child != null) {
+            for(ParseTree c : child.children) {
+                if(c.getText().equals("super")) {
+                    write(" extends " + superClass.getText());
+                    write("(");
+                    visitArgumentList(child.argumentList());
+                    write(")");
+                    break;
+                }
+            }
+        }
+        
         visitConstructorBody(ctx.constructorBody());
         return null;
+    }
+    
+    @Override
+    public Void visitExplicitConstructorInvocation(
+            ExplicitConstructorInvocationContext ctx) {
+        for(ParseTree c : ctx.children) {
+            if(c.getText().equals("super")) {
+                return null;
+            }
+        }
+        
+        return super.visitExplicitConstructorInvocation(ctx);
     }
 
     @Override
@@ -584,7 +630,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitMethodInvocation(MethodInvocationContext ctx) {
         String name = null;
-        
+
         if (ctx.methodName() != null) {
             write(escapeIdentifier(ctx.methodName().getText(), true));
         } else if (ctx.typeName() != null) {
@@ -737,7 +783,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         write(";\n");
         return null;
     }
-    
+
     @Override
     public Void visitThrowStatement(ThrowStatementContext ctx) {
         write("throw ");
@@ -850,7 +896,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.primitiveType() != null) {
             String ceylonType;
             String type = ctx.primitiveType().getText();
-            
+
             if(ctx.arrayInitializer() != null) {
             	switch (type) {
             	case "int":
@@ -919,7 +965,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write(">");
         }
         write("(");
-        
+
         if(ctx.arrayInitializer() != null) {
         	visitArrayInitializer(ctx.arrayInitializer());
         } else if (ctx.dimExprs() != null) {
@@ -931,17 +977,17 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
         return null;
     }
-    
+
     @Override
     public Void visitArrayInitializer(ArrayInitializerContext ctx) {
     	write("{");
     	if(ctx.variableInitializerList() != null)
     		visitVariableInitializerList(ctx.variableInitializerList());
     	write("}");
-    	
+
     	return null;
     }
-    
+
     @Override
     public Void visitVariableInitializerList(VariableInitializerListContext ctx) {
     	for (int i = 0; i < ctx.getChildCount(); i++) {
@@ -950,7 +996,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     		else
     			write(", ");
     	}
-    	
+
     	return null;
     }
 
@@ -960,7 +1006,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             boolean shouldUseAssert = var.variableInitializer() != null && isCastOutsideOfInstanceof(ctx.localVariableDeclaration(), var);
 
             Node n = scopeTree.getNode(var.variableDeclaratorId(), scopeTree.root);
-            
+
             if (!shouldUseAssert && useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
@@ -972,10 +1018,15 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 // TODO int a[] should be converted to IntArray, but unfortunately at this point we can't know that it's an array
                 // we should do some sort of lookahead :(
                 visitUnannType(ctx.localVariableDeclaration().unannType());
+                
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 
-            write(escapeIdentifier(var.variableDeclaratorId().Identifier().getText(), true));
+            String identifier = var.variableDeclaratorId().Identifier().getText();
+            
+            write(escapeIdentifier(identifier, true));
 
             if (var.variableInitializer() != null) {
                 write(" = ");
@@ -994,9 +1045,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitLocalVariableDeclaration(LocalVariableDeclarationContext ctx) {
         for (VariableDeclaratorContext var : ctx.variableDeclaratorList().variableDeclarator()) {
             VariableDeclaratorIdContext context = var.variableDeclaratorId();
-            
+
             Node n = scopeTree.getNode(context, scopeTree.root);
-            
+
             if (useValues && var.variableInitializer() != null) {
                 write("value");
             } else {
@@ -1004,6 +1055,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
+            
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 
@@ -1107,7 +1161,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         }
         return null;
     }
-    
+
     @Override
     public Void visitIfThenStatement(IfThenStatementContext ctx) {
         write("if (");
@@ -1278,7 +1332,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
-    	if(ctx.getChild(2) != null && ctx.getChild(2).getText().equals("class")) 
+    	if(ctx.getChild(2) != null && ctx.getChild(2).getText().equals("class"))
     		write("javaClass<" + ctx.getChild(0).getText() + ">()");
     	else
     		switch (ctx.getChild(0).getText()) {
@@ -1377,7 +1431,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.relationalExpression() != null) {
             String operator = ctx.getChild(1).getText();
             if (operator.equals("instanceof")) {
-                if (ctx.relationalExpression().getText().matches("\\w+") && isInIfCondition(ctx) 
+                if (ctx.relationalExpression().getText().matches("\\w+") && isInIfCondition(ctx)
                 		&& !isExpression(ctx)) {
                     write("is ");
                     visitReferenceType(ctx.referenceType());
@@ -1603,6 +1657,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                     write("variable ");
                 }
                 visitUnannType(ctx.unannType());
+                
+                if(n.optional)
+                	write("?");
             }
             write(" ");
 
@@ -1703,7 +1760,12 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitCatchType(CatchTypeContext ctx) {
-        super.visitCatchType(ctx);
+        visitUnannClassType(ctx.unannClassType());
+
+        for (ClassTypeContext ct : ctx.classType()) {
+            write(" | ");
+            visitClassType(ct);
+        }
         write(" ");
         return null;
     }
@@ -2013,11 +2075,43 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
         if (RESERVED_KEYWORDS.contains(identifier)) {
             return "\\i" + identifier;
+        } else if(is_CONSTANT_CASE(identifier.toCharArray())) {
+            return constant_case_toCamelCase(identifier.toCharArray());
         } else if (shouldBeLowercase && identifier.charAt(0) != '_'
                 && !Character.isLowerCase(identifier.charAt(0))) {
             return "\\i" + identifier;
         }
 
         return identifier;
+    }
+    
+    private static String constant_case_toCamelCase(char[] newName) {
+        int j = 0;
+        boolean capitaliseNext = false;
+        for(int i=0;i<newName.length;i++){
+            char codepoint = newName[i];
+            if(codepoint == '_'){
+                // skip underscore
+                capitaliseNext = true;
+            }else if(capitaliseNext){
+                newName[j++] = codepoint;
+                capitaliseNext = false;
+            }else{
+                newName[j++] = Character.toLowerCase(codepoint);
+            }
+        }
+        return new String(newName, 0, j);
+    }
+
+    private static boolean is_CONSTANT_CASE(char[] newName) {
+        // reject empty, "U" and "_"
+        if(newName.length <= 1)
+            return false;
+        for(int i=0;i<newName.length;i++){
+            int codepoint = newName[i];
+            if(Character.isLowerCase(codepoint) && codepoint != '_')
+                return false;
+        }
+        return true;
     }
 }

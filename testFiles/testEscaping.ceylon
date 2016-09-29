@@ -1,7 +1,7 @@
 shared class TestEscaping() {
 
 IntArray \imodule;
-shared String \iCONSTANT = "bwaaaaaaaa!";
+shared String constant = "bwaaaaaaaa!";
 shared void \iin(IntArray \imodule) {
 Integer a = \imodule.get(1);
 \iin(\imodule);
@@ -10,16 +10,16 @@ for (Package \ifunction in \imodule.allVisiblePackages) {
 }
 }
 
-shared void \iLOUD() {
-print(\iCONSTANT);
-print(TestEscaping.\iCONSTANT);
-print(TestEscaping.InnerClass.\iOTHER_CONSTANT);
-String \iUPPERCASE = "WHY ARE YOU SHOUTING?";
-\iLOUD();
+shared void loud() {
+print(constant);
+print(TestEscaping.constant);
+print(TestEscaping.InnerClass.otherConstant);
+String uppercase = "WHY ARE YOU SHOUTING?";
+loud();
 }
 
 class InnerClass() {
 
-String \iOTHER_CONSTANT = ":(";
+String otherConstant = ":(";
 }
 }

@@ -26,6 +26,9 @@ Enum{
 import java.util {
 ...
 }
+import pkg.\imodule.\ivalue {
+SomeClass
+}
 shared class TestImports() {
 
 }
