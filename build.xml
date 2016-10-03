@@ -13,10 +13,6 @@
     <property name="osgi.dist.features" location="${osgi.dist}/features"/>
     <property name="eclipse.project.path" location="${basedir}/../ceylon-ide-eclipse"/>
 
-    <tstamp>
-        <format property="qualifier" timezone="GMT" pattern="'v'yyyyMMdd-HHmm"/>
-    </tstamp>
-
     <taskdef resource="net/sf/antcontrib/antcontrib.properties">
         <classpath>
             <pathelement location="${ceylon.root.dir}/lib/ant-contrib-1.0b3.jar"/>
@@ -225,14 +221,15 @@
     <!-- Rule to setup a plugins directory with required bundles -->
     <target name="osgi-p2-quick" depends="ceylondefs,osgi-quick">
         <mkdir dir="${osgi.dist.features}"/>
+    	<ceylon-osgi-version ceylonversion="${module.ceylon.tool.converter.java2ceylon.version}" propertyname="osgiVersion" addtimestamp="true"/>
         <ant target="generateFeatures" inheritall="true">
             <property name="feature.id" value="ceylon.tool.converter.java2ceylon.feature"/>
-            <property name="feature.version" value="${module.ceylon.tool.converter.java2ceylon.version}.${qualifier}"/>
+            <property name="feature.version" value="${osgiVersion}"/>
             <property name="xslFileName" value="generatePluginFeature.xsl"/>
         </ant>
         <ant target="generateFeatures" inheritall="true">
             <property name="feature.id" value="ceylon.tool.converter.java2ceylon.dependencies.feature"/>
-            <property name="feature.version" value="${module.ceylon.tool.converter.java2ceylon.version}.${qualifier}"/>
+            <property name="feature.version" value="${osgiVersion}"/>
             <property name="xslFileName" value="generateFixedDependenciesFeature.xsl"/>
         </ant>
         <makeurl property="destinationRepository" file="${osgi.dist}"/>
