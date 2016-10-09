@@ -177,6 +177,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (hasModifier(ctx.classModifier(), "public")) {
             write("shared ");
         }
+        if (hasModifier(ctx.classModifier(), "static")) {
+            write("static ");
+        }
         if (hasModifier(ctx.classModifier(), "abstract")) {
             write("abstract ");
         }
@@ -319,6 +322,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitMethodDeclaration(MethodDeclarationContext ctx) {
         if (hasModifier(ctx.methodModifier(), "public")) {
             write("shared ");
+        }
+        if (hasModifier(ctx.methodModifier(), "static")) {
+            write("static ");
         }
         if (hasModifier(ctx.methodModifier(), "@Override")) {
             if(!hasModifier(ctx.methodModifier(), "public"))
@@ -520,6 +526,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     public Void visitNormalInterfaceDeclaration(NormalInterfaceDeclarationContext ctx) {
         if (hasModifier(ctx.interfaceModifier(), "public")) {
             write("shared ");
+        }
+        if (hasModifier(ctx.interfaceModifier(), "static")) { //TODO: or if it is any nested interface!!!
+            write("static ");
         }
 
         write("interface ");
@@ -1569,6 +1578,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (hasModifier(ctx.classModifier(), "public")) {
             write("shared ");
         }
+        if (hasModifier(ctx.classModifier(), "static")) {
+            write("static ");
+        }
         write("class ");
         write(ctx.Identifier().getText());
         if (ctx.superinterfaces() != null) {
@@ -1649,6 +1661,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
             if (hasModifier(ctx.fieldModifier(), "public")) {
                 write("shared ");
+            }
+            if (hasModifier(ctx.fieldModifier(), "static")) {
+                write("static ");
             }
             if (useValues && var.variableInitializer() != null) {
                 write("value");
