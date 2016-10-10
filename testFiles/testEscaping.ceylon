@@ -1,7 +1,7 @@
 shared class TestEscaping() {
 
 IntArray \imodule;
-shared String constant = "bwaaaaaaaa!";
+shared static String constant = "bwaaaaaaaa!";
 shared void \iin(IntArray \imodule) {
 Integer a = \imodule.get(1);
 \iin(\imodule);
@@ -18,8 +18,8 @@ String uppercase = "WHY ARE YOU SHOUTING?";
 loud();
 }
 
-class InnerClass() {
+static class InnerClass() {
 
-String otherConstant = ":(";
+static String otherConstant = ":(";
 }
 }
