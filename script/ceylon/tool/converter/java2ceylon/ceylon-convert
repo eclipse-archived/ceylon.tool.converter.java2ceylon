@@ -14,4 +14,4 @@ OPTIONS
 
 . $CEYLON_HOME/bin/ceylon-sh-setup
 
-$CEYLON run ceylon.tool.converter.java2ceylon/1.3.1-SNAPSHOT "$@"
+$CEYLON run ceylon.tool.converter.java2ceylon/1.3.2-SNAPSHOT "$@"
