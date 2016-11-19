@@ -5,6 +5,7 @@ import ceylon.tool.converter.java2ceylon.ScopeTree.Node;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -1570,6 +1571,38 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (ctx.lambdaExpression() != null) {
             visitLambdaExpression(ctx.lambdaExpression());
         }
+        return null;
+    }
+
+
+    @Override
+    public Void visitLambdaExpression(LambdaExpressionContext ctx) {
+        visitLambdaParameters(ctx.lambdaParameters());
+        write(" => ");
+        visitLambdaBody(ctx.lambdaBody());
+        return null;
+    }
+
+    @Override
+    public Void visitLambdaParameters(LambdaParametersContext ctx) {
+        write("(");
+        super.visitLambdaParameters(ctx);
+        write(")");
+        return null;
+    }
+
+    @Override
+    public Void visitInferredFormalParameterList(InferredFormalParameterListContext ctx) {
+        boolean isFirst = true;
+        for (TerminalNode i : ctx.Identifier()) {
+            if (!isFirst) {
+                write(", ");
+            }
+
+            write(i.getText());
+            isFirst = false;
+        }
+
         return null;
     }
 
