@@ -13,3 +13,4 @@ resource=resource
 
 [repositories]
 lookup=./repo
+lookup=./modules

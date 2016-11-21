@@ -1578,7 +1578,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitLambdaExpression(LambdaExpressionContext ctx) {
         visitLambdaParameters(ctx.lambdaParameters());
-        write(" => ");
+        if (ctx.lambdaBody().block() == null) {
+            write(" => ");
+        }
         visitLambdaBody(ctx.lambdaBody());
         return null;
     }
