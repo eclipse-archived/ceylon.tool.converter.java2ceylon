@@ -5,7 +5,7 @@ Runnable hello = (){
 print("hello");
 }
 ;
-swingComponent.addActionListener(() => print("event handler"));
+swingComponent.addActionListener((event) => print("event handler"));
 }
 
 }
