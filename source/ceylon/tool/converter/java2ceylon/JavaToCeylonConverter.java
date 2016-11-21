@@ -1588,6 +1588,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitLambdaParameters(LambdaParametersContext ctx) {
         write("(");
+        if (ctx.Identifier() != null) {
+            write(ctx.Identifier().getText());
+        }
         super.visitLambdaParameters(ctx);
         write(")");
         return null;
