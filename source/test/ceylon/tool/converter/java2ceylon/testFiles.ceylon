@@ -185,3 +185,8 @@ test
 shared void testOptional() {
 	testFiles("Optional");
 }
+
+test
+shared void testLambda() {
+	testFiles("Lambda");
+}
