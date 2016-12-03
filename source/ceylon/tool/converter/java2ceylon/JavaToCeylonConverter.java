@@ -553,9 +553,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitInterfaceMethodDeclaration(InterfaceMethodDeclarationContext ctx) {
-        if (hasModifier(ctx.interfaceMethodModifier(), "public")) {
-            write("shared ");
-        }
+        write("shared ");
+
         if (hasModifier(ctx.interfaceMethodModifier(), "default")) {
             write("default ");
         } else {
