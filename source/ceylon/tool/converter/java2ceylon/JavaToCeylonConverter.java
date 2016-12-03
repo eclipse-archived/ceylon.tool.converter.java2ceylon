@@ -259,6 +259,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 write("in ");
             }
             visitReferenceType((ReferenceTypeContext) bounds.getChild(1));
+        } else {
+            write("out Object");
         }
         return null;
     }

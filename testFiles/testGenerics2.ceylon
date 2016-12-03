@@ -6,4 +6,7 @@ shared class TestGenerics2() {
 void java(Map<in String, out Widget> map) {
 }
 
+void removeAll(Collection<out Object> c) {
+}
+
 }
