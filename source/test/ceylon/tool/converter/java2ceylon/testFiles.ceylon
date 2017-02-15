@@ -47,6 +47,11 @@ shared void testArrays2() {
 }
 
 test
+shared void testAssert() {
+	testFiles("Assert");
+}
+
+test
 shared void testClass() {
 	testFiles("Class");
 }

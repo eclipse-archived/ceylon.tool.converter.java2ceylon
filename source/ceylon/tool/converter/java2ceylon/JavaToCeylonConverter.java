@@ -1896,6 +1896,22 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitAssertStatement(AssertStatementContext ctx) {
+        if (ctx.expression().size() > 1) {
+            if (!ctx.expression(1).getText().matches("\"[^\"]*\"")) {
+                write("// ");
+            }
+            visitExpression(ctx.expression(1));
+            write("\n");
+        }
+        write("assert(");
+        visitExpression(ctx.expression(0));
+        write(");\n");
+
+        return null;
+    }
+
     private boolean isBlock(StatementContext ctx) {
         return ctx.statementWithoutTrailingSubstatement() != null
                 && ctx.statementWithoutTrailingSubstatement().block() != null;
