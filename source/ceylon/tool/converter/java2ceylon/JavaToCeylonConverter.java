@@ -1096,7 +1096,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 write("object extends ");
             }
         }
-        write(ctx.Identifier().get(0).getText());
+
+        for (int i = 0; i < ctx.Identifier().size(); i++) {
+            if (i > 0) {
+                write(".");
+            }
+            write(ctx.Identifier().get(i).getText());
+        }
         // TODO other identifiers
         if (ctx.typeArgumentsOrDiamond() != null) {
             visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond());

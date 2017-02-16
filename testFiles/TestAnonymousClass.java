@@ -39,3 +39,12 @@ public class TestAnonymousClass {
 		};
 	}
 }
+
+class Other {
+	void fun() {
+		TestAnonymousClass.Foo foo = new TestAnonymousClass.Foo() {
+			public void a() {}
+			public void b(int x, int y) {}
+		};
+	}
+}

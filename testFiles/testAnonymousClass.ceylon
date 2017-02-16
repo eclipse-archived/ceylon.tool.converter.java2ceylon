@@ -38,3 +38,19 @@ shared actual void a() {
 }
 
 }
+class Other() {
+
+void fun() {
+TestAnonymousClass.Foo foo = object satisfies TestAnonymousClass.Foo {
+
+shared void a() {
+}
+
+shared void b(Integer x, Integer y) {
+}
+
+}
+;
+}
+
+}
