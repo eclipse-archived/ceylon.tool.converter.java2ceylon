@@ -1710,7 +1710,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             if (hasModifier(ctx.fieldModifier(), "static")) {
                 write("static ");
             }
-            if (useValues && var.variableInitializer() != null) {
+            if (useValues && var.variableInitializer() != null
+                    && !hasModifier(ctx.fieldModifier(), "public")
+                    && !hasModifier(ctx.fieldModifier(), "protected")) {
                 write("value");
             } else {
                 if (n.variable && !hasModifier(ctx.fieldModifier(), "final")) {

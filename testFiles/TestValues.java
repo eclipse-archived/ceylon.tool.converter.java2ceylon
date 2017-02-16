@@ -1,6 +1,7 @@
 public class TestValues {
     int a;
     int b = 2;
+    public int c = 3;
 
     public void testValues(int a) {
         String b = "";
