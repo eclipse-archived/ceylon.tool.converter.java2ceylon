@@ -1330,7 +1330,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitPrimaryNoNewArray(PrimaryNoNewArrayContext ctx) {
     	if(ctx.getChild(2) != null && ctx.getChild(2).getText().equals("class"))
-    		write("javaClass<" + ctx.getChild(0).getText() + ">()");
+    		write("`" + ctx.getChild(0).getText() + "`");
     	else
 	        switch (ctx.getChild(0).getText()) {
 	            case "this":
@@ -1350,7 +1350,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
     @Override
     public Void visitPrimaryNoNewArray_lfno_primary(PrimaryNoNewArray_lfno_primaryContext ctx) {
     	if(ctx.getChild(2) != null && ctx.getChild(2).getText().equals("class"))
-    		write("javaClass<" + ctx.getChild(0).getText() + ">()");
+    		write("`" + ctx.getChild(0).getText() + "`");
     	else
     		switch (ctx.getChild(0).getText()) {
             	case "this":
