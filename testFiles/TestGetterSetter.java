@@ -9,10 +9,13 @@ public class TestMethod {
 		foo.setMethod();
 		foo.setMethod(true);
 
-		a = foo.getBar().getBaz().method().getFoo();
+		a = foo.getBar().getBaz().method().getFoo().toString();
 		a = foo.getPackage().getModule().getShared().getObject();
 		a = foo.toString();
 		a = foo.toString(a);
+
+		int b = foo.hashCode();
+		b = foo.hashCode(a);
 		
 		Runtime.getRuntime().exec("");
 		

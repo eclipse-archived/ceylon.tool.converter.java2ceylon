@@ -373,6 +373,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write(escapeIdentifier(property, true));
         } else if ("toString".equals(methodName) && ctx.formalParameterList() == null){
             write("string");
+        } else if ("hashCode".equals(methodName) && ctx.formalParameterList() == null){
+            write("hash");
         } else {
             write(escapeIdentifier(methodName, true));
 
@@ -741,6 +743,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             write(escapeIdentifier(property, true));
         } else if ("toString".equals(methodName) && ctx.argumentList() == null){
             write("string");
+        } else if ("hashCode".equals(methodName) && ctx.argumentList() == null){
+            write("hash");
         } else {
             write(escapeIdentifier(methodName, true));
             write("(");
@@ -755,11 +759,18 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitMethodInvocation_lf_primary(MethodInvocation_lf_primaryContext ctx) {
+        String methodName = "";
+
         write(".");
         if (ctx.typeArguments() != null) {
             visitTypeArguments(ctx.typeArguments());
         }
-        Matcher matcher = GETTER_PATTERN.matcher(ctx.Identifier().getText());
+
+        if (ctx.Identifier() != null) {
+            methodName = ctx.Identifier().getText();
+        }
+
+        Matcher matcher = GETTER_PATTERN.matcher(methodName);
         if (transformGetters && matcher.matches() && ctx.argumentList() == null) {
             String property = matcher.group(2);
             if (property.length() > 1) {
@@ -768,6 +779,10 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 property = property.toLowerCase();
             }
             write(escapeIdentifier(property, true));
+        }  else if ("toString".equals(methodName) && ctx.argumentList() == null){
+            write("string");
+        } else if ("hashCode".equals(methodName) && ctx.argumentList() == null){
+            write("hash");
         } else {
             write(escapeIdentifier(ctx.Identifier().getText(), true));
             write("(");

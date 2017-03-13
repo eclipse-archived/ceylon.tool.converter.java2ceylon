@@ -16,4 +16,8 @@ shared actual String string {
 return super.string;
 }
 
+shared actual Integer hash {
+return super.hash;
+}
+
 }
