@@ -406,7 +406,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 write(", ");
             }
         }
-        if (ctx.lastFormalParameter().formalParameter() != null) {
+        if (ctx.lastFormalParameter()!=null && ctx.lastFormalParameter().formalParameter() != null) {
             visitFormalParameter(ctx.lastFormalParameter().formalParameter());
         }
         return null;
