@@ -1,4 +1,4 @@
-// Generated from /Users/bastien/Dev/ceylon/ceylon.tool.converter.java2ceylon/grammar/Java8.g4 by ANTLR 4.5.1
+// Generated from Java8.g4 by ANTLR 4.5.1
 package ceylon.tool.converter.java2ceylon;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -407,6 +407,30 @@ public class Java8BaseListener implements Java8Listener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitCompilationUnit(Java8Parser.CompilationUnitContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclaration(Java8Parser.DeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaration(Java8Parser.DeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSingleStatement(Java8Parser.SingleStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSingleStatement(Java8Parser.SingleStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

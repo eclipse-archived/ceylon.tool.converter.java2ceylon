@@ -8,7 +8,7 @@ The Main class requires 2 arguments - the location of the source java file and t
 
 ## Instructions
 
-###With `ant`
+### With `ant`
 
 ```bash
 git clone https://github.com/ceylon/ceylon.tool.converter.java2ceylon.git
@@ -18,7 +18,7 @@ ant install
 
 The buildfile assumes that `ceylon-dist` (including the Ceylon ant files) is a sibling folder; otherwise, you might have to adjust the paths in `build.properties`.
 
-###Usage
+### Usage
 
 If you have the plugin installed,
 

@@ -1,4 +1,4 @@
-// Generated from /Users/bastien/Dev/ceylon/ceylon.tool.converter.java2ceylon/grammar/Java8.g4 by ANTLR 4.5.1
+// Generated from Java8.g4 by ANTLR 4.5.1
 package ceylon.tool.converter.java2ceylon;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -337,6 +337,26 @@ public interface Java8Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitCompilationUnit(Java8Parser.CompilationUnitContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link Java8Parser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclaration(Java8Parser.DeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Java8Parser#declaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclaration(Java8Parser.DeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link Java8Parser#singleStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSingleStatement(Java8Parser.SingleStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Java8Parser#singleStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSingleStatement(Java8Parser.SingleStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link Java8Parser#packageDeclaration}.
 	 * @param ctx the parse tree

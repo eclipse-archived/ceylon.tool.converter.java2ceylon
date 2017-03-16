@@ -229,8 +229,20 @@ ambiguousName
  */
 
 compilationUnit
-	:	methodDeclaration+ | (packageDeclaration? importDeclaration* typeDeclaration*) EOF
+	:	declaration+
+	|   classDeclaration+
+	|   (packageDeclaration? importDeclaration* typeDeclaration*) EOF
 	;
+
+declaration
+    :   methodDeclaration
+    |   fieldDeclaration
+    ;
+
+singleStatement
+    :   statement
+    |   localVariableDeclarationStatement
+    ;
 
 packageDeclaration
 	:	packageModifier* 'package' Identifier ('.' Identifier)* ';'

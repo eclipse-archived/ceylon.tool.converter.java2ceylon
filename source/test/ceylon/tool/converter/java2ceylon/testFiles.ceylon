@@ -195,3 +195,13 @@ test
 shared void testLambda() {
 	testFiles("Lambda");
 }
+
+test
+shared void testDeclaration() {
+	testFiles("Declaration");
+}
+
+test
+shared void testSingleStatement() {
+	testFiles("SingleStatement");
+}

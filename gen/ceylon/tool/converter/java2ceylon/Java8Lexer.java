@@ -1,4 +1,4 @@
-// Generated from /Users/bastien/Dev/ceylon/ceylon.tool.converter.java2ceylon/grammar/Java8.g4 by ANTLR 4.5.1
+// Generated from Java8.g4 by ANTLR 4.5.1
 package ceylon.tool.converter.java2ceylon;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
