@@ -5,30 +5,29 @@ import java.io {
 }
 import org.antlr.v4.runtime {
 	ANTLRInputStream,
-	CommonTokenStream,
-	ParserRuleContext
+	CommonTokenStream
 }
 
 "Converts the given Java file to Ceylon."
 shared void convert(String? sourceFile, String? targetFile, Boolean transformGetters = false,
 	 Boolean useValues = false) {
 	
-	File f = File(sourceFile);
+	value f = File(sourceFile);
 	
-	ANTLRInputStream input = ANTLRInputStream(FileInputStream(f));
-	Java8Lexer lexer = Java8Lexer(input);
-	CommonTokenStream tokens = CommonTokenStream(lexer);
-	Java8Parser parser = Java8Parser(tokens);
+	value input = ANTLRInputStream(FileInputStream(f));
+	value lexer = Java8Lexer(input);
+	value tokens = CommonTokenStream(lexer);
+	value parser = Java8Parser(tokens);
 	
-	ParserRuleContext tree = parser.compilationUnit();
+	value tree = parser.compilationUnit();
 	
-	FileWriter fw = FileWriter(File(targetFile));
+	value fw = FileWriter(File(targetFile));
 	
-	ScopeTree scopeTree = ScopeTree();
+	value scopeTree = ScopeTree();
 	
 	tree.accept(scopeTree);
 	
-	JavaToCeylonConverter converter = JavaToCeylonConverter(fw, transformGetters, useValues, scopeTree);
+	value converter = JavaToCeylonConverter(fw, transformGetters, useValues, scopeTree);
 	
 	tree.accept(converter);
 	
