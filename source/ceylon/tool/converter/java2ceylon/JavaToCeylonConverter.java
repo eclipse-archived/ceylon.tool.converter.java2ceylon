@@ -1296,13 +1296,22 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         boolean hasElse = false;
         for (SwitchBlockStatementGroupContext group : ctx.switchBlockStatementGroup()) {
             // TODO transform `case a: case b:` to `case (a|b)`
-            SwitchLabelContext label = group.switchLabels().switchLabel(0);
-            if (label.getChild(0).getText().equals("case")) {
+            SwitchLabelContext firstLabel = group.switchLabels().switchLabel(0);
+            if (firstLabel.getChild(0).getText().equals("case")) {
                 write("case (");
-                if (label.constantExpression() != null) {
-                    visitConstantExpression(label.constantExpression());
-                } else {
-                    visitEnumConstantName(label.enumConstantName());
+                boolean first = true;
+                for (SwitchLabelContext label : group.switchLabels().switchLabel()) {
+                    if (first) {
+                        first = false;
+                    }
+                    else {
+                        write(" | ");
+                    }
+                    if (label.constantExpression() != null) {
+                        visitConstantExpression(label.constantExpression());
+                    } else {
+                        visitEnumConstantName(label.enumConstantName());
+                    }
                 }
                 write(") {\n");
             } else {
@@ -1316,7 +1325,6 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
         if (!hasElse) {
             write("else {}\n");
         }
-        // TODO is it really necessary to loop over switchLabel*, since those are "empty" cases?
         return null;
     }
 
