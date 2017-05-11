@@ -798,7 +798,13 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
     @Override
     public Void visitLiteral(LiteralContext ctx) {
-        write(ctx.getText());
+        if (ctx.FloatingPointLiteral() != null) {
+            double d = Double.parseDouble(ctx.FloatingPointLiteral().getText());
+            write(String.valueOf(d));
+        } else {
+            write(ctx.getText());
+        }
+
         return super.visitLiteral(ctx);
     }
 

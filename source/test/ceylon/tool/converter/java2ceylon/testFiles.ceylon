@@ -205,3 +205,8 @@ test
 shared void testSingleStatement() {
 	testFiles("SingleStatement");
 }
+
+test
+shared void testDouble() {
+	testFiles("Double");
+}
