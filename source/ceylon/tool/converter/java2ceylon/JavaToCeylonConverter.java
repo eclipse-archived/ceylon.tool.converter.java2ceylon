@@ -931,72 +931,46 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             String ceylonType;
             String type = ctx.primitiveType().getText();
 
-            if(ctx.arrayInitializer() != null) {
-            	switch (type) {
-            	case "int":
-                    ceylonType = "createJavaIntArray";
+            switch (type) {
+                case "int":
+                    ceylonType = "IntArray";
                     break;
                 case "short":
-                    ceylonType = "createJavaShortArray";
+                    ceylonType = "ShortArray";
                     break;
                 case "boolean":
-                    ceylonType = "createJavaBooleanArray";
+                    ceylonType = "BooleanArray";
                     break;
                 case "byte":
-                    ceylonType = "createJavaByteArray";
+                    ceylonType = "ByteArray";
                     break;
                 case "long":
-                    ceylonType = "createJavaLongArray";
+                    ceylonType = "LongArray";
                     break;
                 case "float":
-                    ceylonType = "createJavaFloatArray";
+                    ceylonType = "FloatArray";
                     break;
                 case "double":
-                    ceylonType = "createJavaDoubleArray";
+                    ceylonType = "DoubleArray";
+                    break;
+                case "char":
+                    ceylonType = "CharArray";
                     break;
                 default:
-                    ceylonType = "createJavaObjectArray<" + type + ">";
+                    ceylonType = "ObjectArray<" + type + ">";
                     break;
-				}
-            } else {
-	            switch (type) {
-	                case "int":
-	                    ceylonType = "IntArray";
-	                    break;
-	                case "short":
-	                    ceylonType = "ShortArray";
-	                    break;
-	                case "boolean":
-	                    ceylonType = "BooleanArray";
-	                    break;
-	                case "byte":
-	                    ceylonType = "ByteArray";
-	                    break;
-	                case "long":
-	                    ceylonType = "LongArray";
-	                    break;
-	                case "float":
-	                    ceylonType = "FloatArray";
-	                    break;
-	                case "double":
-	                    ceylonType = "DoubleArray";
-	                    break;
-	                case "char":
-	                    ceylonType = "CharArray";
-	                    break;
-	                default:
-	                    ceylonType = "ObjectArray<" + type + ">";
-	                    break;
-	            }
             }
             write(ceylonType);
+            if (ctx.arrayInitializer() != null) {
+                write(".with");
+            }
         } else {
-        	if(ctx.arrayInitializer() != null)
-        		write("createJavaObjectArray<");
-        	else
-        		write("ObjectArray<");
+            write("ObjectArray<");
             visitClassOrInterfaceType(ctx.classOrInterfaceType());
             write(">");
+            if (ctx.arrayInitializer() != null) {
+                write(".with");
+            }
         }
         write("(");
 
