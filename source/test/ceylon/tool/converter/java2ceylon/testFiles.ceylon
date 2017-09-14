@@ -210,3 +210,8 @@ test
 shared void testDouble() {
 	testFiles("Double");
 }
+
+test
+shared void testVarargs() {
+	testFiles("Varargs");
+}

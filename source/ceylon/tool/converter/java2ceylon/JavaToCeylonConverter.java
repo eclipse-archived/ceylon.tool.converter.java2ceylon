@@ -406,9 +406,32 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 write(", ");
             }
         }
-        if (ctx.lastFormalParameter()!=null && ctx.lastFormalParameter().formalParameter() != null) {
-            visitFormalParameter(ctx.lastFormalParameter().formalParameter());
+
+        if (ctx.lastFormalParameter() != null) {
+            LastFormalParameterContext lastFormalParameter = ctx.lastFormalParameter();
+
+            if (lastFormalParameter.formalParameter() != null) {
+                visitFormalParameter(lastFormalParameter.formalParameter());
+            } else {
+                visitLastFormalParameter(lastFormalParameter);
+            }
         }
+
+        return null;
+    }
+
+    @Override
+    public Void visitLastFormalParameter(LastFormalParameterContext ctx) {
+        Node n = scopeTree.getNode(ctx.variableDeclaratorId(), scopeTree.root);
+
+        if (n.variable && !hasModifier(ctx.variableModifier(), "final")) {
+            write("variable ");
+        }
+
+        visitUnannType(ctx.unannType());
+        write("* ");
+        write(escapeIdentifier(ctx.variableDeclaratorId().getText(), true));
+
         return null;
     }
 
