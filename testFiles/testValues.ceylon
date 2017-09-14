@@ -13,4 +13,11 @@ Integer _d;
 Character t;
 }
 
+shared void testValue() {
+value s1 = "Hello";
+String? s2 = null;
+variable String? s3 = "Hello";
+s3 = null;
+}
+
 }

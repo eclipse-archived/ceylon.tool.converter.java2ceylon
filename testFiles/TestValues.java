@@ -14,4 +14,12 @@ public class TestValues {
         int _d;
         char t;
     }
+
+    public void testValue() {
+        String s1 = "Hello";
+        String s2 = null;
+        String s3 = "Hello";
+        s3 = null;
+    }
+
 }

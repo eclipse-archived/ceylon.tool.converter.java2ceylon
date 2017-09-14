@@ -1038,7 +1038,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
             Node n = scopeTree.getNode(var.variableDeclaratorId(), scopeTree.root);
 
-            if (!shouldUseAssert && useValues && var.variableInitializer() != null) {
+            if (!shouldUseAssert && useValues && var.variableInitializer() != null && !n.optional) {
                 write("value");
             } else {
                 if (shouldUseAssert) {
@@ -1079,7 +1079,7 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
 
             Node n = scopeTree.getNode(context, scopeTree.root);
 
-            if (useValues && var.variableInitializer() != null) {
+            if (useValues && var.variableInitializer() != null && !n.optional) {
                 write("value");
             } else {
                 if (n.variable && !hasModifier(ctx.variableModifier(), "final")) {
@@ -1087,8 +1087,9 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
                 }
                 visitUnannType(ctx.unannType());
 
-                if(n.optional)
-                	write("?");
+                if(n.optional) {
+                    write("?");
+                }
             }
             write(" ");
 
@@ -1740,7 +1741,8 @@ public class JavaToCeylonConverter extends Java8BaseVisitor<Void> {
             }
             if (useValues && var.variableInitializer() != null
                     && !hasModifier(ctx.fieldModifier(), "public")
-                    && !hasModifier(ctx.fieldModifier(), "protected")) {
+                    && !hasModifier(ctx.fieldModifier(), "protected")
+                    && !n.optional) {
                 write("value");
             } else {
                 if (n.variable && !hasModifier(ctx.fieldModifier(), "final")) {
