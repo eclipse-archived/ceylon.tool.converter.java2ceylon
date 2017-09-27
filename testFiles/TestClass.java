@@ -1,4 +1,4 @@
-package com.redhat.ceylon.testFiles;
+package ceylon.tool.converter.java2ceylon.testFiles;
 
 public class TestClass extends TestFor implements TestInterface, TestInterface2 {
 	final String foo = "foo";

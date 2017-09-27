@@ -1,4 +1,4 @@
-package com.redhat.ceylon.testFiles;
+package ceylon.tool.converter.java2ceylon.testFiles;
 
 public class TestIf {
 	public void foo(int a, int b) {

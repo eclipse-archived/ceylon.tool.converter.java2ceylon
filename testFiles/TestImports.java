@@ -1,4 +1,4 @@
-package com.redhat.ceylon.testFiles;
+package ceylon.tool.converter.java2ceylon.testFiles;
 
 import java.awt.Frame;
 import java.sql.*;

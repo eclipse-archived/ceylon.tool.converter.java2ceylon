@@ -1,4 +1,4 @@
-import com.redhat.ceylon.common.tool {
+import org.eclipse.ceylon.common.tool {
 	description,
 	description__SETTER,
 	option__SETTER,
