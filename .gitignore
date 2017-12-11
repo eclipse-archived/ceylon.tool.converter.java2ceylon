@@ -1,0 +1,6 @@
+/bin/
+/target/
+/.exploded/
+/TestClass.ceylon
+/modules/
+/.idea/

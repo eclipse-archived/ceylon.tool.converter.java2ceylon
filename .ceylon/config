@@ -1,0 +1,17 @@
+
+[defaults]
+encoding=UTF-8
+offline=false
+flatclasspath=false
+autoexportmavendependencies=false
+fullyexportmavendependencies=false
+
+[compiler]
+source=script
+source=gen
+source=source
+resource=resource
+
+[repositories]
+lookup=./repo
+lookup=./modules
