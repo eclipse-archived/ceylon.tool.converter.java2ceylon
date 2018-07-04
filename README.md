@@ -1,5 +1,3 @@
-[![Build Status](https://ci-ceylon.rhcloud.com/buildStatus/icon?job=ceylon.tool.converter.java2ceylon)](https://ci-ceylon.rhcloud.com/job/ceylon.tool.converter.java2ceylon)
-
 # Java to Ceylon Converter
 
 This is a project to convert java to Ceylon. 
@@ -11,7 +9,7 @@ The Main class requires 2 arguments - the location of the source java file and t
 ### With `ant`
 
 ```bash
-git clone https://github.com/ceylon/ceylon.tool.converter.java2ceylon.git
+git clone https://github.com/eclipse/ceylon.tool.converter.java2ceylon.git
 cd ceylon.tool.converter.java2ceylon
 ant install
 ```
